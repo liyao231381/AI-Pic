@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 图像生成器</title>
+  <style>
+    /* 基本 CSS 重置 */
+    body, h1, h2, h3, p, input, select, button, textarea {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 布局区域 */
+    .params {
+      width: 25%;
+      padding: 20px;
+      background-color: #fff;
+      border-right: 1px solid #ccc;
+      overflow-y: auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .result-area {
+      width: 50%;
+      padding: 20px;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start; /* 内容顶部对齐 */
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .history-area {
+      width: 25%;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-left: 1px solid #ccc;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    /* 通用样式 */
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #007bff;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 3px;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+
+    input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+      color: #999;
+      opacity: 1; /* Firefox */
+    }
+
+    input:-ms-input-placeholder { /* Internet Explorer 10-11 */
+      color: #999;
+    }
+
+    input::-ms-input-placeholder { /* Microsoft Edge */
+      color: #999;
+    }
+
+    select {
+      appearance: none;
+      background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23343a40"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 16px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+      margin-top: 10px; /* 稍微多一点边距，与参数分隔 */
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* "生成图像" 按钮对齐。 删除 margin-top: auto; */
+    .params button {
+      /* margin-top: auto; 删除此项 */
+    }
+
+    #result {
+      margin-top: 10px;
+      text-align: center;
+      width: 100%;
+      height: 100%; /* 占据整个结果区域高度 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center; /* 垂直居中图像 */
+    }
+
+    #generatedImage {
+      width: 95%;
+      max-height: 90%; /* 调整为按钮留出空间 */
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 10px;
+      cursor: pointer;
+      object-fit: contain;
+    }
+
+    #resultButtons {
+      display: flex;
+      justify-content: space-around;
+      width: 100%; /* 占据整个结果区域宽度 */
+      margin-top: 10px;
+    }
+
+    #resultText {
+      font-size: 16px;
+      color: #555;
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      text-align: center; /* 链接居中 */
+    }
+
+    #resultText a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    #resultText a:hover {
+      text-decoration: underline;
+    }
+
+    #copyUrlButton {
+      background-color: #00aaff;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    #downloadButton {
+      background-color: #ffa500;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    #copyUrlButton:hover, #downloadButton:hover {
+      background-color: #218838;
+    }
+
+    /* 历史记录样式 */
+    #history {
+      margin-top: 0;
+      border-top: none;
+      padding-top: 0;
+    }
+
+    #history h2 {
+      margin-bottom: 10px;
+      color: #007bff;
+    }
+
+    .history-item {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background-color 0.2s;
+      cursor: pointer; /* 添加鼠标指针 */
+    }
+
+    .history-item:hover {
+      background-color: #f9f9f9;
+    }
+
+    .history-item img {
+      max-width: 80px;
+      max-height: 80px;
+      border-radius: 4px;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    .history-item-details {
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    .history-item-details p {
+      margin: 0;
+      font-size: 14px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      text-overflow: ellipsis;
+    }
+
+    .delete-button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background-color 0.3s;
+      min-width: fit-content;
+    }
+
+    .delete-button:hover {
+      background-color: #c82333;
+    }
+
+    /* 全屏覆盖层 */
+    .fullscreen-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      display: none;
+    }
+
+    .fullscreen-image {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+
+    .close-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+
+    .close-button:hover {
+      background-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .seed-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .seed-container input[type="number"] {
+      flex-grow: 1;
+      margin-right: 5px; /* 输入框和按钮之间的间距 */
+    }
+
+    .seed-container button {
+      background-color: #4CAF50; /* 绿色 */
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+      white-space: nowrap;
+      padding: 4px 12px; /* 设置内边距为 4px 12px */
+      min-width: fit-content;
+    }
+
+    .seed-container button:hover {
+      background-color: #367c39;
+    }
+
+    .image-base64-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .image-upload-container {
+      display: flex;
+      align-items: center; /* 垂直对齐标签和按钮 */
+      justify-content: space-between;
+    }
+
+    .image-upload-container label {
+      margin-bottom: 0; /* 移除底部边距 */
+      flex-grow: 1;  /* 标签占据剩余空间 */
+    }
+
+    #uploadImageButton {
+      background-color: #673ab7; /* 深紫色 */
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    #uploadImageButton:hover {
+      background-color: #512da8;
+    }
+
+    /* 响应式设计 - 调整小屏幕上的列布局 */
+    @media (max-width: 800px) {
+      body {
+        flex-direction: column;
+        height: auto;
+        overflow: auto;
+      }
+
+      .params, .result-area, .history-area {
+        width: 100%;
+        height: auto;
+        border: none;
+        padding: 15px;
+      }
+
+      .params {
+        border-bottom: 1px solid #ccc;
+      }
+
+      .result-area {
+        border-bottom: 1px solid #ccc;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="params">
+    <h1>AI 图像生成器</h1>
+
+    <label for="apiKey">API 密钥:</label>
+    <input type="text" id="apiKey" placeholder="你的 API 密钥">
+
+    <label for="model">模型:</label>
+    <select id="model">
+      <option value="Kwai-Kolors/Kolors">Kwai-Kolors/Kolors</option>
+    </select>
+
+    <label for="prompt">提示语:</label>
+    <input type="text" id="prompt" placeholder="请输入提示词">
+
+    <label for="negativePrompt">负面提示语:</label>
+    <input type="text" id="negativePrompt">
+
+    <label for="imageSize">图像尺寸（宽×高）：</label>
+    <select id="imageSize">
+      <option value="1024x1024">1024x1024</option>
+      <option value="960x1280">960x1280</option>
+      <option value="768x1024">768x1024</option>
+      <option value="720x1440">720x1440</option>
+      <option value="720x1280">720x1280</option>
+    </select>
+
+    <label for="numInferenceSteps">推理步数 (1-50):</label>
+    <input type="number" id="numInferenceSteps" value="20" min="1" max="50">
+
+    <label for="guidanceScale">引导比例 (0-20):</label>
+    <input type="number" id="guidanceScale" value="2.5" min="0" max="20" step="0.1">
+
+    <label for="seed">种子 (0-9999999999):</label>
+    <div class="seed-container">
+      <input type="number" id="seed" min="0" max="9999999999">
+      <button type="button" onclick="randomSeed()">随机</button>
+    </div>
+
+    <div class="image-base64-container">
+      <div class="image-upload-container">
+        <label for="imageBase64">图像 (Base64):</label>
+        <button type="button" id="uploadImageButton" onclick="document.getElementById('imageUpload').click()">上传图片</button>
+        <input type="file" id="imageUpload" style="display: none;" accept="image/*" onchange="encodeImageToBase64()">
+      </div>
+      <textarea id="imageBase64" placeholder="data:image/webp;base64, XXX"></textarea>
+    </div>
+
+    <button id="generateButton" onclick="generateImage()">生成图像</button>
+  </div>
+
+  <div class="result-area">
+    <div id="result">
+      <img id="generatedImage" src="https://img.liyao.sbs/file/1738502727198.png" alt="生成的图像">
+      <div id="resultButtons">
+          <button onclick="downloadImage()" id="downloadButton" disabled>下载图像</button>
+          <button id="copyUrlButton" onclick="copyImageUrl()">复制 URL</button>
+      </div>
+      <p id="resultText">
+        <a href="#" id="imageUrlLink" target="_blank" title="点击跳转"></a>
+      </p>
+    </div>
+  </div>
+
+  <div class="history-area">
+    <div id="history">
+      <h2>历史记录:</h2>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- 全屏覆盖层 -->
+  <div class="fullscreen-overlay" id="fullscreenOverlay">
+    <button class="close-button" onclick="closeFullscreen()">关闭</button>
+    <img src="" alt="全屏图像" class="fullscreen-image" id="fullscreenImage">
+  </div>
+
+  <script>
+    // Local Storage Keys
+    const API_KEY_KEY = 'apiKey';
+    const IMAGE_HISTORY_KEY = 'imageHistory';
+  
+    // Load API Key from local storage on page load
+    document.getElementById('apiKey').value = localStorage.getItem(API_KEY_KEY) || '';
+  
+    // Function to save API Key to local storage
+    function saveApiKey(apiKey) {
+      localStorage.setItem(API_KEY_KEY, apiKey);
+    }
+  
+    // Function to convert image URL to Base64
+    function imageToBase64(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.setAttribute('crossOrigin', 'anonymous');  // 解决跨域问题，非常重要
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const dataURL = canvas.toDataURL('image/png'); // 你可以在这里更改格式
+          resolve(dataURL);
+        };
+        img.onerror = (error) => {
+          reject(error);
+        };
+        img.src = url;
+      });
+    }
+  
+    // Function to save to local storage
+    async function saveHistory(data) {
+      let imageBase64 = null;
+      try {
+          imageBase64 = await imageToBase64(data.imageUrl);
+      } catch (error) {
+          console.error("Error converting image to Base64:", error);
+      }
+  
+      let history = JSON.parse(localStorage.getItem(IMAGE_HISTORY_KEY) || '[]');
+      history.push({
+          ...data,
+          imageBase64Local: imageBase64 // 保存为 Base64
+      });
+      localStorage.setItem(IMAGE_HISTORY_KEY, JSON.stringify(history));
+      displayHistory();
+    }
+  
+   // Function to display history
+   function displayHistory() {
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = ''; // 清空现有列表
+      let history = JSON.parse(localStorage.getItem(IMAGE_HISTORY_KEY) || '[]');
+      // 反转历史记录数组，先显示最新的记录
+      history = history.reverse();
+      history.forEach((item, index) => {
+        const historyItem = document.createElement('div');
+        historyItem.classList.add('history-item');
+        const imageElement = document.createElement('img');
+        imageElement.src = item.imageBase64Local || '';  // 使用本地 Base64
+        imageElement.alt = "历史图像";
+        // 如果没有本地base64数据，则设置一个默认的占位图或者不显示图片
+        // 如果没有本地base64数据，则不隐藏图片，只是src为空
+        // if (!item.imageBase64Local) {
+        //   imageElement.style.display = 'none';
+        // }
+        const detailsElement = document.createElement('div');
+        detailsElement.classList.add('history-item-details');
+        const promptElement = document.createElement('p');
+        promptElement.textContent = item.prompt;  // 移除 "Prompt: " 文本
+        detailsElement.appendChild(promptElement);
+        const deleteButton = document.createElement('button');
+        deleteButton.classList.add('delete-button');
+        deleteButton.textContent = '删除';
+        // 索引计算现在是正确的
+        const correctIndex = history.length - 1 - index;
+        deleteButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          deleteHistoryItem(correctIndex);  // 使用修正后的索引
+        });
+        historyItem.appendChild(imageElement);
+        historyItem.appendChild(detailsElement);
+        historyItem.appendChild(deleteButton);
+        historyItem.addEventListener('click', () => populateForm(item));
+        historyList.appendChild(historyItem);
+      });
+    }
+
+    // Function to delete a history item
+    function deleteHistoryItem(index) {
+      let history = JSON.parse(localStorage.getItem(IMAGE_HISTORY_KEY) || '[]');
+      history.splice(index, 1);
+      localStorage.setItem(IMAGE_HISTORY_KEY, JSON.stringify(history));
+      displayHistory();
+    }
+  
+    // Function to populate the form and display the image
+    function populateForm(item) {
+      document.getElementById('prompt').value = item.prompt;
+      document.getElementById('negativePrompt').value = item.negativePrompt || '';
+      document.getElementById('imageSize').value = item.imageSize;
+      document.getElementById('numInferenceSteps').value = item.numInferenceSteps;
+      document.getElementById('guidanceScale').value = item.guidanceScale;
+      document.getElementById('seed').value = item.seed || '';
+      document.getElementById('imageBase64').value = item.imageBase64 || '';
+      document.getElementById('generatedImage').src = item.imageBase64Local || ''; // 使用 Base64
+      document.getElementById('imageUrlLink').href = item.imageUrl;
+      document.getElementById('imageUrlLink').textContent = item.imageUrl;
+      // Enable the download button
+      document.getElementById('downloadButton').disabled = false;
+    }
+
+    async function generateImage() {
+      const apiKey = document.getElementById('apiKey').value;
+      const model = document.getElementById('model').value;
+      const prompt = document.getElementById('prompt').value;
+      const negativePrompt = document.getElementById('negativePrompt').value;
+      const imageSize = document.getElementById('imageSize').value;
+      const numInferenceSteps = parseInt(document.getElementById('numInferenceSteps').value);
+      const guidanceScale = parseFloat(document.getElementById('guidanceScale').value);
+      const seed = parseInt(document.getElementById('seed').value);
+      const imageBase64 = document.getElementById('imageBase64').value;
+      const generateButton = document.getElementById('generateButton');
+  
+      // Disable the generate button
+      generateButton.disabled = true;
+      let countdown = 20;
+      generateButton.textContent = `生成中 (${countdown}s)`;
+  
+      // Save API key to local storage
+      saveApiKey(apiKey);
+  
+      const apiUrl = 'https://api.siliconflow.cn/v1/images/generations'; // 替换为你的 API 端点
+  
+      const data = {
+        model: model,
+        prompt: prompt,
+        negative_prompt: negativePrompt || undefined, // 只有当不为空时才包含
+        image_size: imageSize,
+        batch_size: 1, // 固定为 1。不再使用输入。
+        num_inference_steps: numInferenceSteps,
+        guidance_scale: guidanceScale,
+        seed: seed || undefined, // 只有当不为空时才包含
+        image: imageBase64 || undefined // 只有当不为空时才包含
+      };
+  
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`, // Add "Bearer " to the API key
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+  
+        if (!response.ok) {
+          throw new Error(`HTTP 错误! 状态: ${response.status}`);
+        }
+  
+        const result = await response.json();
+  
+        if (result.images && result.images.length > 0) {
+          const imageUrl = result.images[0].url;
+          document.getElementById('generatedImage').src = imageUrl;
+          document.getElementById('imageUrlLink').href = imageUrl;
+          document.getElementById('imageUrlLink').textContent = imageUrl;
+  
+          // Save history
+          await saveHistory({
+            prompt: prompt,
+            negativePrompt: negativePrompt,
+            imageSize: imageSize,
+            numInferenceSteps: numInferenceSteps,
+            guidanceScale: guidanceScale,
+            seed: seed,
+            imageBase64: imageBase64,
+            imageUrl: imageUrl
+          });
+  
+          // Enable the download button
+          document.getElementById('downloadButton').disabled = false;
+  
+        } else {
+          document.getElementById('generatedImage').src = '';
+          document.getElementById('imageUrlLink').href = '#';
+          document.getElementById('imageUrlLink').textContent = '';
+  
+          // Disable the download button
+          document.getElementById('downloadButton').disabled = true;
+        }
+  
+      } catch (error) {
+        console.error('错误:', error);
+        document.getElementById('generatedImage').src = '';
+        document.getElementById('imageUrlLink').href = '#';
+        document.getElementById('imageUrlLink').textContent = '';
+  
+        // Disable the download button
+        document.getElementById('downloadButton').disabled = true;
+      } finally {
+        // Re-enable button after 20 seconds
+        const countdownInterval = setInterval(() => {
+          countdown--;
+          generateButton.textContent = `请稍后 (${countdown}s)`;
+          if (countdown <= 0) {
+            clearInterval(countdownInterval);
+            generateButton.disabled = false;
+            generateButton.textContent = '生成图像';
+          }
+        }, 1000);
+      }
+    }
+  
+    function downloadImage() {
+        const generatedImage = document.getElementById('generatedImage');
+        let downloadUrl = generatedImage.src;
+  
+        // If the displayed image is a Base64, use that directly as the download
+        if (generatedImage.src.startsWith('data:image')) {
+            downloadUrl = generatedImage.src;
+        } else {
+            const imageUrl = document.getElementById('imageUrlLink').textContent;
+            downloadUrl = imageUrl;
+        }
+  
+        if (downloadUrl) {
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = 'generated_image.png';  // You can customize the filename
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            alert('请先生成图像。');
+        }
+    }
+  
+  
+    function copyImageUrl() {
+      const imageUrl = document.getElementById('imageUrlLink').textContent;
+      navigator.clipboard.writeText(imageUrl)
+        .then(() => {
+          alert('URL 已复制到剪贴板！');
+        })
+        .catch(err => {
+          console.error('复制 URL 失败: ', err);
+          alert('复制 URL 失败，请手动复制。');
+        });
+    }
+  
+    // Fullscreen functions
+    document.getElementById('generatedImage').addEventListener('click', openFullscreen);
+  
+    function openFullscreen() {
+      const generatedImage = document.getElementById('generatedImage');
+      const imageUrl = generatedImage.src;
+      if (imageUrl) {
+        document.getElementById('fullscreenImage').src = imageUrl;
+        document.getElementById('fullscreenOverlay').style.display = 'flex';
+      }
+    }
+  
+    function closeFullscreen() {
+      document.getElementById('fullscreenOverlay').style.display = 'none';
+    }
+  
+    // Random Seed Function
+    function randomSeed() {
+      const randomNumber = Math.floor(Math.random() * 9999999999);
+      document.getElementById('seed').value = randomNumber;
+    }
+  
+    function encodeImageToBase64() {
+      const fileInput = document.getElementById('imageUpload');
+      const file = fileInput.files[0];
+  
+      if (file) {
+        const reader = new FileReader();
+  
+        reader.onload = function(e) {
+          const base64String = e.target.result;
+          document.getElementById('imageBase64').value = base64String;
+        };
+  
+        reader.onerror = function(error) {
+          console.error('Error reading file: ', error);
+          alert('Error encoding image to Base64.');
+        };
+  
+        reader.readAsDataURL(file); // This triggers the onload event
+      }
+    }
+  
+    // Initial display of history on page load
+    displayHistory();
+  
+  </script>  
+</body>
+</html>
