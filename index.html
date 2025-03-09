@@ -483,15 +483,15 @@
     // Local Storage Keys
     const API_KEY_KEY = 'apiKey';
     const IMAGE_HISTORY_KEY = 'imageHistory';
-  
+
     // Load API Key from local storage on page load
     document.getElementById('apiKey').value = localStorage.getItem(API_KEY_KEY) || '';
-  
+
     // Function to save API Key to local storage
     function saveApiKey(apiKey) {
       localStorage.setItem(API_KEY_KEY, apiKey);
     }
-  
+
     // Function to convert image URL to Base64
     function imageToBase64(url) {
       return new Promise((resolve, reject) => {
@@ -512,60 +512,62 @@
         img.src = url;
       });
     }
-  
+
     // Function to save to local storage
     async function saveHistory(data) {
-      let imageBase64 = null;
       try {
-          imageBase64 = await imageToBase64(data.imageUrl);
+        const imageBase64 = await imageToBase64(data.imageUrl);
+        data.imageBase64Local = imageBase64; // 保存为 Base64
       } catch (error) {
-          console.error("Error converting image to Base64:", error);
+        console.error("Error converting image to Base64:", error);
+        data.imageBase64Local = null;  // 或者某个默认值
       }
-  
+
       let history = JSON.parse(localStorage.getItem(IMAGE_HISTORY_KEY) || '[]');
-      history.push({
-          ...data,
-          imageBase64Local: imageBase64 // 保存为 Base64
-      });
+      history.push(data);
       localStorage.setItem(IMAGE_HISTORY_KEY, JSON.stringify(history));
       displayHistory();
     }
-  
-   // Function to display history
-   function displayHistory() {
+
+    // Function to display history
+    function displayHistory() {
       const historyList = document.getElementById('historyList');
       historyList.innerHTML = ''; // 清空现有列表
+
       let history = JSON.parse(localStorage.getItem(IMAGE_HISTORY_KEY) || '[]');
+
       // 反转历史记录数组，先显示最新的记录
       history = history.reverse();
+
       history.forEach((item, index) => {
         const historyItem = document.createElement('div');
         historyItem.classList.add('history-item');
+
         const imageElement = document.createElement('img');
-        imageElement.src = item.imageBase64Local || '';  // 使用本地 Base64
+        imageElement.src = item.imageBase64Local || item.imageUrl;  // 优先使用本地 Base64
         imageElement.alt = "历史图像";
-        // 如果没有本地base64数据，则设置一个默认的占位图或者不显示图片
-        // 如果没有本地base64数据，则不隐藏图片，只是src为空
-        // if (!item.imageBase64Local) {
-        //   imageElement.style.display = 'none';
-        // }
+
         const detailsElement = document.createElement('div');
         detailsElement.classList.add('history-item-details');
         const promptElement = document.createElement('p');
         promptElement.textContent = item.prompt;  // 移除 "Prompt: " 文本
         detailsElement.appendChild(promptElement);
+
         const deleteButton = document.createElement('button');
         deleteButton.classList.add('delete-button');
         deleteButton.textContent = '删除';
+
         // 索引计算现在是正确的
         const correctIndex = history.length - 1 - index;
         deleteButton.addEventListener('click', (event) => {
           event.stopPropagation();
           deleteHistoryItem(correctIndex);  // 使用修正后的索引
         });
+
         historyItem.appendChild(imageElement);
         historyItem.appendChild(detailsElement);
         historyItem.appendChild(deleteButton);
+
         historyItem.addEventListener('click', () => populateForm(item));
         historyList.appendChild(historyItem);
       });
@@ -578,7 +580,7 @@
       localStorage.setItem(IMAGE_HISTORY_KEY, JSON.stringify(history));
       displayHistory();
     }
-  
+
     // Function to populate the form and display the image
     function populateForm(item) {
       document.getElementById('prompt').value = item.prompt;
@@ -588,9 +590,11 @@
       document.getElementById('guidanceScale').value = item.guidanceScale;
       document.getElementById('seed').value = item.seed || '';
       document.getElementById('imageBase64').value = item.imageBase64 || '';
-      document.getElementById('generatedImage').src = item.imageBase64Local || ''; // 使用 Base64
+
+      document.getElementById('generatedImage').src = item.imageBase64Local || item.imageUrl; // 优先使用 Base64
       document.getElementById('imageUrlLink').href = item.imageUrl;
       document.getElementById('imageUrlLink').textContent = item.imageUrl;
+
       // Enable the download button
       document.getElementById('downloadButton').disabled = false;
     }
@@ -606,17 +610,17 @@
       const seed = parseInt(document.getElementById('seed').value);
       const imageBase64 = document.getElementById('imageBase64').value;
       const generateButton = document.getElementById('generateButton');
-  
+
       // Disable the generate button
       generateButton.disabled = true;
       let countdown = 20;
       generateButton.textContent = `生成中 (${countdown}s)`;
-  
+
       // Save API key to local storage
       saveApiKey(apiKey);
-  
+
       const apiUrl = 'https://api.siliconflow.cn/v1/images/generations'; // 替换为你的 API 端点
-  
+
       const data = {
         model: model,
         prompt: prompt,
@@ -628,7 +632,7 @@
         seed: seed || undefined, // 只有当不为空时才包含
         image: imageBase64 || undefined // 只有当不为空时才包含
       };
-  
+
       try {
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -638,19 +642,19 @@
           },
           body: JSON.stringify(data)
         });
-  
+
         if (!response.ok) {
           throw new Error(`HTTP 错误! 状态: ${response.status}`);
         }
-  
+
         const result = await response.json();
-  
+
         if (result.images && result.images.length > 0) {
           const imageUrl = result.images[0].url;
           document.getElementById('generatedImage').src = imageUrl;
           document.getElementById('imageUrlLink').href = imageUrl;
           document.getElementById('imageUrlLink').textContent = imageUrl;
-  
+
           // Save history
           await saveHistory({
             prompt: prompt,
@@ -662,25 +666,25 @@
             imageBase64: imageBase64,
             imageUrl: imageUrl
           });
-  
+
           // Enable the download button
           document.getElementById('downloadButton').disabled = false;
-  
+
         } else {
           document.getElementById('generatedImage').src = '';
           document.getElementById('imageUrlLink').href = '#';
           document.getElementById('imageUrlLink').textContent = '';
-  
+
           // Disable the download button
           document.getElementById('downloadButton').disabled = true;
         }
-  
+
       } catch (error) {
         console.error('错误:', error);
         document.getElementById('generatedImage').src = '';
         document.getElementById('imageUrlLink').href = '#';
         document.getElementById('imageUrlLink').textContent = '';
-  
+
         // Disable the download button
         document.getElementById('downloadButton').disabled = true;
       } finally {
@@ -696,32 +700,29 @@
         }, 1000);
       }
     }
-  
+
     function downloadImage() {
-        const generatedImage = document.getElementById('generatedImage');
-        let downloadUrl = generatedImage.src;
-  
-        // If the displayed image is a Base64, use that directly as the download
-        if (generatedImage.src.startsWith('data:image')) {
-            downloadUrl = generatedImage.src;
-        } else {
-            const imageUrl = document.getElementById('imageUrlLink').textContent;
-            downloadUrl = imageUrl;
-        }
-  
-        if (downloadUrl) {
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = 'generated_image.png';  // You can customize the filename
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        } else {
-            alert('请先生成图像。');
-        }
+      const imageUrl = document.getElementById('imageUrlLink').textContent;
+      const generatedImage = document.getElementById('generatedImage');
+      let downloadUrl = generatedImage.src;
+
+      // If the displayed image is a Base64, use that directly as the download
+      if (generatedImage.src.startsWith('data:image')) {
+        downloadUrl = generatedImage.src;
+      }
+
+      if (downloadUrl) {
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = 'generated_image.png';  // You can customize the filename
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        alert('请先生成图像。');
+      }
     }
-  
-  
+
     function copyImageUrl() {
       const imageUrl = document.getElementById('imageUrlLink').textContent;
       navigator.clipboard.writeText(imageUrl)
@@ -733,10 +734,10 @@
           alert('复制 URL 失败，请手动复制。');
         });
     }
-  
+
     // Fullscreen functions
     document.getElementById('generatedImage').addEventListener('click', openFullscreen);
-  
+
     function openFullscreen() {
       const generatedImage = document.getElementById('generatedImage');
       const imageUrl = generatedImage.src;
@@ -745,41 +746,42 @@
         document.getElementById('fullscreenOverlay').style.display = 'flex';
       }
     }
-  
+
     function closeFullscreen() {
       document.getElementById('fullscreenOverlay').style.display = 'none';
     }
-  
+
     // Random Seed Function
     function randomSeed() {
       const randomNumber = Math.floor(Math.random() * 9999999999);
       document.getElementById('seed').value = randomNumber;
     }
-  
+
     function encodeImageToBase64() {
       const fileInput = document.getElementById('imageUpload');
       const file = fileInput.files[0];
-  
+
       if (file) {
         const reader = new FileReader();
-  
+
         reader.onload = function(e) {
           const base64String = e.target.result;
           document.getElementById('imageBase64').value = base64String;
         };
-  
+
         reader.onerror = function(error) {
           console.error('Error reading file: ', error);
           alert('Error encoding image to Base64.');
         };
-  
+
         reader.readAsDataURL(file); // This triggers the onload event
       }
     }
-  
+
     // Initial display of history on page load
     displayHistory();
-  
-  </script>  
+
+  </script>
+
 </body>
 </html>
