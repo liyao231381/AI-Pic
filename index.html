@@ -133,11 +133,6 @@
       cursor: not-allowed;
     }
 
-    /* "生成图像" 按钮对齐。 删除 margin-top: auto; */
-    .params button {
-      /* margin-top: auto; 删除此项 */
-    }
-
     #result {
       margin-top: 10px;
       text-align: center;
@@ -258,6 +253,7 @@
       overflow: hidden;
       display: -webkit-box;
       -webkit-line-clamp: 3;
+      line-clamp: 3;
       -webkit-box-orient: vertical;
       text-overflow: ellipsis;
     }
@@ -422,11 +418,14 @@
 
     <label for="imageSize">图像尺寸（宽×高）：</label>
     <select id="imageSize">
-      <option value="1024x1024">1024x1024</option>
-      <option value="960x1280">960x1280</option>
-      <option value="768x1024">768x1024</option>
-      <option value="720x1440">720x1440</option>
-      <option value="720x1280">720x1280</option>
+      <option value="1024x1024">1024x1024(1:1)</option>
+      <option value="720x1440">720x1440(1:2)</option>
+      <option value="960x1280">960x1280(3:4)</option>
+      <option value="720x1280">720x1280(9:16)</option>
+      <option value="1080x1920">1080x1920(9:16)</option>
+      <option value="1280x960">1280x960(4:3)</option>
+      <option value="1440x720">1440x720(2:1)</option>
+      <option value="1280x720">1920x1080(16:9)</option>
     </select>
 
     <label for="numInferenceSteps">推理步数 (1-50):</label>
