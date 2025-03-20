@@ -418,7 +418,7 @@
     <textarea id="prompt" placeholder="请输入提示词" style="height: 100px; resize: vertical;"></textarea>
 
     <label for="negativePrompt">负面提示语:</label>
-    <input type="text" id="negativePrompt">
+    <input type="text" id="negativePrompt" placeholder="请输入负面提示词" value="bad quality, low quality, deformed, distorted, bad proportions, ugly">
 
     <label for="imageSize">图像尺寸（宽×高）：</label>
     <select id="imageSize">
@@ -668,8 +668,8 @@
 
         if (result.images && result.images.length > 0) {
           const imageUrl = result.images[0].url;
-          document.getElementById('generatedImage').src = imageUrl;
-          document.getElementById('imageUrlLink').href = imageUrl;
+          document.getElementById('generatedImage').src = encodeURI(imageUrl);
+          document.getElementById('imageUrlLink').href = encodeURI(imageUrl);
           document.getElementById('imageUrlLink').textContent = imageUrl;
 
           // Save history
@@ -686,20 +686,20 @@
           // Enable the download button
           document.getElementById('downloadButton').disabled = false;
 
-        } else {
-          document.getElementById('generatedImage').src = '';
-          document.getElementById('imageUrlLink').href = '#';
-          document.getElementById('imageUrlLink').textContent = '';
+    } else {
+      document.getElementById('generatedImage').src = 'https://img.liyao.sbs/file/1738502727198.png';
+      document.getElementById('imageUrlLink').href = '#';
+      document.getElementById('imageUrlLink').textContent = '无图像 URL';
 
-          // Disable the download button
-          document.getElementById('downloadButton').disabled = true;
-        }
+      // Disable the download button
+      document.getElementById('downloadButton').disabled = true;
+    }
 
-      } catch (error) {
-        console.error('错误:', error);
-        document.getElementById('generatedImage').src = '';
-        document.getElementById('imageUrlLink').href = '#';
-        document.getElementById('imageUrlLink').textContent = '';
+  } catch (error) {
+    console.error('错误:', error);
+    document.getElementById('generatedImage').src = 'https://img.liyao.sbs/file/1738502727198.png';
+    document.getElementById('imageUrlLink').href = '#';
+    document.getElementById('imageUrlLink').textContent = '无图像 URL';
 
         // Disable the download button
         document.getElementById('downloadButton').disabled = true;
