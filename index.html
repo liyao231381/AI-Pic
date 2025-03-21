@@ -278,45 +278,6 @@
       background-color: #c82333;
     }
 
-    /* 全屏覆盖层 */
-    .fullscreen-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      display: none;
-    }
-
-    .fullscreen-image {
-      max-width: 90%;
-      max-height: 90%;
-      object-fit: contain;
-    }
-
-    .close-button {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background-color: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.3s;
-    }
-
-    .close-button:hover {
-      background-color: rgba(255, 255, 255, 0.5);
-    }
-
     .seed-container {
       display: flex;
       align-items: center;
@@ -478,12 +439,6 @@
       </h2>
       <div id="historyList"></div>
     </div>
-  </div>
-
-  <!-- 全屏覆盖层 -->
-  <div class="fullscreen-overlay" id="fullscreenOverlay">
-    <button class="close-button" onclick="closeFullscreen()">关闭</button>
-    <img src="" alt="全屏图像" class="fullscreen-image" id="fullscreenImage">
   </div>
 
   <script>
@@ -812,15 +767,29 @@
 
     function openFullscreen() {
       const generatedImage = document.getElementById('generatedImage');
-      const imageUrl = generatedImage.src;
-      if (imageUrl) {
-        document.getElementById('fullscreenImage').src = imageUrl;
-        document.getElementById('fullscreenOverlay').style.display = 'flex';
+      if (generatedImage.src) {
+        if (generatedImage.requestFullscreen) {
+          generatedImage.requestFullscreen();
+        } else if (generatedImage.mozRequestFullScreen) { /* Firefox */
+          generatedImage.mozRequestFullScreen();
+        } else if (generatedImage.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+          generatedImage.webkitRequestFullscreen();
+        } else if (generatedImage.msRequestFullscreen) { /* IE/Edge */
+          generatedImage.msRequestFullscreen();
+        }
       }
     }
 
     function closeFullscreen() {
-      document.getElementById('fullscreenOverlay').style.display = 'none';
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.mozCancelFullScreen) { /* Firefox */
+        document.mozCancelFullScreen();
+      } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) { /* IE/Edge */
+        document.msExitFullscreen();
+      }
     }
 
     // Random Seed Function
