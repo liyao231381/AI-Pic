@@ -545,11 +545,11 @@
         let imageElement = document.createElement('img');
         imageElement.src = item.imageUrl;
         imageElement.alt = "历史图像";
-        if (diffHours >= 24) {
+        if (diffHours >= 1) {
           imageElement.style.display = 'none';
         }
         detailsElement.appendChild(imageElement);
-
+      
         historyItem.appendChild(detailsElement);
 
         const promptElement = document.createElement('p');
