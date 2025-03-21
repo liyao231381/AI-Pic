@@ -532,7 +532,10 @@
         historyItem.appendChild(checkbox);
 
         const now = new Date();
-        const creationTime = new Date(item.creationTime.replace(/(\d+)\/(\d+)\/(\d+)\s(\d+):(\d+)/, '20$1-$2-$3T$4:$5:00'));
+        let creationTime = new Date();
+        if (typeof item.creationTime === 'string') {
+          creationTime = new Date(item.creationTime.replace(/(\d+)\/(\d+)\/(\d+)\s(\d+):(\d+)/, '20$1-$2-$3T$4:$5:00'));
+        }
         const timeDiff = now.getTime() - creationTime.getTime();
         const diffHours = timeDiff / (1000 * 3600);
 
@@ -669,8 +672,8 @@
 
         if (result.images && result.images.length > 0) {
           const imageUrl = result.images[0].url;
-          document.getElementById('generatedImage').src = encodeURI(imageUrl);
-          document.getElementById('imageUrlLink').href = encodeURI(imageUrl);
+          document.getElementById('generatedImage').src = imageUrl;
+          document.getElementById('imageUrlLink').href = imageUrl;
           document.getElementById('imageUrlLink').textContent = imageUrl;
 
           // Save history
@@ -681,31 +684,30 @@
             numInferenceSteps: numInferenceSteps,
             guidanceScale: guidanceScale,
             seed: seed,
+            imageBase64: imageBase64,
             imageUrl: imageUrl
           });
 
           // Enable the download button
           document.getElementById('downloadButton').disabled = false;
+        } else {
+          document.getElementById('generatedImage').src = 'https://img.liyao.sbs/file/1738502727198.png';
+          document.getElementById('imageUrlLink').href = '#';
+          document.getElementById('imageUrlLink').textContent = '无图像 URL';
 
-    } else {
-      document.getElementById('generatedImage').src = 'https://img.liyao.sbs/file/1738502727198.png';
-      document.getElementById('imageUrlLink').href = '#';
-      document.getElementById('imageUrlLink').textContent = '无图像 URL';
-
-      // Disable the download button
-      document.getElementById('downloadButton').disabled = true;
-    }
-
-  } catch (error) {
-    console.error('错误:', error);
-    document.getElementById('generatedImage').src = 'https://img.liyao.sbs/file/1738502727198.png';
-    document.getElementById('imageUrlLink').href = '#';
-    document.getElementById('imageUrlLink').textContent = '无图像 URL';
+          // Disable the download button
+          document.getElementById('downloadButton').disabled = true;
+        }
+      } catch (error) {
+        console.error('错误:', error);
+        document.getElementById('generatedImage').src = 'https://img.liyao.sbs/file/1738502727198.png';
+        document.getElementById('imageUrlLink').href = '#';
+        document.getElementById('imageUrlLink').textContent = '无图像 URL';
 
         // Disable the download button
         document.getElementById('downloadButton').disabled = true;
       } finally {
-        // Re-enable button after 20 seconds
+        // Re-enable button after 10 seconds
         const countdownInterval = setInterval(() => {
           countdown--;
           generateButton.textContent = `请稍后 (${countdown}s)`;
