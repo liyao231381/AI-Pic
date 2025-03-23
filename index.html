@@ -305,11 +305,6 @@
       background-color: #367c39;
     }
 
-    .image-base64-container {
-      display: flex;
-      flex-direction: column;
-    }
-
     .image-upload-container {
       display: flex;
       align-items: center; /* 垂直对齐标签和按钮 */
@@ -318,24 +313,16 @@
       max-width: 100%;
     }
 
+    .image-upload-container p {
+      margin-bottom: 0; /* 移除底部边距 */
+      flex-grow: 1;  /* 标签占据剩余空间 */
+      text-align: center; /* 水平居中 */
+      color: gray; /* 设置灰色字 */
+    }
+
     .image-upload-container label {
       margin-bottom: 0; /* 移除底部边距 */
       flex-grow: 1;  /* 标签占据剩余空间 */
-    }
-
-    #uploadImageButton {
-      background-color: #673ab7; /* 深紫色 */
-      color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-    }
-
-    #uploadImageButton:hover {
-      background-color: #512da8;
     }
 
     /* 响应式设计 - 调整小屏幕上的列布局 */
@@ -417,14 +404,15 @@
     }
 
     .image-upload-container {
-      margin: 20px auto 0;
+      margin: 0 auto;
       border: 2px dashed #ccc;
-      padding: 20px;
+      padding: 8px;
       border-radius: 8px;
       max-width: 100%;
       cursor: pointer;
       position: relative;
       overflow: hidden;
+      min-height: 100px;
     }
 
     .image-upload-container input[type="file"] {
@@ -439,7 +427,6 @@
 
     #imagePreview {
       max-width: 100%;
-      margin-top: 10px;
     }
 
     .clear-button {
@@ -450,10 +437,6 @@
     .clear-button:hover {
       background-color: #da190b;
     }
-
-    /* .api-key-container {
-      margin-bottom: 10px;
-    } */
   </style>
 </head>
 <body>
@@ -1024,7 +1007,7 @@
         const translate_data = await translate_response.json();
         const translate_translatedText = translate_data.choices[0].message.content;
 
-        translate_translationResultDiv.innerText = "翻译结果: " + translate_translatedText;
+        translate_translationResultDiv.innerText = translate_translatedText;
 
         // 缓存 API Key
         localStorage.setItem('openrouter_api_key', translate_API_KEY);
@@ -1038,7 +1021,7 @@
     }
 
     function fillInput() {
-      const translate_translatedText = document.getElementById("translationResult").innerText.replace("翻译结果: ", "");
+      const translate_translatedText = document.getElementById("translationResult").innerText;
       document.getElementById("prompt").value = translate_translatedText;
     }
 
@@ -1070,6 +1053,7 @@
         translate_base64Image = translate_reader.result; // 保存Base64编码
         document.getElementById("imagePreview").src = translate_base64Image;
         document.getElementById("imagePreview").style.display = "block";
+        document.querySelector("#imageUploadContainer p").style.display = "none"; // 隐藏提示文字
       }
 
       if (translate_file) {
@@ -1077,6 +1061,7 @@
       } else {
         document.getElementById("imagePreview").src = "#";
         document.getElementById("imagePreview").style.display = "none";
+        document.querySelector("#imageUploadContainer p").style.display = "block"; // 显示提示文字
         translate_base64Image = ""; // 清空Base64编码
       }
     }
@@ -1178,29 +1163,30 @@
         }
 
         const translate_data = await translate_response.json();
-    const translate_imageDescription = translate_data.choices[0].message.content;
-    document.getElementById("prompt").value = translate_imageDescription; // 将识别结果填入输入框
-    translate_translationResultDiv.innerText = "识别结果: " + translate_imageDescription; // 将识别结果显示在翻译结果的位置
+        const translate_imageDescription = translate_data.choices[0].message.content;
+        document.getElementById("prompt").value = translate_imageDescription; // 将识别结果填入输入框
+        translate_translationResultDiv.innerText = translate_imageDescription; // 将识别结果显示在翻译结果的位置
 
-        // 缓存 API Key
-        localStorage.setItem('openrouter_api_key', translate_API_KEY);
+            // 缓存 API Key
+            localStorage.setItem('openrouter_api_key', translate_API_KEY);
 
-      } catch (error) {
-        console.error("图片识别出错:", error);
-        translate_translationResultDiv.innerText = "图片识别出错，请稍后再试。"; // 错误信息也显示在翻译结果的位置
-      } finally {
-        translate_loadingIndicator.style.display = "none";
+          } catch (error) {
+            console.error("图片识别出错:", error);
+            translate_translationResultDiv.innerText = "图片识别出错，请稍后再试。"; // 错误信息也显示在翻译结果的位置
+          } finally {
+            translate_loadingIndicator.style.display = "none";
+          }
+        }
+
+      function clearAll() {
+        document.getElementById("prompt").value = "";
+        document.getElementById("translationResult").innerText = "";
+        document.getElementById("imagePreview").src = "#";
+        document.getElementById("imagePreview").style.display = "none";
+        translate_base64Image = "";
+        document.getElementById("imageUpload").value = ""; // 清除文件选择
+        document.querySelector("#imageUploadContainer p").style.display = "block"; // 显示提示文字
       }
-    }
-
-function clearAll() {
-  document.getElementById("prompt").value = "";
-  document.getElementById("translationResult").innerText = "";
-  document.getElementById("imagePreview").src = "#";
-  document.getElementById("imagePreview").style.display = "none";
-  translate_base64Image = "";
-  document.getElementById("imageUpload").value = ""; // 清除文件选择
-}
   </script>
 
 </body>
