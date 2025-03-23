@@ -371,31 +371,57 @@
     <input type="text" id="apiKey" placeholder="你的 API 密钥">
 
     <label for="model">模型:</label>
-    <select id="model">
+    <select id="model" onchange="setModelGuidanceScale()">
       <option value="Kwai-Kolors/Kolors">Kwai-Kolors/Kolors</option>
-      <option value="black-forest-labs/FLUX.1-schnell">black-forest-labs/FLUX.1-schnell(只能用英文，引导比例无效)</option>
-      <option value="stabilityai/stable-diffusion-xl-base-1.0">stabilityai/stable-diffusion-xl-base-1.0(只能用英文，引导比例7)</option>
-      <option value="stabilityai/stable-diffusion-3-5-large">stabilityai/stable-diffusion-3-5-large(很慢，只能用英文，引导比例3.5)</option>
-      <option value="stabilityai/stable-diffusion-2-1">stabilityai/stable-diffusion-2-1(只能用英文，引导比例20)</option>
+      <option value="black-forest-labs/FLUX.1-schnell">black-forest-labs/FLUX.1-schnell</option>
+      <option value="stabilityai/stable-diffusion-xl-base-1.0">stabilityai/stable-diffusion-xl-base-1.0</option>
+      <option value="stabilityai/stable-diffusion-3-5-large">stabilityai/stable-diffusion-3-5-large(很慢)</option>
+      <option value="stabilityai/stable-diffusion-2-1">stabilityai/stable-diffusion-2-1</option>
       <option value="black-forest-labs/FLUX.1-dev">black-forest-labs/FLUX.1-dev(付费)</option>
     </select>
+
+    <script>
+      function setModelGuidanceScale() {
+        const model = document.getElementById('model').value;
+        if (model === "stabilityai/stable-diffusion-xl-base-1.0") {
+          document.getElementById('guidanceScale').value = "7";
+        } else if (model === "stabilityai/stable-diffusion-3-5-large") {
+          document.getElementById('guidanceScale').value = "3.5";
+        } else if (model === "stabilityai/stable-diffusion-2-1") {
+          document.getElementById('guidanceScale').value = "20";
+        } else if (model === "Kwai-Kolors/Kolors") {
+          document.getElementById('guidanceScale').value = "2.5";
+        } 
+      }
+    </script>
 
     <label for="prompt">提示语:</label>
     <textarea id="prompt" placeholder="请输入提示词" style="height: 100px; resize: vertical;"></textarea>
 
     <label for="negativePrompt">负面提示语:</label>
     <input type="text" id="negativePrompt" placeholder="请输入负面提示词" value="bad quality, low quality, deformed, distorted, bad proportions, ugly">
-
     <label for="imageSize">图像尺寸（宽×高）：</label>
     <select id="imageSize">
-      <option value="720x1280">720x1280(9:16)</option>
-      <option value="1024x1024">1024x1024(1:1)</option>
-      <option value="720x1440">720x1440(1:2)</option>
-      <option value="960x1280">960x1280(3:4)</option>
-      <option value="1080x1920">1080x1920(9:16)</option>
-      <option value="1280x960">1280x960(4:3)</option>
-      <option value="1440x720">1440x720(2:1)</option>
-      <option value="1280x720">1920x1080(16:9)</option>
+      <option value="720x1280">默认720x1280 (9:16)</option>
+      <option disabled>————方图————</option>
+      <option value="512x512">512x512 (1:1)</option>
+      <option value="1024x1024">1024x1024 (1:1)</option>
+      <option disabled>————竖图————</option>
+      <option value="480x640">480x640 (3:4)</option>
+      <option value="600x800">600x800 (3:4)</option>
+      <option value="768x1024">768x1024 (3:4)</option>
+      <option value="540x960">540x960 (9:16 qHD)</option>
+      <option value="720x1280">720x1280 (9:16 HD)</option>
+      <option value="900x1600">900x1600 (9:16 HD+)</option>
+      <option value="1080x1920">1080x1920 (9:16 FHD)</option>
+      <option disabled>————横图————</option>
+      <option value="640x480">640x480 (4:3 VGA)</option>
+      <option value="800x600">800x600 (4:3 SVGA)</option>
+      <option value="1024x768">1024x768 (4:3 XGA)</option>
+      <option value="960x540">960x540 (16:9 qHD)</option>
+      <option value="1280x720">1280x720 (16:9 HD)</option>
+      <option value="1600x900">1600x900 (16:9 HD+)</option>
+      <option value="1920x1080">1920x1080 (16:9 FHD)</option>
     </select>
 
     <label for="numInferenceSteps">推理步数 (1-50):</label>
