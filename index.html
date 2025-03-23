@@ -564,15 +564,6 @@
       <button type="button" onclick="randomSeed()">随机</button>
     </div>
 
-    <div class="image-base64-container">
-      <div class="image-upload-container">
-        <label for="imageBase64">图像 (Base64):</label>
-        <button type="button" id="uploadImageButton" onclick="document.getElementById('imageUpload').click()">上传图片</button>
-        <input type="file" id="imageUpload" style="display: none;" accept="image/*" onchange="encodeImageToBase64()">
-      </div>
-      <textarea id="imageBase64" placeholder="data:image/webp;base64, XXX"></textarea>
-    </div>
-
     <button id="generateButton" onclick="generateImage()" style="font-size: 14px; font-weight: bold;">生成图像</button>
   </div>
 
@@ -785,7 +776,6 @@
       document.getElementById('numInferenceSteps').value = item.numInferenceSteps;
       document.getElementById('guidanceScale').value = item.guidanceScale;
       document.getElementById('seed').value = item.seed || '';
-      document.getElementById('imageBase64').value = item.imageBase64 || '';
 
       document.getElementById('generatedImage').src = item.imageUrl;
       document.getElementById('imageUrlLink').href = item.imageUrl;
@@ -804,7 +794,6 @@
       const numInferenceSteps = parseInt(document.getElementById('numInferenceSteps').value);
       const guidanceScale = parseFloat(document.getElementById('guidanceScale').value);
       const seed = parseInt(document.getElementById('seed').value);
-      const imageBase64 = document.getElementById('imageBase64').value;
       const generateButton = document.getElementById('generateButton');
 
       // Disable the generate button
@@ -826,7 +815,6 @@
         num_inference_steps: numInferenceSteps,
         guidance_scale: guidanceScale,
         seed: seed || undefined, // 只有当不为空时才包含
-        image: imageBase64 || undefined // 只有当不为空时才包含
       };
 
       try {
@@ -859,7 +847,6 @@
             numInferenceSteps: numInferenceSteps,
             guidanceScale: guidanceScale,
             seed: seed,
-            imageBase64: imageBase64,
             imageUrl: imageUrl
           });
 
@@ -963,27 +950,6 @@
     function randomSeed() {
       const randomNumber = Math.floor(Math.random() * 9999999999);
       document.getElementById('seed').value = randomNumber;
-    }
-
-    function encodeImageToBase64() {
-      const fileInput = document.getElementById('imageUpload');
-      const file = fileInput.files[0];
-
-      if (file) {
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-          const base64String = e.target.result;
-          document.getElementById('imageBase64').value = base64String;
-        };
-
-        reader.onerror = function(error) {
-          console.error('Error reading file: ', error);
-          alert('Error encoding image to Base64.');
-        };
-
-        reader.readAsDataURL(file); // This triggers the onload event
-      }
     }
 
     // Initial display of history on page load
