@@ -370,6 +370,7 @@
     }
 
     #translationResult {
+      display: none;
       font-size: 12px;
       font-family: monospace;
       background-color: #f9f9f9;
@@ -378,7 +379,6 @@
 
     #loadingIndicator {
       display: none;
-      margin-top: 10px;
       font-style: italic;
     }
 
@@ -478,7 +478,7 @@
     <div class="ai-translate-area">
       <label for="apiKeyInput">OpenRouter API 密钥:</label>
       <input type="text" id="apiKeyInput" placeholder="请输入 OpenRouter API Key">
-      <div id="loadingIndicator">翻译中...</div>
+      <div id="loadingIndicator">正在生成...</div>
       <div id="translationResult"></div>
       <div class="button-container">
         <button onclick="pasteText()">粘贴</button>
@@ -974,6 +974,7 @@
       const translate_loadingIndicator = document.getElementById("loadingIndicator");
       translate_API_KEY = document.getElementById("apiKeyInput").value; // 获取 API Key
       translate_loadingIndicator.style.display = "block";
+      translate_translationResultDiv.style.display = "none";
       translate_translationResultDiv.innerText = "";
 
       try {
@@ -1017,6 +1018,7 @@
         translate_translationResultDiv.innerText = "翻译出错，请稍后再试。";
       } finally {
         translate_loadingIndicator.style.display = "none";
+        translate_translationResultDiv.style.display = "block";
       }
     }
 
@@ -1126,6 +1128,7 @@
       const translate_translationResultDiv = document.getElementById("translationResult"); // 获取翻译结果的 div
       translate_API_KEY = document.getElementById("apiKeyInput").value; // 获取 API Key
       translate_loadingIndicator.style.display = "block";
+      translate_translationResultDiv.style.display = "none";
       translate_translationResultDiv.innerText = ""; // 清空之前的结果
       try {
         const translate_response = await fetch(translate_API_URL, {
@@ -1175,6 +1178,7 @@
             translate_translationResultDiv.innerText = "图片识别出错，请稍后再试。"; // 错误信息也显示在翻译结果的位置
           } finally {
             translate_loadingIndicator.style.display = "none";
+            translate_translationResultDiv.style.display = "block";
           }
         }
 
@@ -1186,6 +1190,7 @@
         translate_base64Image = "";
         document.getElementById("imageUpload").value = ""; // 清除文件选择
         document.querySelector("#imageUploadContainer p").style.display = "block"; // 显示提示文字
+        document.getElementById("translationResult").style.display = "none";
       }
   </script>
 
