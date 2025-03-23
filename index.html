@@ -591,8 +591,9 @@
 
   <div class="history-area">
     <div id="history">
-      <h2>
+<h2>
         历史记录:
+        <button type="button" id="selectAllButton" onclick="toggleSelectAll()">全选</button>
         <button type="button" id="deleteSelectedButton" onclick="deleteSelectedHistoryItems()">删除选中</button>
       </h2>
       <div id="historyList"></div>
@@ -742,6 +743,14 @@
         historyItem.appendChild(deleteButton);
         historyItem.addEventListener('click', () => populateForm(item));
         historyList.appendChild(historyItem);
+      });
+    }
+
+    function toggleSelectAll() {
+      const checkboxes = document.querySelectorAll('#historyList input[type="checkbox"]');
+      const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = !allChecked;
       });
     }
 
