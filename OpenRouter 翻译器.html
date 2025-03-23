@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenRouter 翻译器</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 300px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+
+    button:hover {
+      background-color: #3e8e41;
+    }
+
+    #translationResult {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    #loadingIndicator {
+      display: none;
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    .button-container {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .model-select-container {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center; /* 垂直居中 */
+    }
+
+    .model-select-container select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-right: 5px;
+    }
+
+    .image-upload-container {
+      margin: 20px auto 0;
+      border: 2px dashed #ccc;
+      padding: 20px;
+      border-radius: 8px;
+      width: 300px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .image-upload-container input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    #imagePreview {
+      max-width: 100%;
+      margin-top: 10px;
+    }
+
+    .clear-button {
+      background-color: #f44336; /* 红色 */
+    }
+
+    .clear-button:hover {
+      background-color: #da190b;
+    }
+
+    .api-key-container {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>OpenRouter 翻译器</h1>
+
+    <div class="api-key-container">
+      <input type="text" id="apiKeyInput" placeholder="请输入 OpenRouter API Key">
+    </div>
+
+    <input type="text" id="prompt" placeholder="请输入要翻译的文本">
+    <div id="loadingIndicator">翻译中...</div>
+    <div id="translationResult"></div>
+    <div class="button-container">
+      <button onclick="pasteText()">粘贴</button>
+      <button onclick="translateText()">翻译 / 重新翻译</button>
+      <button onclick="fillInput()">填入</button>
+      <button onclick="copyText()">复制</button>
+    </div>
+
+    <div class="model-select-container">
+      <select id="modelSelect">
+        <option value="google/gemini-2.0-flash-exp:free">google/gemini-2.0-flash-exp:free</option>
+        <option value="google/gemini-2.0-flash-thinking-exp:free">google/gemini-2.0-flash-thinking-exp:free</option>
+        <option value="google/gemini-2.0-flash-thinking-exp-1219:free">google/gemini-2.0-flash-thinking-exp-1219:free</option>
+        <option value="google/gemini-2.0-flash-lite-preview-02-05:free">google/gemini-2.0-flash-lite-preview-02-05:free</option>
+        <option value="google/gemini-2.0-pro-exp-02-05:free">google/gemini-2.0-pro-exp-02-05:free</option>
+        <option value="google/gemini-exp-1206:free">google/gemini-exp-1206:free</option>
+        <option value="meta-llama/llama-3.2-11b-vision-instruct:free">meta-llama/llama-3.2-11b-vision-instruct:free</option>
+        <option value="mistralai/mistral-small-3.1-24b-instruct:free">mistralai/mistral-small-3.1-24b-instruct:free</option>
+        <option value="qwen/qwen2.5-vl-72b-instruct:free">qwen/qwen2.5-vl-72b-instruct:free</option>
+        <option value="google/gemma-3-27b-it:free">google/gemma-3-27b-it:free</option>
+      </select>
+      <button onclick="describeImage()">识别</button>
+      <button onclick="clearAll()" class="clear-button">清除</button>
+    </div>
+
+    <div class="image-upload-container" id="imageUploadContainer">
+      <input type="file" id="imageUpload" accept="image/*" onchange="previewImage()">
+      <p>拖放图片到这里，或点击选择图片</p>
+      <img id="imagePreview" src="#" alt="图片预览" style="display: none;">
+    </div>
+  </div>
+
+  <script>
+    const translate_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+    let translate_MODEL = "google/gemini-2.0-flash-exp:free"; // 默认模型
+    const translate_PROMPT = "Translate the content into English. Respond only with the translated content, and the response must be entirely in English without any other languages.";
+
+    let translate_base64Image = ""; // 用于存储Base64编码的图片
+    let translate_API_KEY = localStorage.getItem('openrouter_api_key') || ""; // 从 localStorage 获取 API Key
+
+    // 页面加载时，将 API Key 填入输入框
+    document.getElementById("apiKeyInput").value = translate_API_KEY;
+
+    // 监听模型选择的变化
+    document.getElementById("modelSelect").addEventListener("change", function() {
+      translate_MODEL = this.value;
+    });
+
+    async function translateText() {
+      const translate_text = document.getElementById("prompt").value;
+      const translate_translationResultDiv = document.getElementById("translationResult");
+      const translate_loadingIndicator = document.getElementById("loadingIndicator");
+      translate_API_KEY = document.getElementById("apiKeyInput").value; // 获取 API Key
+      translate_loadingIndicator.style.display = "block";
+      translate_translationResultDiv.innerText = "";
+
+      try {
+        const translate_response = await fetch(translate_API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${translate_API_KEY}`,
+            "HTTP-Referer": "http://localhost:3000", // Replace with your actual domain or localhost
+            "X-Title": "My Translation App" // Replace with your app name
+          },
+          body: JSON.stringify({
+            model: translate_MODEL,
+            messages: [
+              {
+                role: "system",
+                content: translate_PROMPT
+              },
+              {
+                role: "user",
+                content: translate_text
+              }
+            ]
+          })
+        });
+
+        if (!translate_response.ok) {
+          throw new Error(`HTTP error! status: ${translate_response.status}`);
+        }
+
+        const translate_data = await translate_response.json();
+        const translate_translatedText = translate_data.choices[0].message.content;
+
+        translate_translationResultDiv.innerText = "翻译结果: " + translate_translatedText;
+
+        // 缓存 API Key
+        localStorage.setItem('openrouter_api_key', translate_API_KEY);
+
+      } catch (error) {
+        console.error("翻译出错:", error);
+        translate_translationResultDiv.innerText = "翻译出错，请稍后再试。";
+      } finally {
+        translate_loadingIndicator.style.display = "none";
+      }
+    }
+
+    function fillInput() {
+      const translate_translatedText = document.getElementById("translationResult").innerText.replace("翻译结果: ", "");
+      document.getElementById("prompt").value = translate_translatedText;
+    }
+
+    async function pasteText() {
+      try {
+        const translate_text = await navigator.clipboard.readText();
+        document.getElementById("prompt").value = translate_text;
+      } catch (translate_err) {
+        console.error('Failed to read clipboard contents: ', translate_err);
+        alert('无法读取剪贴板内容，请确保浏览器允许访问剪贴板。');
+      }
+    }
+
+    function copyText() {
+      const translate_text = document.getElementById("prompt").value;
+      navigator.clipboard.writeText(translate_text).then(function() {
+        alert('内容已复制到剪贴板！');
+      }, function(translate_err) {
+        console.error('Failed to copy text to clipboard: ', translate_err);
+        alert('复制到剪贴板失败，请确保浏览器允许访问剪贴板。');
+      });
+    }
+
+    function previewImage() {
+      const translate_file = document.getElementById("imageUpload").files[0];
+      const translate_reader = new FileReader();
+
+      translate_reader.onloadend = function() {
+        translate_base64Image = translate_reader.result; // 保存Base64编码
+        document.getElementById("imagePreview").src = translate_base64Image;
+        document.getElementById("imagePreview").style.display = "block";
+      }
+
+      if (translate_file) {
+        translate_reader.readAsDataURL(translate_file);
+      } else {
+        document.getElementById("imagePreview").src = "#";
+        document.getElementById("imagePreview").style.display = "none";
+        translate_base64Image = ""; // 清空Base64编码
+      }
+    }
+
+    const translate_imageUploadContainer = document.getElementById("imageUploadContainer");
+
+    // 拖放事件
+    translate_imageUploadContainer.addEventListener("dragover", function(event) {
+      event.preventDefault();
+      translate_imageUploadContainer.style.backgroundColor = "#eee";
+    });
+
+    translate_imageUploadContainer.addEventListener("dragleave", function(event) {
+      event.preventDefault();
+      translate_imageUploadContainer.style.backgroundColor = "";
+    });
+
+    translate_imageUploadContainer.addEventListener("drop", function(event) {
+      event.preventDefault();
+      translate_imageUploadContainer.style.backgroundColor = "";
+
+      const translate_file = event.dataTransfer.files[0];
+      document.getElementById("imageUpload").files = event.dataTransfer.files; // 兼容拖拽
+      previewImage();
+    });
+
+    async function describeImage() {
+      if (!translate_base64Image) {
+        alert("请先选择图片！");
+        return;
+      }
+
+      const translate_descriptionPrompt = `# 提示词：图片识别英文提示词生成助手
+
+**你的定位**：专业的图片识别英文提示词生成助手，用于将图片内容转化为高质量的英文文生图提示词。
+
+**你的能力**：
+
+*   精确分析上传的图片，识别图片中的主体、场景、风格、色彩、构图等关键元素。
+*   基于图片内容，生成简洁、清晰、富有表现力的英文文生图提示词。
+*   提示词能够准确描述图片的核心内容，并适用于各种主流文生图模型。
+*   根据图片风格，选择合适的艺术风格关键词，例如：photorealistic, abstract, impressionistic, cyberpunk 等。
+
+**你的知识储备**：
+
+*   掌握丰富的视觉词汇，能够准确描述各种图像元素。
+*   熟悉英文文生图提示词的常用结构和关键词搭配。
+*   了解不同艺术风格和摄影技巧的英文表达方式。
+*   具备图像识别和理解能力，能够有效提取图片信息。
+
+**使用指南**：
+
+1.  用户上传图片。
+2.  你分析图片内容，并生成相应的英文文生图提示词。
+
+**输出要求**：
+
+*   仅输出 Markdown 格式的英文文生图提示词。
+*   输出结果不要放在代码块中，不要出现英文文生图提示词以外的任何内容。
+*   提示词应详细、精确、易于理解。`;
+      const translate_loadingIndicator = document.getElementById("loadingIndicator");
+      const translate_translationResultDiv = document.getElementById("translationResult"); // 获取翻译结果的 div
+      translate_API_KEY = document.getElementById("apiKeyInput").value; // 获取 API Key
+      translate_loadingIndicator.style.display = "block";
+      translate_translationResultDiv.innerText = ""; // 清空之前的结果
+      try {
+        const translate_response = await fetch(translate_API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${translate_API_KEY}`,
+            "HTTP-Referer": "http://localhost:3000", // Replace with your actual domain or localhost
+            "X-Title": "My Translation App" // Replace with your app name
+          },
+          body: JSON.stringify({
+            model: translate_MODEL,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    "type": "text",
+                    "text": translate_descriptionPrompt
+                  },
+                  {
+                    "type": "image_url",
+                    "image_url": {
+                      "url": translate_base64Image
+                    }
+                  }
+                ]
+              }
+            ]
+          })
+        });
+
+        if (!translate_response.ok) {
+          throw new Error(`HTTP error! status: ${translate_response.status}`);
+        }
+
+        const translate_data = await translate_response.json();
+    const translate_imageDescription = translate_data.choices[0].message.content;
+    document.getElementById("prompt").value = translate_imageDescription; // 将识别结果填入输入框
+    translate_translationResultDiv.innerText = "识别结果: " + translate_imageDescription; // 将识别结果显示在翻译结果的位置
+
+        // 缓存 API Key
+        localStorage.setItem('openrouter_api_key', translate_API_KEY);
+
+      } catch (error) {
+        console.error("图片识别出错:", error);
+        translate_translationResultDiv.innerText = "图片识别出错，请稍后再试。"; // 错误信息也显示在翻译结果的位置
+      } finally {
+        translate_loadingIndicator.style.display = "none";
+      }
+    }
+
+function clearAll() {
+  document.getElementById("prompt").value = "";
+  document.getElementById("translationResult").innerText = "";
+  document.getElementById("imagePreview").src = "#";
+  document.getElementById("imagePreview").style.display = "none";
+  translate_base64Image = "";
+  document.getElementById("imageUpload").value = ""; // 清除文件选择
+}
+  </script>
+</body>
+</html>
