@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Image Generator</title>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 10px;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        p {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box; /* 确保内边距不影响宽度 */
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* 桌面端布局 */
+        .container {
+            display: flex;
+            height: 100vh; /* 占据整个视窗高度 */
+        }
+
+        .left-panel {
+            width: 25%;
+            padding: 20px;
+            background-color: #fff;
+            border-right: 1px solid #ddd;
+            box-sizing: border-box;
+            overflow-y: auto;
+            position: sticky;
+            top: 0; /* 保持左侧面板固定 */
+            height: 100vh;
+        }
+
+        .right-panel {
+            width: 75%;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto; /* 允许内容滚动 */
+        }
+
+        /* 移动端布局 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .left-panel,
+            .right-panel {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+                height: auto;
+                position: static; /* 移除固定定位 */
+            }
+
+            .left-panel {
+                padding-bottom: 30px;
+            }
+        }
+
+        /* 图片显示样式 */
+        #imageContainer {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #fff;
+            text-align: center; /* 居中错误信息 */
+            position: relative; /* 为下载按钮定位 */
+        }
+
+        #generatedImage {
+            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        #textBeforeImage,
+        #textAfterImage {
+            margin-bottom: 10px;
+            text-align: center;
+            color: #555;
+        }
+        /* 提示信息样式 */
+        .error-message {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* 下载按钮样式 */
+        #downloadButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 123, 255, 0.7); /* 半透明蓝色 */
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            display: none; /* 初始状态隐藏 */
+        }
+
+        #downloadButton:hover {
+            background-color: rgba(0, 86, 179, 0.7); /* 深色半透明蓝色 */
+        }
+    </style>
+</head>
+<body>
+    <h1>Gemini对话生图编辑</h1>
+    <p> → <a href="./index.html">主页</a></p>
+    <div class="container">
+        <div class="left-panel">
+            <label for="apiKey">API Key:</label>
+            <input type="text" id="apiKey" name="apiKey" placeholder="输入谷歌API密钥">
+            <button onclick="saveApiKey()">Save API Key</button>
+            <div id="apiKeyAlert" class="alert" style="display: none;"></div>
+
+            <label for="promptText">提示词:</label>
+            <textarea id="promptText" name="promptText" rows="6" placeholder="输入想要生成的图片，或者对图片进行的编辑"></textarea>
+
+            <label for="imageUpload">上传图片:</label>
+            <input type="file" id="imageUpload" name="imageUpload" accept="image/*">
+
+            <button onclick="generateImage()">Go</button>
+        </div>
+
+        <div class="right-panel">
+            <div id="imageContainer">
+                <div id="textBeforeImage"></div>
+                <img id="generatedImage" src="" alt="Generated Image">
+                <div id="textAfterImage"></div>
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+                <button id="downloadButton" onclick="downloadImage()">下载图片</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 从 localStorage 获取 API 密钥
+        let API_KEY = localStorage.getItem("geminiApiKey") || "";
+        document.getElementById("apiKey").value = API_KEY;
+
+        let uploadedImageBase64 = null;
+        let uploadedImageMimeType = null;
+
+        // 监听文件上传事件
+        document.getElementById('imageUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    uploadedImageBase64 = e.target.result.split(',')[1]; // 获取 base64 数据部分
+                    uploadedImageMimeType = file.type;
+                    console.log("Uploaded image:", uploadedImageBase64.substring(0, 50) + "..."); // Log first 50 chars
+                    console.log("MIME type:", uploadedImageMimeType);
+                }
+
+                reader.readAsDataURL(file); // 读取为 Data URL (base64)
+            } else {
+                uploadedImageBase64 = null;
+                uploadedImageMimeType = null;
+            }
+        });
+
+
+        function saveApiKey() {
+            API_KEY = document.getElementById("apiKey").value;
+            localStorage.setItem("geminiApiKey", API_KEY);
+            showAlert('apiKeyAlert', 'API Key saved!', 'success');
+        }
+
+        async function generateImage() {
+            // 在生成图像之前清除错误信息
+            clearErrorMessage();
+            hideDownloadButton();
+
+            const promptText = document.getElementById("promptText").value;
+            const apiKey = document.getElementById("apiKey").value; // 从输入框获取 API 密钥
+
+            if (!apiKey) {
+               displayErrorMessage("请先输入API Key。");
+                return;
+            } else {
+                hideAlert('apiKeyAlert'); // 隐藏之前的错误提示
+            }
+
+            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=' + apiKey;
+
+            let data;
+
+            if (uploadedImageBase64 && uploadedImageMimeType) {
+                // 使用上传的图片进行请求
+                data = {
+                  "contents": [{
+                    "parts": [
+                        {"text": promptText}, // 使用用户提供的 Prompt
+                        {
+                          "inline_data": {
+                            "mime_type": uploadedImageMimeType,
+                            "data": uploadedImageBase64
+                          }
+                        }
+                    ]
+                  }],
+                  "generationConfig": {"responseModalities": ["Text", "Image"]}
+                };
+            } else {
+                // 没有上传图片，只使用 promptText
+                data = {
+                    "contents": [{
+                        "parts": [
+                            {"text": promptText}
+                        ]
+                    }],
+                    "generationConfig":{"responseModalities":["Text","Image"]}
+                };
+            }
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    const errorMessage = errorData.error ? errorData.error.message : `HTTP error! status: ${response.status}`;
+                    displayErrorMessage(`Error generating image: ${errorMessage}`);
+                    throw new Error(errorMessage);
+                }
+
+                const result = await response.json();
+                console.log("API Response:", result); // 用于调试，查看完整 API 响应
+
+                if (result.candidates && result.candidates.length > 0) {
+                    const candidate = result.candidates[0];
+
+                    if (candidate.finishReason === "IMAGE_SAFETY") {
+                       displayErrorMessage("由于安全原因，生成的图片被屏蔽。请尝试不同的提示语。");
+                        return; // 停止进一步处理
+                    }
+                }
+
+
+                // 获取文本和图像内容
+                let textBefore = "";
+                let textAfter = "";
+                let base64Image = null;
+                let mimeType = null;
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts) {
+                    const parts = result.candidates[0].content.parts;
+
+                    for (const part of parts) {
+                        if (part.text) {
+                            if (textBefore === "") { // 假设第一个文本在图像之前
+                                textBefore = part.text;
+                            } else {
+                                textAfter += part.text; // 其余文本在图像之后
+                            }
+                        } else if (part.inlineData && part.inlineData.data && part.inlineData.mimeType) {
+                            base64Image = part.inlineData.data;
+                            mimeType = part.inlineData.mimeType;
+                        }
+                    }
+                } else {
+                    displayErrorMessage("Unexpected API response format.");
+                    console.error("Unexpected API response format:", result);
+                    return;
+                }
+
+                // 设置文本内容
+                document.getElementById("textBeforeImage").innerText = textBefore;
+                document.getElementById("textAfterImage").innerText = textAfter;
+
+
+                // 设置图像
+                if (base64Image && mimeType) {
+                    const imageUrl = `data:${mimeType};base64,${base64Image}`;
+                    document.getElementById("generatedImage").src = imageUrl;
+                    showDownloadButton();
+                } else {
+                    displayErrorMessage("No image data found in the response.");
+                    console.error("No image data found in the response:", result);
+                }
+
+
+
+            } catch (error) {
+                console.error("Error:", error);
+                displayErrorMessage(`Error generating image: ${error.message}`);
+            }
+        }
+
+        // 清除错误信息
+        function clearErrorMessage() {
+            const errorMessageElement = document.getElementById("errorMessage");
+            errorMessageElement.textContent = "";
+            errorMessageElement.style.display = "none";
+        }
+
+
+        // 显示错误信息
+        function displayErrorMessage(message) {
+            const errorMessageElement = document.getElementById("errorMessage");
+            errorMessageElement.textContent = message;
+            errorMessageElement.style.display = "block";
+
+            // 清空图片和文本内容
+            document.getElementById("generatedImage").src = "";
+            document.getElementById("textBeforeImage").innerText = "";
+            document.getElementById("textAfterImage").innerText = "";
+            hideDownloadButton();
+        }
+
+        // 显示下载按钮
+        function showDownloadButton() {
+            document.getElementById("downloadButton").style.display = "block";
+        }
+
+        // 隐藏下载按钮
+        function hideDownloadButton() {
+            document.getElementById("downloadButton").style.display = "none";
+        }
+
+        // 下载图片
+        function downloadImage() {
+            const imageUrl = document.getElementById("generatedImage").src;
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = 'generated_image.png'; //  您可以自定义文件名
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+
+        // 显示提示信息
+        function showAlert(elementId, message, type = 'success') {
+            const alertElement = document.getElementById(elementId);
+            alertElement.textContent = message;
+            alertElement.className = `alert alert-${type}`;
+            alertElement.style.display = 'block';
+        }
+
+        // 隐藏提示信息
+        function hideAlert(elementId) {
+            const alertElement = document.getElementById(elementId);
+            alertElement.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
