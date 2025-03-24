@@ -53,6 +53,7 @@
             transition: background-color 0.3s;
             min-width: fit-content;
             font-weight: bold;
+            width: 100%;
         }
 
         button:hover {
@@ -122,8 +123,8 @@
 
         #textBeforeImage,
         #textAfterImage {
-            margin-bottom: 10px;
-            text-align: center;
+            margin: 5px auto;
+            text-align: left;
             color: #555;
         }
         /* 提示信息样式 */
@@ -138,9 +139,6 @@
 
         /* 下载按钮样式 */
         #downloadButton {
-            position: absolute;
-            top: 10px;
-            right: 10px;
             background-color: rgba(0, 123, 255, 0.7); /* 半透明蓝色 */
             color: white;
             padding: 8px 12px;
@@ -268,7 +266,6 @@
         async function generateImage() {
             // 在生成图像之前清除错误信息
             clearErrorMessage();
-            hideDownloadButton();
 
             const promptText = document.getElementById("promptText").value;
             let apiKey = document.getElementById("apiKey").value; // 从输入框获取 API 密钥
@@ -324,6 +321,7 @@
                 });
 
                 if (!response.ok) {
+                    hideDownloadButton();
                     const errorData = await response.json();
                     const errorMessage = errorData.error ? errorData.error.message : `HTTP error! status: ${response.status}`;
                     displayErrorMessage(`Error generating image: ${errorMessage}`);
@@ -338,6 +336,7 @@
 
                     if (candidate.finishReason === "IMAGE_SAFETY") {
                        displayErrorMessage("由于安全原因，生成的图片被屏蔽。请尝试不同的提示语。");
+                       hideDownloadButton();
                         return; // 停止进一步处理
                     }
                 }
