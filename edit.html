@@ -18,12 +18,12 @@
         h1 {
             text-align: center;
             color: #007bff;
-            margin-bottom: 20px;
+            margin: 0 auto;
         }
 
         p {
             text-align: center;
-            margin-bottom: 10px;
+            margin: 0 auto;
         }
 
         label {
@@ -45,12 +45,14 @@
         button {
             background-color: #007bff;
             color: white;
-            padding: 12px 20px;
+            padding: 6px 10px;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            min-width: fit-content;
+            font-weight: bold;
         }
 
         button:hover {
@@ -60,33 +62,33 @@
         /* 桌面端布局 */
         .container {
             display: flex;
-            height: 100vh; /* 占据整个视窗高度 */
+            max-height: calc(100vh - 200px); /* 占据整个视窗高度 */
         }
 
         .left-panel {
             width: 25%;
             padding: 20px;
             background-color: #fff;
-            border-right: 1px solid #ddd;
             box-sizing: border-box;
             overflow-y: auto;
             position: sticky;
             top: 0; /* 保持左侧面板固定 */
-            height: 100vh;
+            min-height: max-content;
+            border-radius: 5px;
         }
 
         .right-panel {
             width: 75%;
-            padding: 20px;
             box-sizing: border-box;
             overflow-y: auto; /* 允许内容滚动 */
+            padding: 10px;
         }
 
         /* 移动端布局 */
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
-                height: auto;
+                max-height: fit-content;
             }
 
             .left-panel,
@@ -105,13 +107,11 @@
 
         /* 图片显示样式 */
         #imageContainer {
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
             padding: 15px;
             background-color: #fff;
             text-align: center; /* 居中错误信息 */
             position: relative; /* 为下载按钮定位 */
+            border-radius: 5px;
         }
 
         #generatedImage {
@@ -154,6 +154,41 @@
         #downloadButton:hover {
             background-color: rgba(0, 86, 179, 0.7); /* 深色半透明蓝色 */
         }
+
+    .image-upload-container {
+      margin: 0 auto 10px;
+      border: 2px dashed #ccc;
+      padding: 8px;
+      border-radius: 8px;
+      max-width: 100%;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-height: 100px;
+    }
+
+    .image-upload-container input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    #imagePreview {
+      max-width: 100%;
+    }
+
+    .clear-button {
+      background-color: #f44336; /* 红色 */
+      margin-left: 4px;
+    }
+
+    .clear-button:hover {
+      background-color: #da190b;
+    }
     </style>
 </head>
 <body>
@@ -170,7 +205,11 @@
             <textarea id="promptText" name="promptText" rows="6" placeholder="输入想要生成的图片，或者对图片进行的编辑"></textarea>
 
             <label for="imageUpload">上传图片:</label>
-            <input type="file" id="imageUpload" name="imageUpload" accept="image/*">
+            <div class="image-upload-container" id="imageUploadContainer">
+              <input type="file" id="imageUpload" accept="image/*" onchange="previewImage()">
+              <p>拖放或点击选择图片</p>
+              <img id="imagePreview" src="#" alt="图片预览" style="display: none;">
+            </div>
 
             <button onclick="generateImage()">Go</button>
         </div>
@@ -206,12 +245,18 @@
                     uploadedImageMimeType = file.type;
                     console.log("Uploaded image:", uploadedImageBase64.substring(0, 50) + "..."); // Log first 50 chars
                     console.log("MIME type:", uploadedImageMimeType);
+                    document.getElementById("imagePreview").src = e.target.result;
+                    document.getElementById("imagePreview").style.display = "block";
+                    document.querySelector("#imageUploadContainer p").style.display = "none";
                 }
 
                 reader.readAsDataURL(file); // 读取为 Data URL (base64)
             } else {
                 uploadedImageBase64 = null;
                 uploadedImageMimeType = null;
+                document.getElementById("imagePreview").src = "#";
+                document.getElementById("imagePreview").style.display = "none";
+                document.querySelector("#imageUploadContainer p").style.display = "block";
             }
         });
 
@@ -404,6 +449,28 @@
             const alertElement = document.getElementById(elementId);
             alertElement.style.display = 'none';
         }
+
+    const translate_imageUploadContainer = document.getElementById("imageUploadContainer");
+
+    // 拖放事件
+    translate_imageUploadContainer.addEventListener("dragover", function(event) {
+      event.preventDefault();
+      translate_imageUploadContainer.style.backgroundColor = "#eee";
+    });
+
+    translate_imageUploadContainer.addEventListener("dragleave", function(event) {
+      event.preventDefault();
+      translate_imageUploadContainer.style.backgroundColor = "";
+    });
+
+    translate_imageUploadContainer.addEventListener("drop", function(event) {
+      event.preventDefault();
+      translate_imageUploadContainer.style.backgroundColor = "";
+
+      const translate_file = event.dataTransfer.files[0];
+      document.getElementById("imageUpload").files = event.dataTransfer.files; // 兼容拖拽
+      previewImage();
+    });
     </script>
 </body>
 </html>
