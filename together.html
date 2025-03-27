@@ -82,7 +82,7 @@
     }
 
     textarea {
-      min-height: 120px;
+      min-height: 80px;
     }
 
     input[type="text"]:focus,
@@ -137,6 +137,12 @@
       cursor: not-allowed;
     }
 
+    .buttons button {
+      margin-right: 4px;
+      width: calc(25% - 4px);
+      max-width: fit-content;
+      margin-bottom: 10px;
+    }
     #random-seed-button {
       padding: 6px 10px;
       max-width: fit-content;
@@ -235,23 +241,82 @@
     cursor: pointer;
     transition: background-color 0.3s;
   }
+  @media (max-width: 1200px) {
+    h1 {
+      font-size: 20px;
+      margin-bottom: 0;
+    }
+    .custom {
+      display: none;
+    }
+  }
+  @media (max-width: 800px) {
+      body {
+        flex-direction: column;
+        height: auto;
+        overflow: auto;
+      }
 
+      .left-column, .middle-column, .right-column {
+        width: calc(100% - 30px);
+        height: auto;
+        border: none;
+        padding: 15px;
+      }
+
+      .left-column {
+        border-bottom: 1px solid #ccc;
+      }
+
+      .middle-column {
+        border-bottom: 1px solid #ccc;
+      }
+    }
 </style>
 </head>
 
 <body>
     <div class="left-column">
       <h1>FLUX Schnell无限</h1>
-      <a href="./index.html">返回首页</a>
+      <a href="./index.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">返回首页</a>
       <div class="input-group">
         <label for="api-key">API Key:</label>
         <input type="text" id="api-key" name="api-key" placeholder="请输入您的API Key">
-        <a href="https://api.together.ai/settings/api-keys" target="_blank">获取together.ai API Key</a>
+        <a href="https://api.together.ai/settings/api-keys" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none;">获取together.ai API Key</a>
       </div>
 
-      <div class="input-group">
+      <div class="input-group" style="margin-top: 10px;">
         <label for="prompt">提示词 (Prompt):</label>
         <textarea id="prompt" name="prompt" placeholder="请输入提示词，例如: A cat wearing sunglasses"></textarea>
+        <div class="buttons" style="display: flex; justify-content: flex-start; margin-top: 0px;">
+          <button type="button" style="background-color: #00c7b0;"onclick="pastePrompt()">粘贴</button>
+          <button type="button" style="background-color: #00aaff;"onclick="copyPrompt()">复制</button>
+          <button type="button" onclick="translatePrompt()">翻译</button>
+          <button type="button" style="background-color: #ffa500;"onclick="fillPrompt()">填入</button>
+        </div>
+        <div class="input-group">
+          <input type="text" id="translation-api-key" name="translation-api-key" placeholder="Gemini API Key">
+          <select id="modelSelect">
+            <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
+            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+            <option value="gemini-2.0-flas-001">gemini-2.0-flas-001</option>
+            <option value="gemini-2.0-flash-thinking-exp">gemini-2.0-flash-thinking-exp</option>
+            <option value="gemini-2.0-flash-thinking-exp-1219">gemini-2.0-flash-thinking-exp-1219</option>
+            <option value="gemini-2.0-flash-thinking-exp-01-21">gemini-2.0-flash-thinking-exp-01-21</option>
+            <option value="gemini-2.0-flash-lite-preview-02-05">gemini-2.0-flash-lite-preview-02-05</option>
+            <option value="gemini-2.0-flash-lite-preview">gemini-2.0-flash-lite-preview</option>
+            <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
+            <option value="gemini-2.0-pro-exp-02-05">gemini-2.0-pro-exp-02-05</option>
+            <option value="gemini-2.0-pro-exp">gemini-2.0-pro-exp</option>
+            <option value="gemini-exp-1206">gemini-exp-1206</option>
+            <option value="gemini-2.0-flash-exp-image-generation">gemini-2.0-flash-exp-image-generation</option>
+            <option value="gemma-3-27b-it">gemma-3-27b-it</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <textarea id="translated-text" rows="4" readonly style="resize: none; margin: 0 auto; border: 2px dashed #ccc; padding: 8px; border-radius: 8px; max-width: 100%; cursor: pointer; position: relative; overflow: hidden; min-height: 100px;"></textarea>
+
+        </div>  
       </div>
 
       <div class="input-group">
@@ -288,7 +353,7 @@
 
 
       <div class="input-group">
-        <strong>自定义分辨率：</strong>
+        <strong class="custom">自定义：</strong>
         <input type="number" id="width" name="width" min="64" max="1792" style="min-width: 60px; width: 15%; display: inline-block;"
           placeholder="宽度">
         <span> × </span>
@@ -306,7 +371,7 @@
 
       <div class="input-group">
         <label for="seed">种子数 (Seed, 可选):</label>
-        <input type="number" id="seed" name="seed" placeholder="留空则随机" style="width: 80%; display: inline-block;">
+        <input type="number" id="seed" name="seed" placeholder="留空则随机" style="width: calc(100% - 100px); display: inline-block;">
         <button type="button" id="random-seed-button" onclick="randomSeed()">随机</button>
       </div>
 
@@ -338,6 +403,10 @@
       const cachedApiKey = localStorage.getItem('apiKey_image_generator');
       if (cachedApiKey) {
         document.getElementById('api-key').value = cachedApiKey;
+      }
+      const cachedTranslationApiKey = localStorage.getItem('translationApiKey');
+      if (cachedTranslationApiKey) {
+        document.getElementById('translation-api-key').value = cachedTranslationApiKey;
       }
     });
 
@@ -451,6 +520,7 @@
       } finally {
         // 隐藏加载动画并启用按钮（如果倒计时结束）
         loader.style.display = 'none';
+        generateButton.disabled = false;
       }
     }
 
@@ -458,7 +528,7 @@
       const imageUrl = document.getElementById('output-image').src;
       const downloadLink = document.createElement('a');
       downloadLink.href = imageUrl;
-      downloadLink.download = 'ai_generated_image.png'; // 下载的文件名
+      downloadLink.download = 'tgz—FLUX.png'; // 下载的文件名
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
@@ -571,6 +641,91 @@
 
         historyContainer.appendChild(historyItem);
       });
+    }
+
+    async function pastePrompt() {
+      const promptInput = document.getElementById('prompt');
+      try {
+        const text = await navigator.clipboard.readText();
+        promptInput.value = text;
+      } catch (err) {
+        console.error('Failed to read clipboard contents: ', err);
+      }
+    }
+
+    function copyPrompt() {
+      const promptInput = document.getElementById('prompt');
+      promptInput.select();
+      document.execCommand('copy');
+    }
+    
+    async function translatePrompt() {
+      const apiKey = document.getElementById('translation-api-key').value;
+      const prompt = document.getElementById('prompt').value;
+      const model = document.getElementById('modelSelect').value;
+      const translatedTextarea = document.getElementById('translated-text');
+
+      if (!apiKey) {
+        alert('翻译 API Key 不能为空！');
+        return;
+      }
+
+      if (!prompt) {
+        alert('提示词不能为空！');
+        return;
+      }
+
+      const apiUrl = "https://gemini.liyao.sbs/v1/chat/completions";
+      const headers = {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      };
+
+      const requestBody = {
+        "model": model,
+        "messages": [
+          {
+            "role": "user",
+            "content": `Translate the content into English. Respond only with the translated content, and the response must be entirely in English without any other languages. Content: ${prompt}`
+          }
+        ]
+      };
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("API error:", errorData);
+          alert(`翻译失败: ${response.status} ${response.statusText} - ${errorData.message || '请查看控制台错误信息'}`);
+          return;
+        }
+
+        const data = await response.json();
+        if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
+          const translatedContent = data.choices[0].message.content;
+          translatedTextarea.value = translatedContent;
+
+          // 缓存 API Key
+          localStorage.setItem('translationApiKey', apiKey);
+        } else {
+          alert('未能成功翻译，请检查API响应格式。');
+          console.error("Unexpected API response format:", data);
+        }
+
+      } catch (error) {
+        console.error("Fetch error:", error);
+        alert('网络请求错误，请检查网络连接或稍后再试。');
+      }
+    }
+
+    function fillPrompt() {
+      const translatedText = document.getElementById('translated-text').value;
+      document.getElementById('prompt').value = translatedText;
     }
 
     // 删除历史记录项
