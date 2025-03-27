@@ -200,9 +200,7 @@
             body: JSON.stringify(requestBody)
           });
 
-          if (response.ok) {
-              localStorage.setItem('apiKey', apiKey);
-          }
+          localStorage.setItem('apiKey', apiKey);
 
           if (!response.ok) {
             const errorData = await response.json();
