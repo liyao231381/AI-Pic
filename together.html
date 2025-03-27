@@ -308,7 +308,9 @@
 
     <div class="right-column">
       <h2>历史记录</h2>
-      <!-- 历史记录内容留空 -->
+      <div id="history-container">
+        <!-- 历史记录内容将在这里动态生成 -->
+      </div>
     </div>
 
   <script>
@@ -408,6 +410,19 @@
           // 启动倒计时
           startCountdown(5);
 
+          // 缓存历史记录
+          cacheHistory({
+            prompt: prompt,
+            width: width,
+            height: height,
+            steps: steps,
+            seed: seed,
+            imageUrl: imageUrl
+          });
+
+          // 更新历史记录显示
+          updateHistory();
+
         } else {
           errorMessageDiv.textContent = '未能在响应中找到图片数据。请检查API响应格式。';
           console.error("Unexpected API response format:", data); // 打印完整的响应数据到控制台
@@ -464,6 +479,98 @@
         }
       }, 1000);
     }
+
+    // 缓存历史记录
+    function cacheHistory(data) {
+      let history = JSON.parse(localStorage.getItem('image_history') || '[]');
+      history.unshift({
+        ...data,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('image_history', JSON.stringify(history));
+    }
+
+    // 更新历史记录显示
+    function updateHistory() {
+      const historyContainer = document.getElementById('history-container');
+      historyContainer.innerHTML = ''; // 清空历史记录
+
+      let history = JSON.parse(localStorage.getItem('image_history') || '[]');
+
+      history.forEach((item, index) => {
+        const historyItem = document.createElement('div');
+        historyItem.style.borderBottom = '1px solid #ccc';
+        historyItem.style.padding = '10px';
+        historyItem.style.display = 'flex';
+        historyItem.style.alignItems = 'center';
+
+        const imagePreview = document.createElement('img');
+        imagePreview.src = item.imageUrl;
+        imagePreview.alt = '历史图片';
+        imagePreview.style.width = '50px';
+        imagePreview.style.height = '50px';
+        imagePreview.style.marginRight = '10px';
+        historyItem.appendChild(imagePreview);
+
+        const promptText = document.createElement('span');
+        promptText.textContent = item.prompt;
+        promptText.style.flexGrow = '1';
+        promptText.style.userSelect = 'none'; // 提示词不可复制
+        historyItem.appendChild(promptText);
+
+        const timestampText = document.createElement('span');
+        timestampText.textContent = new Date(item.timestamp).toLocaleString();
+        timestampText.style.fontSize = '0.8em';
+        timestampText.style.color = '#666';
+        historyItem.appendChild(timestampText);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = '删除';
+        deleteButton.style.marginLeft = '10px';
+        deleteButton.onclick = function () {
+          deleteHistoryItem(index);
+        };
+        historyItem.appendChild(deleteButton);
+
+        historyItem.onclick = function () {
+          fillForm(item);
+        };
+
+        historyContainer.appendChild(historyItem);
+      });
+    }
+
+    // 删除历史记录项
+    function deleteHistoryItem(index) {
+      let history = JSON.parse(localStorage.getItem('image_history') || '[]');
+      history.splice(index, 1);
+      localStorage.setItem('image_history', JSON.stringify(history));
+      updateHistory(); // 刷新历史记录显示
+    }
+
+    // 填充表单
+    function fillForm(item) {
+      document.getElementById('prompt').value = item.prompt;
+      document.getElementById('width').value = item.width;
+      document.getElementById('height').value = item.height;
+      document.getElementById('steps').value = item.steps;
+      document.getElementById('stepsValue').innerText = item.steps;
+      document.getElementById('seed').value = item.seed;
+
+      const outputImage = document.getElementById('output-image');
+      outputImage.src = item.imageUrl;
+      document.getElementById('image-container').style.display = 'block';
+    }
+
+    // 页面加载时更新历史记录
+    document.addEventListener('DOMContentLoaded', function () {
+      // 页面加载时检查本地缓存的 API Key
+      const cachedApiKey = localStorage.getItem('apiKey_image_generator');
+      if (cachedApiKey) {
+        document.getElementById('api-key').value = cachedApiKey;
+      }
+      updateHistory();
+    });
   </script>
 </body>
 
