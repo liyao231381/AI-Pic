@@ -759,6 +759,22 @@
       }
       updateHistory();
     });
+
+    // 获取图片元素
+    const outputImage = document.getElementById('output-image');
+
+    // 检查浏览器是否支持全屏 API
+    if (outputImage && outputImage.requestFullscreen) {
+      // 添加点击事件监听器
+      outputImage.addEventListener('click', function() {
+        // 进入全屏模式
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          outputImage.requestFullscreen();
+        }
+      });
+    }
   </script>
 </body>
 
