@@ -57,7 +57,7 @@
       <a href="./index.html">返回首页</a>
       <div class="input-group">
         <label for="api-key">API Key:</label>
-        <input type="password" id="api-key" name="api-key" value="tgp_v1_m0a8jxs-NgRvMwmt4NY5cQpcxZsWlT24VINsOpVrQk8" placeholder="请输入您的API Key">
+        <input type="text" id="api-key" name="api-key" placeholder="请输入您的API Key">
         <a href="https://api.together.ai/settings/api-keys" target="_blank">获取together.ai API Key</a>
       </div>
 
@@ -134,6 +134,14 @@
     </div>
 
     <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          // 页面加载时检查本地缓存的 API Key
+          const cachedApiKey = localStorage.getItem('apiKey_image_generator');
+          if (cachedApiKey) {
+            document.getElementById('api-key').value = cachedApiKey;
+          }
+        });
+
       async function generateImage() {
         const apiKey = document.getElementById('api-key').value;
         const prompt = document.getElementById('prompt').value;
@@ -193,6 +201,8 @@
             body: JSON.stringify(requestBody)
           });
 
+          localStorage.setItem('apiKey_image_generator', apiKey);
+
           if (!response.ok) {
             const errorData = await response.json();
             console.error("API error:", errorData); // 打印详细错误信息到控制台
@@ -208,6 +218,10 @@
             outputImage.src = imageUrl;
             document.getElementById('image-container').style.display = 'block'; // 显示图片容器
             errorMessageDiv.textContent = ''; // 清空错误信息
+
+            // 请求成功后缓存 API Key
+            localStorage.setItem('apiKey_image_generator', apiKey);
+
           } else {
             errorMessageDiv.textContent = '未能在响应中找到图片数据。请检查API响应格式。';
             console.error("Unexpected API response format:", data); // 打印完整的响应数据到控制台
