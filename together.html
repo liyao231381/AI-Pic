@@ -9,10 +9,10 @@
   .input-group label { display: block; margin-bottom: 5px; font-weight: bold; }
   .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 8px; box-sizing: border-box; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; }
   .input-group textarea { height: 100px; }
-  button { padding: 10px 15px; border: none; border-radius: 4px; background-color: #007bff; color: white; cursor: pointer; font-size: 16px; }
+  button { padding: 10px 15px; border: none; border-radius: 4px; background-color: #007bff; color: white; cursor: pointer; font-size: 16px; margin-right: 10px; } /* 按钮间距 */
   button:hover { background-color: #0056b3; }
   #image-container { margin-top: 20px; text-align: center; }
-  #output-image { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; }
+  #output-image { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; } /* 图片和按钮间距 */
   #error-message { color: red; margin-top: 10px; }
 </style>
 </head>
@@ -50,17 +50,29 @@
       <input type="number" id="seed" name="seed" placeholder="留空则随机">
     </div>
 
-    <button onclick="generateImage()">生成图片</button>
+    <div>
+        <button onclick="generateImage()">生成图片</button>
+    </div>
+
 
     <div id="image-container" style="display: none;">
       <h2>生成的图片:</h2>
       <img id="output-image" src="#" alt="生成的AI图片">
+      <button onclick="downloadImage()">下载图片</button>
     </div>
 
     <div id="error-message"></div>
   </div>
 
   <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 页面加载时检查本地缓存的 API Key
+      const cachedApiKey = localStorage.getItem('apiKey');
+      if (cachedApiKey) {
+        document.getElementById('api-key').value = cachedApiKey;
+      }
+    });
+
     async function generateImage() {
       const apiKey = document.getElementById('api-key').value;
       const prompt = document.getElementById('prompt').value;
@@ -103,7 +115,6 @@
         requestBody.seed = seed; // 只有当 seed 不为 null 时才添加到请求体中
       }
 
-
       try {
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -126,6 +137,10 @@
           outputImage.src = imageUrl;
           document.getElementById('image-container').style.display = 'block'; // 显示图片容器
           errorMessageDiv.textContent = ''; // 清空错误信息
+
+          // 请求成功后缓存 API Key
+          localStorage.setItem('apiKey', apiKey);
+
         } else {
           errorMessageDiv.textContent = '未能在响应中找到图片数据。请检查API响应格式。';
           console.error("Unexpected API response format:", data); // 打印完整的响应数据到控制台
@@ -135,6 +150,16 @@
         console.error("Fetch error:", error);
         errorMessageDiv.textContent = '网络请求错误，请检查网络连接或稍后再试。';
       }
+    }
+
+    function downloadImage() {
+      const imageUrl = document.getElementById('output-image').src;
+      const downloadLink = document.createElement('a');
+      downloadLink.href = imageUrl;
+      downloadLink.download = 'ai_generated_image.png'; // 下载的文件名
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
     }
   </script>
 </body>
