@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI 图片生成器</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  .container { display: flex; flex-direction: column; max-width: 600px; margin: auto; }
+  .input-group { margin-bottom: 15px; }
+  .input-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+  .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 8px; box-sizing: border-box; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; }
+  .input-group textarea { height: 100px; }
+  button { padding: 10px 15px; border: none; border-radius: 4px; background-color: #007bff; color: white; cursor: pointer; font-size: 16px; }
+  button:hover { background-color: #0056b3; }
+  #image-container { margin-top: 20px; text-align: center; }
+  #output-image { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; }
+  #error-message { color: red; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI 图片生成器</h1>
+    <a href="./index.html">返回首页</a>
+    <div class="input-group">
+      <label for="api-key">API Key:</label>
+      <input type="password" id="api-key" name="api-key" placeholder="请输入您的API Key">
+    </div>
+
+    <div class="input-group">
+      <label for="prompt">提示词 (Prompt):</label>
+      <textarea id="prompt" name="prompt" placeholder="请输入提示词，例如: A cat wearing sunglasses"></textarea>
+    </div>
+
+    <div class="input-group">
+      <label for="width">宽度 (Width):</label>
+      <input type="number" id="width" name="width" value="720" min="64" max="2048">
+    </div>
+
+    <div class="input-group">
+      <label for="height">高度 (Height):</label>
+      <input type="number" id="height" name="height" value="1280" min="64" max="2048">
+    </div>
+
+    <div class="input-group">
+      <label for="steps">步数 (Steps):</label>
+      <input type="number" id="steps" name="steps" value="4" min="1" max="50">
+    </div>
+
+    <div class="input-group">
+      <label for="seed">种子数 (Seed, 可选):</label>
+      <input type="number" id="seed" name="seed" placeholder="留空则随机">
+    </div>
+
+    <button onclick="generateImage()">生成图片</button>
+
+    <div id="image-container" style="display: none;">
+      <h2>生成的图片:</h2>
+      <img id="output-image" src="#" alt="生成的AI图片">
+    </div>
+
+    <div id="error-message"></div>
+  </div>
+
+  <script>
+    async function generateImage() {
+      const apiKey = document.getElementById('api-key').value;
+      const prompt = document.getElementById('prompt').value;
+      const width = parseInt(document.getElementById('width').value);
+      const height = parseInt(document.getElementById('height').value);
+      const steps = parseInt(document.getElementById('steps').value);
+      const seedInput = document.getElementById('seed').value;
+      const seed = seedInput ? parseInt(seedInput) : null; // 如果留空则为 null
+      const errorMessageDiv = document.getElementById('error-message');
+      errorMessageDiv.textContent = ''; // 清空错误信息
+      document.getElementById('image-container').style.display = 'none'; // 隐藏之前的图片
+
+      if (!apiKey) {
+        errorMessageDiv.textContent = 'API Key 不能为空！';
+        return;
+      }
+      if (!prompt) {
+        errorMessageDiv.textContent = '提示词不能为空！';
+        return;
+      }
+
+      const apiUrl = "https://api.together.xyz/v1/images/generations";
+      const headers = {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      };
+      const requestBody = {
+        "model": "black-forest-labs/FLUX.1-schnell-Free",
+        "prompt": prompt,  // 修正：直接使用 prompt 字符串，不再放入数组
+        "width": width,
+        "height": height,
+        "steps": steps,
+        "n": 1,
+        "response_format": "b64_json",
+        "stop": [],
+        "update_at": new Date().toISOString() // 使用当前时间
+      };
+
+      if (seed !== null) {
+        requestBody.seed = seed; // 只有当 seed 不为 null 时才添加到请求体中
+      }
+
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("API error:", errorData); // 打印详细错误信息到控制台
+          errorMessageDiv.textContent = `生成图片失败: ${response.status} ${response.statusText} - ${errorData.message || '请查看控制台错误信息'}`;
+          return;
+        }
+
+        const data = await response.json();
+        if (data.data && data.data.length > 0 && data.data[0].b64_json) {
+          const base64Image = data.data[0].b64_json;
+          const imageUrl = `data:image/png;base64,${base64Image}`;
+          const outputImage = document.getElementById('output-image');
+          outputImage.src = imageUrl;
+          document.getElementById('image-container').style.display = 'block'; // 显示图片容器
+          errorMessageDiv.textContent = ''; // 清空错误信息
+        } else {
+          errorMessageDiv.textContent = '未能在响应中找到图片数据。请检查API响应格式。';
+          console.error("Unexpected API response format:", data); // 打印完整的响应数据到控制台
+        }
+
+      } catch (error) {
+        console.error("Fetch error:", error);
+        errorMessageDiv.textContent = '网络请求错误，请检查网络连接或稍后再试。';
+      }
+    }
+  </script>
+</body>
+</html>
