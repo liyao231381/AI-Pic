@@ -33,28 +33,35 @@
     <div class="input-group">
       <label for="imageSize">预设分辨率:</label>
       <select id="imageSize">
-        <option value="720x1280">默认720x1280 (9:16)</option>
+        <option value="1008x1792">默认 1008x1792 (9:16)</option>
         <option disabled>————方图————</option>
         <option value="512x512">512x512 (1:1)</option>
         <option value="1024x1024">1024x1024 (1:1)</option>
-        <option disabled>————竖图————</option>
+        <option disabled>————3:4 竖图————</option>
         <option value="480x640">480x640 (3:4)</option>
-        <option value="600x800">600x800 (3:4)</option>
         <option value="768x1024">768x1024 (3:4)</option>
-        <option value="540x960">540x960 (9:16 qHD)</option>
-        <option value="720x1280">720x1280 (9:16 HD)</option>
-        <option value="900x1600">900x1600 (9:16 HD+)</option>
-        <option value="1080x1920">1080x1920 (9:16 FHD)</option>
-        <option disabled>————横图————</option>
-        <option value="640x480">640x480 (4:3 VGA)</option>
-        <option value="800x600">800x600 (4:3 SVGA)</option>
-        <option value="1024x768">1024x768 (4:3 XGA)</option>
-        <option value="960x540">960x540 (16:9 qHD)</option>
-        <option value="1280x720">1280x720 (16:9 HD)</option>
-        <option value="1600x900">1600x900 (16:9 HD+)</option>
-        <option value="1920x1080">1920x1080 (16:9 FHD)</option>
+        <option value="960x1280">960x1280 (3:4)</option>
+        <option value="1344x1792">1344x1792 (3:4)</option>
+        <option disabled>————9:16 竖图————</option>
+        <option value="432x768">432x768 (9:16)</option>
+        <option value="576x1024">576x1024 (9:16)</option>
+        <option value="720x1280">720x1280 (9:16)</option>
+        <option value="864x1536">864x1536 (9:16)</option>
+        <option value="1008x1792">1008x1792 (9:16)</option>
+        <option disabled>————4:3 横图————</option>
+        <option value="640x480">640x480 (4:3)</option>
+        <option value="1024x768">1024x768 (4:3)</option>
+        <option value="1280x960">1280x960 (4:3)</option>
+        <option value="1792x1344">1792x1344 (4:3)</option>
+        <option disabled>————16:9 横图————</option>
+        <option value="768x432">768x432 (16:9)</option>
+        <option value="1024x576">1024x576 (16:9)</option>
+        <option value="1280x720">1280x720 (16:9)</option>
+        <option value="1536x864">1536x864 (16:9)</option>
+        <option value="1792x1008">1792x1008 (16:9)</option>
       </select>
     </div>
+    
 
     <div class="input-group">
       <strong>自定义分辨率：</strong>
@@ -70,7 +77,8 @@
 
     <div class="input-group">
       <label for="seed">种子数 (Seed, 可选):</label>
-      <input type="number" id="seed" name="seed" placeholder="留空则随机">
+      <input type="number" id="seed" name="seed" placeholder="留空则随机" style="width: 70%; display: inline-block;">
+      <button type="button" onclick="randomSeed()" style="padding: 5px 10px; font-size: 14px; width: 25%; box-sizing: border-box;">随机</button>
     </div>
 
     <div>
@@ -197,6 +205,12 @@
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
+    }
+
+    function randomSeed() {
+      const seedInput = document.getElementById('seed');
+      const randomSeedValue = Math.floor(Math.random() * 10000000000000000000) + 1;
+      seedInput.value = randomSeedValue;
     }
   </script>
 </body>
