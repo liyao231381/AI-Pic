@@ -34,7 +34,7 @@
 
   .middle-column {
     width: 50%;
-    padding: 20px;
+    padding: 10px;
     background-color: #fff;
     display: flex;
     flex-direction: column;
@@ -84,7 +84,7 @@
     textarea {
       min-height: 120px;
     }
-    
+
     input[type="text"]:focus,
     input[type="number"]:focus,
     select:focus,
@@ -138,16 +138,24 @@
     }
 
   #image-container {
-    margin-top: 20px;
+    margin-top: 10px;
     text-align: center;
+    width: 100%;
+    height: 96%; /* 占据整个结果区域高度 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* 垂直居中图像 */
   }
 
   #output-image {
-    max-width: 100%;
-    height: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    width: 95%;
+    max-height: 95%; /* 调整为按钮留出空间 */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin-bottom: 10px;
+    cursor: pointer;
+    object-fit: contain;
   }
 
   /* 图片和按钮间距 */
@@ -195,7 +203,7 @@
 
 <body>
     <div class="left-column">
-      <h1>AI 图片生成器</h1>
+      <h1>FLUX Schnell无限</h1>
       <a href="./index.html">返回首页</a>
       <div class="input-group">
         <label for="api-key">API Key:</label>
@@ -272,7 +280,6 @@
 
     <div class="middle-column">
       <div id="image-container" style="display: none;">
-        <h2>生成的图片:</h2>
         <img id="output-image" src="#" alt="生成的AI图片">
         <button onclick="downloadImage()">下载图片</button>
       </div>
