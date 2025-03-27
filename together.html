@@ -134,12 +134,12 @@
 
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-        // 页面加载时检查本地缓存的 API Key
-        const cachedApiKey = localStorage.getItem('apiKey');
-        if (cachedApiKey) {
-          document.getElementById('api-key').value = cachedApiKey;
-        }
-      });
+          // 页面加载时检查本地缓存的 API Key
+          const cachedApiKey = localStorage.getItem('apiKey_image_generator');
+          if (cachedApiKey) {
+            document.getElementById('api-key').value = cachedApiKey;
+          }
+        });
 
       async function generateImage() {
         const apiKey = document.getElementById('api-key').value;
@@ -200,7 +200,7 @@
             body: JSON.stringify(requestBody)
           });
 
-          localStorage.setItem('apiKey', apiKey);
+          localStorage.setItem('apiKey_image_generator', apiKey);
 
           if (!response.ok) {
             const errorData = await response.json();
@@ -219,7 +219,7 @@
             errorMessageDiv.textContent = ''; // 清空错误信息
 
             // 请求成功后缓存 API Key
-            localStorage.setItem('apiKey', apiKey);
+            localStorage.setItem('apiKey_image_generator', apiKey);
 
           } else {
             errorMessageDiv.textContent = '未能在响应中找到图片数据。请检查API响应格式。';
