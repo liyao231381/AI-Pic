@@ -122,6 +122,10 @@
           body: JSON.stringify(requestBody)
         });
 
+        if (response.ok) {
+            localStorage.setItem('apiKey', apiKey);
+        }
+
         if (!response.ok) {
           const errorData = await response.json();
           console.error("API error:", errorData); // 打印详细错误信息到控制台
