@@ -61,7 +61,7 @@
       color: #007bff;
     }
 
-    @media (max-width: 1000px) {
+    @media (max-width: 800px) {
     h1 {
       font-size: 20px;
       margin-bottom: 0;
@@ -76,7 +76,7 @@
       }
 
       .left-column, .middle-column, .right-column {
-        width: calc(100% - 30px);
+        width: 100%;
         height: auto;
         border: none;
         padding: 15px;
@@ -88,6 +88,22 @@
 
       .middle-column {
         border-bottom: 1px solid #ccc;
+      }
+
+      #history-container {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 10px;
+      }
+
+      #history-container > div {
+        display: inline-block;
+        vertical-align: top;
+        width: 200px; /* 调整为合适的宽度 */
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        padding: 5px;
+        box-sizing: border-box;
       }
     }
     
