@@ -80,7 +80,7 @@
       }
 
       .left-column, .middle-column, .right-column {
-        width: 100%;
+        width: calc(100% - 30px);
         height: auto;
         border: none;
         padding: 15px;
@@ -98,16 +98,18 @@
         overflow-x: auto;
         white-space: nowrap;
         padding-bottom: 10px;
+        overflow-x: hidden;
       }
 
       #history-container > div {
         display: inline-block;
         vertical-align: top;
-        width: 200px; /* 调整为合适的宽度 */
+        width: 100%; /* 调整为合适的宽度 */
         margin-right: 10px;
-        border: 1px solid #ccc;
         padding: 5px;
         box-sizing: border-box;
+        border-radius: 5px;
+        border: none;
       }
     }
     
