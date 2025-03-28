@@ -316,30 +316,34 @@
         <select id="imageSize">
           <option value="1008x1792">默认 1008x1792 (9:16)</option>
           <option disabled>————方图————</option>
-          <option value="512x512">512x512 (1:1)</option>
-          <option value="1024x1024">1024x1024 (1:1)</option>
+          <option value="512x512">512x512</option>
+          <option value="1024x1024">1024x1024</option>
+          <option value="1200×1200">1200x1200</option>
+          <option value="1440x1440">1440x1440</option>
+          <option value="1600x1600">1600x1600</option>
+          <option value="1792x1792">1792x1792</option>
           <option disabled>————3:4 竖图————</option>
-          <option value="480x640">480x640 (3:4)</option>
-          <option value="768x1024">768x1024 (3:4)</option>
-          <option value="960x1280">960x1280 (3:4)</option>
-          <option value="1344x1792">1344x1792 (3:4)</option>
+          <option value="480x640">480x640</option>
+          <option value="768x1024">768x1024</option>
+          <option value="960x1280">960x1280</option>
+          <option value="1344x1792">1344x1792</option>
           <option disabled>————9:16 竖图————</option>
-          <option value="432x768">432x768 (9:16)</option>
-          <option value="576x1024">576x1024 (9:16)</option>
-          <option value="720x1280">720x1280 (9:16)</option>
-          <option value="864x1536">864x1536 (9:16)</option>
-          <option value="1008x1792">1008x1792 (9:16)</option>
+          <option value="432x768">432x768</option>
+          <option value="576x1024">576x1024</option>
+          <option value="720x1280">720x1280</option>
+          <option value="864x1536">864x1536</option>
+          <option value="1008x1792">1008x1792</option>
           <option disabled>————4:3 横图————</option>
-          <option value="640x480">640x480 (4:3)</option>
-          <option value="1024x768">1024x768 (4:3)</option>
-          <option value="1280x960">1280x960 (4:3)</option>
-          <option value="1792x1344">1792x1344 (4:3)</option>
+          <option value="640x480">640x480</option>
+          <option value="1024x768">1024x768</option>
+          <option value="1280x960">1280x960</option>
+          <option value="1792x1344">1792x1344</option>
           <option disabled>————16:9 横图————</option>
-          <option value="768x432">768x432 (16:9)</option>
-          <option value="1024x576">1024x576 (16:9)</option>
-          <option value="1280x720">1280x720 (16:9)</option>
-          <option value="1536x864">1536x864 (16:9)</option>
-          <option value="1792x1008">1792x1008 (16:9)</option>
+          <option value="768x432">768x432</option>
+          <option value="1024x576">1024x576</option>
+          <option value="1280x720">1280x720</option>
+          <option value="1536x864">1536x864</option>
+          <option value="1792x1008">1792x1008</option>
         </select>
       </div>
 
@@ -419,7 +423,7 @@
     </div>
 
     <div class="right-column">
-      <h2>历史记录</h2>
+      <h3>历史记录</h3>
       <div id="history-container">
         <!-- 历史记录内容将在这里动态生成 -->
       </div>
@@ -623,6 +627,13 @@
         historyItem.style.display = 'flex';
         historyItem.style.alignItems = 'flex-start'; /* 顶部对齐 */
         historyItem.style.position = 'relative'; /* 为删除按钮定位 */
+        historyItem.style.transition = 'background-color 0.3s ease'; /* 添加过渡效果 */
+        historyItem.addEventListener('mouseenter', () => {
+            historyItem.style.backgroundColor = '#ffa500'; /* 悬停时的背景颜色 */
+        });
+        historyItem.addEventListener('mouseleave', () => {
+            historyItem.style.backgroundColor = ''; /* 恢复默认背景颜色 */
+        });
 
         const imagePreview = document.createElement('img');
         imagePreview.src = item.imageUrl;
