@@ -553,7 +553,7 @@
       const imageUrl = document.getElementById('output-image').src;
       const downloadLink = document.createElement('a');
       downloadLink.href = imageUrl;
-      downloadLink.download = 'tgz—FLUX.png'; // 下载的文件名
+      downloadLink.download = 'together.png'; // 下载的文件名
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
@@ -764,11 +764,34 @@
     // 填充表单
     function fillForm(item) {
       document.getElementById('prompt').value = item.prompt;
-      document.getElementById('width').value = item.width;
-      document.getElementById('height').value = item.height;
       document.getElementById('steps').value = item.steps;
       document.getElementById('stepsValue').innerText = item.steps;
       document.getElementById('seed').value = item.seed;
+      const imageSizeSelect = document.getElementById('imageSize');
+      const widthInput = document.getElementById('width');
+      const heightInput = document.getElementById('height');
+
+      // 检查历史记录项中是否存在 width 和 height
+      if (item.width && item.height) {
+        // 查找 imageSize select 中是否有匹配的选项
+        let found = false;
+        for (let i = 0; i < imageSizeSelect.options.length; i++) {
+          if (imageSizeSelect.options[i].value === `${item.width}x${item.height}`) {
+            imageSizeSelect.selectedIndex = i;
+            found = true;
+            break;
+          }
+        }
+
+        // 如果在 imageSize select 中没有找到匹配的选项，则填充到 width 和 height 输入框中
+        if (!found) {
+          widthInput.value = item.width;
+          heightInput.value = item.height;
+        } else {
+          widthInput.value = '';
+          heightInput.value = '';
+        }
+      }
 
       const outputImage = document.getElementById('output-image');
       outputImage.src = item.imageUrl;

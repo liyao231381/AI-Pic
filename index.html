@@ -538,6 +538,11 @@
       <option disabled>————方图————</option>
       <option value="512x512">512x512 (1:1)</option>
       <option value="1024x1024">1024x1024 (1:1)</option>
+      <option value="1280x1280">1280x1280 (1:1)</option>
+      <option value="1440x1440">1440x1440 (1:1)</option>
+      <option value="1600x1600">1600x1600 (1:1)</option>
+      <option value="1792x1792">1792x1792 (1:1)</option>
+      <option value="2048x2048">2048x2048 (1:1)</option>
       <option disabled>————竖图————</option>
       <option value="480x640">480x640 (3:4)</option>
       <option value="600x800">600x800 (3:4)</option>
@@ -940,7 +945,7 @@
       if (downloadUrl) {
         const a = document.createElement('a');
         a.href = downloadUrl;
-        a.download = 'generated_image.png';  // You can customize the filename
+        a.download = 'openrouter.png';  // You can customize the filename
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
