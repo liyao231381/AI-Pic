@@ -158,7 +158,7 @@
 
     #resultButtons {
       display: flex;
-      justify-content: space-around;
+      justify-content: center;
       width: 100%; /* 占据整个结果区域宽度 */
       margin-top: 10px;
     }
@@ -578,11 +578,14 @@
 
   <div class="result-area">
     <div id="result">
-      <img id="generatedImage" src="https://img.liyao.sbs/file/1738502727198.png" alt="生成的图像">
+      <img id="generatedImage" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像">
       <div id="resultButtons">
-          <button onclick="downloadImage()" id="downloadButton" disabled>下载图像</button>
-          <a href="#" onclick="showDownloadHelp()">下载后无法打开？</a>
-          <button id="copyUrlButton" onclick="copyImageUrl()">复制 URL</button>
+        <div class="download-container" style="display: flex; justify-content: center;">
+          <input type="text" id="filenameInput" placeholder="自定义文件名" style="margin-right: 5px;">
+          <button onclick="downloadImage()" id="downloadButton" style="padding: 8px 8px; height: fit-content; margin-right: 5px;" disabled>下载图像</button>
+        </div>
+        <a href="#" onclick="showDownloadHelp()" style="font-size: small;text-decoration: none; color: #007bff; align-self: center;">下载图像无法打开？</a>
+        <button id="copyUrlButton" onclick="copyImageUrl()" style="padding: 8px 8px; height: fit-content;">复制 URL</button>
       </div>
       <p id="resultText">
         <a href="#" id="imageUrlLink" target="_blank" title="点击跳转"></a>
@@ -592,7 +595,7 @@
 
   <div class="history-area">
     <div id="history">
-<h2>
+      <h2>
         历史记录:
         <button type="button" id="selectAllButton" onclick="toggleSelectAll()">全选</button>
         <button type="button" id="deleteSelectedButton" onclick="deleteSelectedHistoryItems()">删除选中</button>
@@ -939,19 +942,23 @@
     }
 
     function downloadImage() {
-      const generatedImage = document.getElementById('generatedImage');
-      let downloadUrl = generatedImage.src;
+        const generatedImage = document.getElementById('generatedImage');
+        let downloadUrl = generatedImage.src;
+        const filenameInput = document.getElementById('filenameInput');
+        const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : 'together'; // 获取文件名，如果为空则使用默认文件名
+        const fileExtension = 'png'; // 文件扩展名
+        const fullFilename = `${filename}.${fileExtension}`; // 完整文件名
 
-      if (downloadUrl) {
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = 'openrouter.png';  // You can customize the filename
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      } else {
-        alert('请先生成图像。');
-      }
+        if (downloadUrl) {
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = fullFilename;  // 使用完整文件名
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            alert('请先生成图像。');
+        }
     }
 
     function copyImageUrl() {

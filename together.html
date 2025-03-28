@@ -407,9 +407,12 @@
     </div>
 
     <div class="middle-column">
-      <div id="image-container" style="display: none;">
-        <img id="output-image" src="#" alt="生成的AI图片">
-        <button onclick="downloadImage()">下载图片</button>
+      <div id="image-container">
+        <img id="output-image" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的AI图片">
+        <div class="download-container" style="display: flex; justify-content: center;">
+          <input type="text" id="filename" placeholder="自定义文件名" style="margin-right: 5px; width: 150px; display: inline-block;">
+          <button onclick="downloadImage()" style="padding: 8px 8px; height: fit-content;">下载图片</button>
+        </div>
       </div>
     </div>
 
@@ -551,9 +554,11 @@
 
     function downloadImage() {
       const imageUrl = document.getElementById('output-image').src;
+      const filenameInput = document.getElementById('filename');
+      const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : 'together'; // 获取文件名，如果为空则使用默认值
       const downloadLink = document.createElement('a');
       downloadLink.href = imageUrl;
-      downloadLink.download = 'together.png'; // 下载的文件名
+      downloadLink.download = `${filename}.png`; // 下载的文件名
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
