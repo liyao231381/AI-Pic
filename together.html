@@ -61,7 +61,7 @@
       color: #007bff;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
     h1 {
       font-size: 20px;
       margin-bottom: 0;
@@ -477,6 +477,7 @@
           const errorData = await response.json();
           console.error("API error:", errorData); // 打印详细错误信息到控制台
           errorMessageDiv.textContent = `生成图片失败: ${response.status} ${response.statusText} - ${errorData.message || '请查看控制台错误信息'}`;
+          generateButton.disabled = false;
           return;
         }
 
@@ -511,15 +512,16 @@
         } else {
           errorMessageDiv.textContent = '未能在响应中找到图片数据。请检查API响应格式。';
           console.error("Unexpected API response format:", data); // 打印完整的响应数据到控制台
+          generateButton.disabled = false;
         }
 
       } catch (error) {
         console.error("Fetch error:", error);
         errorMessageDiv.textContent = '网络请求错误，请检查网络连接或稍后再试。';
+        generateButton.disabled = false;
       } finally {
         // 隐藏加载动画并启用按钮（如果倒计时结束）
         loader.style.display = 'none';
-        generateButton.disabled = false;
       }
     }
 
