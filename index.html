@@ -576,6 +576,7 @@
       <img id="generatedImage" src="https://img.liyao.sbs/file/1738502727198.png" alt="生成的图像">
       <div id="resultButtons">
           <button onclick="downloadImage()" id="downloadButton" disabled>下载图像</button>
+          <a href="#" onclick="showDownloadHelp()">下载后无法打开？</a>
           <button id="copyUrlButton" onclick="copyImageUrl()">复制 URL</button>
       </div>
       <p id="resultText">
@@ -1251,6 +1252,17 @@
         document.getElementById("imageUpload").value = ""; // 清除文件选择
         document.querySelector("#imageUploadContainer p").style.display = "block"; // 显示提示文字
         document.getElementById("translationResult").style.display = "none";
+      }
+
+      function showDownloadHelp() {
+        alert(
+          "风险提示： 修改 Internet Explorer 安全设置可能会降低系统的安全性，请谨慎操作。\n" +
+          "打开 Internet Explorer，选择“工具” -> “Internet 选项” -> “安全” -> “自定义级别”。\n" +
+          "在“设置”列表中，找到“下载” -> “文件下载”，选择“启用”。\n" +
+          "找到“杂项” -> “启动应用程序和不安全文件”，选择“提示”。\n" +
+          "单击“确定”保存设置。"
+        );
+        return false; // 阻止链接跳转
       }
   </script>
 
