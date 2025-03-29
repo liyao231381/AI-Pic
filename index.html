@@ -449,6 +449,27 @@
     .clear-button:hover {
       background-color: #da190b;
     }
+
+    /* 添加在style标签内 */
+    .copy-notification {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .copy-notification.show {
+      opacity: 1;
+    }
+
   </style>
 </head>
 <body>
@@ -787,7 +808,7 @@
         .map(checkbox => parseInt(checkbox.value));
 
       if (idsToDelete.length === 0) {
-        alert('请选择要删除的项。');
+        showNotification('请选择要删除的项。', true);
         return;
       }
 
@@ -801,10 +822,12 @@
       tx.oncomplete = () => {
         console.log('成功删除选定的历史记录项');
         displayHistory();
+        showNotification('成功删除选定的历史记录项');
       };
 
       tx.onerror = (event) => {
         console.error('删除选定的历史记录项失败:', event.target.error);
+        showNotification('删除选定的历史记录项失败', true);
       };
     }
 
@@ -817,10 +840,12 @@
       request.onsuccess = () => {
         console.log('成功删除历史记录项', id);
         displayHistory();
+        showNotification('成功删除历史记录项');
       };
 
       request.onerror = (event) => {
         console.error('删除历史记录项失败:', event.target.error);
+        showNotification('删除历史记录项失败', true);
       };
     }
 
@@ -840,6 +865,7 @@
 
       // Enable the download button
       document.getElementById('downloadButton').disabled = false;
+      showNotification("已填入");
     }
 
     async function generateImage() {
@@ -911,6 +937,7 @@
 
           // Enable the download button
           document.getElementById('downloadButton').disabled = false;
+          showNotification("图像生成成功!");
         } else {
           document.getElementById('generatedImage').src = 'https://img.liyao.sbs/file/1738502727198.png';
           document.getElementById('imageUrlLink').href = '#';
@@ -927,6 +954,7 @@
 
         // Disable the download button
         document.getElementById('downloadButton').disabled = true;
+        showNotification("图像生成失败!", true);
       } finally {
         // Re-enable button after 10 seconds
         const countdownInterval = setInterval(() => {
@@ -956,8 +984,9 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+            showNotification("图像已开始下载");
         } else {
-            alert('请先生成图像。');
+            showNotification('请先生成图像。', true);
         }
     }
 
@@ -965,13 +994,34 @@
       const imageUrl = document.getElementById('imageUrlLink').textContent;
       navigator.clipboard.writeText(imageUrl)
         .then(() => {
-          alert('Base64 数据已复制到剪贴板！');
+          showNotification('Base64 数据已复制到剪贴板！');
         })
         .catch(err => {
           console.error('复制 Base64 失败: ', err);
-          alert('复制 Base64 失败，请手动复制。');
+          showNotification('复制失败，请手动复制', true);
         });
     }
+
+    // 新增的通知函数
+    function showNotification(message, isError = false) {
+      const notification = document.createElement('div');
+      notification.className = 'copy-notification show';
+      notification.textContent = message;
+      
+      if (isError) {
+        notification.style.backgroundColor = '#dc3545';
+      }
+
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 2000);
+    }
+
 
     // Fullscreen functions
     document.getElementById('generatedImage').addEventListener('click', openFullscreen);
@@ -1085,10 +1135,12 @@
 
         // 缓存 API Key
         localStorage.setItem('openrouter_api_key', translate_API_KEY);
+        showNotification('翻译完成');
 
       } catch (error) {
         console.error("翻译出错:", error);
         translate_translationResultDiv.innerText = "翻译出错，请稍后再试。";
+        showNotification("翻译出错，请稍后再试。", true);
       } finally {
         translate_loadingIndicator.style.display = "none";
         translate_translationResultDiv.style.display = "block";
@@ -1098,25 +1150,27 @@
     function fillInput() {
       const translate_translatedText = document.getElementById("translationResult").innerText;
       document.getElementById("prompt").value = translate_translatedText;
+      showNotification("已填入");
     }
 
     async function pasteText() {
       try {
         const translate_text = await navigator.clipboard.readText();
         document.getElementById("prompt").value = translate_text;
+        showNotification("已粘贴");
       } catch (translate_err) {
         console.error('Failed to read clipboard contents: ', translate_err);
-        alert('无法读取剪贴板内容，请确保浏览器允许访问剪贴板。');
+        showNotification('无法读取剪贴板内容，请确保浏览器允许访问剪贴板。', true);
       }
     }
 
     function copyText() {
       const translate_text = document.getElementById("prompt").value;
       navigator.clipboard.writeText(translate_text).then(function() {
-        alert('内容已复制到剪贴板！');
+        showNotification('内容已复制到剪贴板！');
       }, function(translate_err) {
         console.error('Failed to copy text to clipboard: ', translate_err);
-        alert('复制到剪贴板失败，请确保浏览器允许访问剪贴板。');
+        showNotification('复制到剪贴板失败，请确保浏览器允许访问剪贴板。', true);
       });
     }
 
@@ -1244,11 +1298,13 @@
         translate_translationResultDiv.innerText = translate_imageDescription; // 将识别结果显示在翻译结果的位置
 
             // 缓存 API Key
+            showNotification("识别完成");
             localStorage.setItem('openrouter_api_key', translate_API_KEY);
 
           } catch (error) {
             console.error("图片识别出错:", error);
             translate_translationResultDiv.innerText = "图片识别出错，请稍后再试。"; // 错误信息也显示在翻译结果的位置
+            showNotification("图片识别出错，请稍后再试。", true);
           } finally {
             translate_loadingIndicator.style.display = "none";
             translate_translationResultDiv.style.display = "block";
