@@ -48,6 +48,7 @@
       justify-content: flex-start; /* 内容顶部对齐 */
       height: 100%;
       overflow-y: auto;
+      position: relative;
     }
 
     .history-area {
@@ -393,8 +394,15 @@
     #loadingIndicator {
       display: none;
       font-style: italic;
-      margin-bottom: 10px;
-      color: #999;
+      color: #ffffff;
+      z-index: 1000;
+      position: absolute; /* 绝对定位 */
+      top: 50%; /* 垂直居中 */
+      left: 50%; /* 水平居中 */
+      transform: translate(-50%, -50%); /* 精确居中 */
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 10px 20px;
+      border-radius: 5px;
     }
 
     .button-container {
@@ -476,6 +484,40 @@
       opacity: 1;
     }
 
+        /* 跳跃点动画 (Bounce Dots Spinner) CSS */
+        .spinner-bounce-dots {
+      display: inline-block; /* 或者 block，根据您的布局需要 */
+      width: auto; /* 让宽度自适应内容 */
+      height: 20px;
+      text-align: center; /* 水平居中 dots */
+      margin-bottom: 10px; /* 与文字指示器保持间距, 如果不需要文字 "正在生成..." 可以移除 */
+    }
+
+    .spinner-bounce-dots .dot {
+      width: 10px; /* 点的大小 */
+      height: 10px;
+      background-color: #007bff; /* 点的颜色，可修改 */
+      border-radius: 50%;
+      display: inline-block;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .spinner-bounce-dots .dot1 {
+      animation-delay: -0.32s;
+    }
+
+    .spinner-bounce-dots .dot2 {
+      animation-delay: -0.16s;
+    }
+
+    @keyframes bounce {
+      0%, 80%, 100% {
+        transform: scale(0);
+      }  40% {
+        transform: scale(1.0);
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -487,7 +529,7 @@
       <a href="./together.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">Tegether AI</a>
     </p>
     <label for="apiKey">API 密钥:</label>
-    <a href="https://cloud.siliconflow.cn/account/ak" target="_blank" style="color: #00aaff; font-size:small; text-decoration: none;">获取 硅基流动 API密钥</a>
+    <a href="https://cloud.siliconflow.cn/account/ak" target="_blank" rel="noreferrer" style="color: #00aaff; font-size:small; text-decoration: none;">获取 硅基流动 API密钥</a>
     <input type="text" id="apiKey" placeholder="你的 API 密钥">
 
     <label for="model">模型:</label>
@@ -522,9 +564,9 @@
       <button onclick="copyText()">复制</button>
       <button onclick="clearAll()" class="clear-button">清除</button>
     </div>
-    <button type="button" id="toggleTranslateArea">——————显示/隐藏 翻译&识别区——————</button>
+    <button type="button" id="toggleTranslateArea">———显示/隐藏 翻译&识别区———</button>
     <div class="ai-translate-area">
-      <label for="apiKeyInput">Gemini API 密钥:</label><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #00aaff; font-size:small; text-decoration: none;">申请 Gemini API密钥</a>
+      <label for="apiKeyInput">Gemini API 密钥:</label><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style="color: #00aaff; font-size:small; text-decoration: none;">申请 Gemini API密钥</a>
       <input type="text" id="apiKeyInput" placeholder="请输入 Gemini API Key">
 
       <div class="model-select-container">
@@ -546,7 +588,13 @@
         </select>
       </div>
 
-      <div id="loadingIndicator">正在生成...</div>
+      <div id="translateloadingIndicator" style="display: none;">
+        <div class="spinner-bounce-dots">
+          <div class="dot dot1"></div>
+          <div class="dot dot2"></div>
+          <div class="dot dot3"></div>
+        </div>
+      </div>
       <div id="translationResult"></div>
 
       <div class="button-container">
@@ -619,20 +667,27 @@
         <button id="copyUrlButton" onclick="copyImageUrl()" style="padding: 8px 8px; height: fit-content;">复制 URL</button>
       </div>
       <p id="resultText">
-        <a href="#" id="imageUrlLink" target="_blank" title="点击跳转"></a>
+        <a href="#" id="imageUrlLink" target="_blank" rel="noreferrer" title="点击跳转"></a>
       </p>
+    </div>
+    <div id="loadingIndicator" style="display: none;"> <!-- 初始状态隐藏，JS控制显示 -->
+      <div class="spinner-bounce-dots">
+        <div class="dot dot1"></div>
+        <div class="dot dot2"></div>
+        <div class="dot dot3"></div>
+      </div>
     </div>
   </div>
 
   <div class="history-area">
     <div id="history">
-      <h2>
-        历史记录:
-        <button type="button" id="selectAllButton" onclick="toggleSelectAll()">全选</button>
-        <button type="button" id="deleteSelectedButton" onclick="deleteSelectedHistoryItems()">删除选中</button>
-      </h2>
+      <h2>历史记录:</h2>
+      <div>
+        <button type="button" id="selectAllButton" onclick="toggleSelectAll()" style="padding: 4px 8px;">全选</button>
+        <button type="button" id="deleteSelectedButton" onclick="deleteSelectedHistoryItems()" style="padding: 4px 8px; background-color: #c82333;">删除选中</button>
+      </div>
       <div id="historyList"></div>
-    </div>
+      </div>    
   </div>
 
   <script>
@@ -897,6 +952,9 @@
       // Save API key to local storage
       saveApiKey(apiKey);
 
+      const loadingIndicatorElement = document.getElementById('loadingIndicator'); // 获取 loadingIndicator 元素
+      loadingIndicatorElement.style.display = "block";
+
       const apiUrl = 'https://api.siliconflow.cn/v1/images/generations'; // 替换为你的 API 端点
 
       const data = {
@@ -966,6 +1024,7 @@
         document.getElementById('downloadButton').disabled = true;
         showNotification("图像生成失败!", true);
       } finally {
+        loadingIndicatorElement.style.display = "none";
         // Re-enable button after 10 seconds
         const countdownInterval = setInterval(() => {
           countdown--;
@@ -1104,7 +1163,7 @@
     async function translateText() {
       const translate_text = document.getElementById("prompt").value;
       const translate_translationResultDiv = document.getElementById("translationResult");
-      const translate_loadingIndicator = document.getElementById("loadingIndicator");
+      const translate_loadingIndicator = document.getElementById("translateloadingIndicator");
       translate_API_KEY = document.getElementById("apiKeyInput").value; // 获取 API Key
       translate_loadingIndicator.style.display = "block";
       translate_translationResultDiv.style.display = "none";
