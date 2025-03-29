@@ -331,6 +331,12 @@
     }
 
     /* 响应式设计 - 调整小屏幕上的列布局 */
+    @media screen and (max-width: 1200px) {
+      h1 {
+        font-size: 24px;
+        margin-bottom: 0;
+      }      
+    }
     @media (max-width: 800px) {
       body {
         flex-direction: column;
@@ -475,7 +481,11 @@
 <body>
   <div class="params">
     <h1>AI 图像生成器</h1>
-    <p><a href="./edit.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">Gemini对话生图编辑</a> <a href="./together.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">Tegether AI</a></p>
+    <p>
+      <a href="./edit.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">Gemini对话生图编辑</a>
+      |
+      <a href="./together.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">Tegether AI</a>
+    </p>
     <label for="apiKey">API 密钥:</label>
     <a href="https://cloud.siliconflow.cn/account/ak" target="_blank" style="color: #00aaff; font-size:small; text-decoration: none;">获取 硅基流动 API密钥</a>
     <input type="text" id="apiKey" placeholder="你的 API 密钥">

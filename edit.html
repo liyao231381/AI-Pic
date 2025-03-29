@@ -40,6 +40,7 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box; /* 确保内边距不影响宽度 */
+            resize: vertical;
         }
 
         button {
@@ -83,6 +84,7 @@
             box-sizing: border-box;
             overflow-y: auto; /* 允许内容滚动 */
             padding: 10px;
+            max-height: calc(100vh - 20px); /* 占据整个视窗高度 */
         }
 
         /* 移动端布局 */
@@ -113,6 +115,7 @@
             text-align: center; /* 居中错误信息 */
             position: relative; /* 为下载按钮定位 */
             border-radius: 5px;
+            scrollbar-width: none;
         }
 
         #generatedImage {
@@ -190,10 +193,12 @@
     </style>
 </head>
 <body>
-    <h1>Gemini对话生图编辑</h1>
-    <p> → <a href="./index.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">主页</a></p>
     <div class="container">
         <div class="left-panel">
+            <h1>Gemini对话生图编辑</h1>
+            <a href="./index.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">返回主页</a>
+            |
+            <a href="./together.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">together.ai</a>
             <label for="apiKey">API Key:</label>
             <input type="text" id="apiKey" name="apiKey" placeholder="输入谷歌API密钥" onchange="saveApiKey()">
             <div id="apiKeyAlert" class="alert" style="display: none;"></div>
@@ -214,7 +219,7 @@
         <div class="right-panel">
             <div id="imageContainer">
                 <div id="textBeforeImage"></div>
-                <img id="generatedImage" src="" alt="Generated Image">
+                <img id="generatedImage" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="Generated Image">
                 <div id="textAfterImage"></div>
                 <div id="errorMessage" class="error-message" style="display: none;"></div>
                 <button id="downloadButton" onclick="downloadImage()">下载图片</button>
