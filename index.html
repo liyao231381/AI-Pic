@@ -408,8 +408,8 @@
     .button-container {
       margin-bottom: 10px;
       display: flex;
-      justify-content: center;
-      gap: 4px;
+      justify-content: space-around;
+      font-size: small;
     }
 
     #apiKeyInput {
@@ -560,9 +560,85 @@
     <label for="prompt">提示语:</label>
     <textarea id="prompt" placeholder="请输入提示词" style="min-height:60px; resize: none;"></textarea>
     <div class="button-container">
-      <button onclick="pasteText()">粘贴</button>
-      <button onclick="copyText()">复制</button>
-      <button onclick="clearAll()" class="clear-button">清除</button>
+      <button onclick="pasteText()"
+        style="
+          background: rgb(0, 170, 255, 0.1);
+          border: 1px solid #00aaff; /* 边框颜色 */
+          border-radius: 4px; /* 圆角 */
+          padding: 4px 6px; /* 调整内边距 */
+          cursor: pointer; /* 手型光标 */
+          display: flex; /* 使用 Flexbox 布局 */
+          align-items: center; /* 垂直居中 SVG 和文本 (如果需要文本) */
+          justify-content: center; /* 水平居中 SVG 和文本 (如果需要文本) */
+          transition: border-color 0.3s; /* 添加过渡效果 */
+        "
+        onmouseover="
+          this.style.borderColor='#00aaff'
+          this.style.scale='1.05'; /* 鼠标悬停时放大 */
+          "
+        onmouseout="
+          this.style.borderColor='#ccc'
+          this.style.scale='1'; /* 鼠标悬停时放大 */
+          "    
+        title="粘贴"                            
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="#00aaff" stroke="#00aaff">
+              <path d="M9 2H7c-.276 0-.5.224-.5.5v1.5H3c-.276 0-.5.224-.5.5v18c0 .276.224.5.5.5h18c.276 0 .5-.224.5-.5v-18c0-.276-.224-.5-.5-.5h-3.5V2.5c0-.276-.224-.5-.5-.5H9zm-1 2v2H5V4h3zm8 0v2h-3V4h3zm-8 16H5v-14h14v14H8z"/>
+              <path d="M12 7V3c0-.276-.224-.5-.5-.5H8c-.276 0-.5.224-.5.5v4h4.5zM16 7V3c0-.276-.224-.5-.5-.5h-4c-.276 0-.5.224-.5.5v4h5z"/>
+          </svg>
+      </button>
+      <button onclick="copyText()"
+        style="
+          background: rgb(241, 241, 241);
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          padding: 4px 6px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: border-color 0.3s;
+        "
+        onmouseover="
+          this.style.borderColor='gray'
+          this.style.scale='1.05';
+          "
+        onmouseout="
+          this.style.borderColor='#ccc'
+          this.style.scale='1';
+          "
+        title="复制"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="gray" stroke="gray">
+            <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM20 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H20C21.1 23 22 22.1 22 21V7C22 5.9 21.1 5 20 5ZM20 21H8V7H20V21Z"/>
+        </svg>
+      </button>
+      <button onclick="clearAll()" class="clear-button"
+        style="
+          background: rgba(255, 0, 0, 0.1);
+          border: 1px solid red;
+          border-radius: 4px;
+          padding: 4px 6px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: border-color 0.3s;
+        "
+        onmouseover="
+          this.style.borderColor='red'
+          this.style.scale='1.05';
+          "
+        onmouseout="
+          this.style.borderColor='#ccc'
+          this.style.scale='1';
+          "
+        title="清除"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="red" stroke="red">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+        </svg>
+      </button>    
     </div>
     <button type="button" id="toggleTranslateArea">———显示/隐藏 翻译&识别区———</button>
     <div class="ai-translate-area">
@@ -598,7 +674,7 @@
       <div id="translationResult"></div>
 
       <div class="button-container">
-        <button onclick="translateText()">翻译 / 重新翻译</button>
+        <button onclick="translateText()">翻译</button>
         <button onclick="fillInput()" style="background-color: #ffa500;">填入</button>
         <button onclick="describeImage()">识别</button>
       </div>
