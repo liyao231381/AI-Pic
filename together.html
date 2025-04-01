@@ -274,6 +274,8 @@
   }
   .setting-area {
     display: none;
+    border-bottom: 2px dashed #FFA500;
+    padding-bottom: 10px;
   }
   /* 添加在style标签内 */
   .copy-notification {
@@ -305,51 +307,12 @@
         |
         <a href="https://api.together.ai/settings/api-keys" target="_blank" style="font-size: 14px; color: #007bff; text-decoration: none;">获取together.ai API Key</a>
       </div>
+      <button type="button" id="toggleTranslateArea">————显示/隐藏 参数设置————</button>
       <div class="setting-area">
         <div class="input-group">
           <label for="api-key">API Key:</label>
           <input type="text" id="api-key" name="api-key" placeholder="请输入您的API Key">
         </div>
-
-        <div class="input-group">
-          <label for="imageSize">预设分辨率:</label>
-          <select id="imageSize">
-            <option value="1008x1792">默认 1008x1792 (9:16)</option>
-            <option disabled>————方图————</option>
-            <option value="512x512">512x512</option>
-            <option value="1024x1024">1024x1024</option>
-            <option value="1200×1200">1200x1200</option>
-            <option value="1440x1440">1440x1440</option>
-            <option value="1600x1600">1600x1600</option>
-            <option value="1792x1792">1792x1792</option>
-            <option disabled>————3:4 竖图————</option>
-            <option value="480x640">480x640</option>
-            <option value="768x1024">768x1024</option>
-            <option value="960x1280">960x1280</option>
-            <option value="1200x1600">1200x1600</option>
-            <option value="1344x1792">1344x1792</option>
-            <option disabled>————9:16 竖图————</option>
-            <option value="432x768">432x768</option>
-            <option value="576x1024">576x1024</option>
-            <option value="720x1280">720x1280</option>
-            <option value="864x1536">864x1536</option>
-            <option value="1008x1792">1008x1792</option>
-            <option disabled>————4:3 横图————</option>
-            <option value="640x480">640x480</option>
-            <option value="1024x768">1024x768</option>
-            <option value="1280x960">1280x960</option>
-            <option value="1600x1200">1600x1200</option>
-            <option value="1792x1344">1792x1344</option>
-            <option disabled>————16:9 横图————</option>
-            <option value="768x432">768x432</option>
-            <option value="1024x576">1024x576</option>
-            <option value="1280x720">1280x720</option>
-            <option value="1536x864">1536x864</option>
-            <option value="1792x1008">1792x1008</option>
-          </select>
-        </div>
-
-
         <div class="input-group">
           <strong class="custom">自定义：</strong>
           <input type="number" id="width" name="width" min="64" max="1792" style="min-width: 60px; width: 15%; display: inline-block;"
@@ -372,18 +335,8 @@
           <input type="number" id="seed" name="seed" placeholder="留空则随机" style="width: calc(100% - 100px); display: inline-block;">
           <button type="button" id="random-seed-button" onclick="randomSeed()">随机</button>
         </div>
-      </div>
-      <button type="button" id="toggleTranslateArea">————显示/隐藏 参数设置————</button>
-      <div class="input-group" style="margin-top: 10px;">
-        <label for="prompt">提示词 (Prompt):</label>
-        <textarea id="prompt" name="prompt" placeholder="请输入【英文】提示词"></textarea>
-        <div class="buttons" style="display: flex; justify-content: flex-start; margin-top: 0px;">
-          <button type="button" style="background-color: #00c7b0;"onclick="pastePrompt()">粘贴</button>
-          <button type="button" style="background-color: #00aaff;"onclick="copyPrompt()">复制</button>
-          <button type="button" onclick="translatePrompt()">翻译</button>
-          <button type="button" style="background-color: #ffa500;"onclick="fillPrompt()">填入</button>
-        </div>
         <div class="input-group">
+          <label>翻译设置:</label>
           <input type="text" id="translation-api-key" name="translation-api-key" placeholder="Gemini API Key">
           <select id="modelSelect">
             <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
@@ -402,12 +355,57 @@
             <option value="gemma-3-27b-it">gemma-3-27b-it</option>
           </select>
         </div>
+      </div>
+      <div class="input-group" style="margin-top: 10px;">
+        <label for="imageSize">预设分辨率:</label>
+        <select id="imageSize">
+          <option value="1008x1792">默认 1008x1792 (9:16)</option>
+          <option disabled>————方图————</option>
+          <option value="512x512">512x512</option>
+          <option value="1024x1024">1024x1024</option>
+          <option value="1200×1200">1200x1200</option>
+          <option value="1440x1440">1440x1440</option>
+          <option value="1600x1600">1600x1600</option>
+          <option value="1792x1792">1792x1792</option>
+          <option disabled>————3:4 竖图————</option>
+          <option value="480x640">480x640</option>
+          <option value="768x1024">768x1024</option>
+          <option value="960x1280">960x1280</option>
+          <option value="1200x1600">1200x1600</option>
+          <option value="1344x1792">1344x1792</option>
+          <option disabled>————9:16 竖图————</option>
+          <option value="432x768">432x768</option>
+          <option value="576x1024">576x1024</option>
+          <option value="720x1280">720x1280</option>
+          <option value="864x1536">864x1536</option>
+          <option value="1008x1792">1008x1792</option>
+          <option disabled>————4:3 横图————</option>
+          <option value="640x480">640x480</option>
+          <option value="1024x768">1024x768</option>
+          <option value="1280x960">1280x960</option>
+          <option value="1600x1200">1600x1200</option>
+          <option value="1792x1344">1792x1344</option>
+          <option disabled>————16:9 横图————</option>
+          <option value="768x432">768x432</option>
+          <option value="1024x576">1024x576</option>
+          <option value="1280x720">1280x720</option>
+          <option value="1536x864">1536x864</option>
+          <option value="1792x1008">1792x1008</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="prompt">提示词 (Prompt):</label>
+        <textarea id="prompt" name="prompt" placeholder="请输入【英文】提示词"></textarea>
+        <div class="buttons" style="display: flex; justify-content: flex-start;">
+          <button type="button" style="background-color: #00c7b0;"onclick="pastePrompt()">粘贴</button>
+          <button type="button" style="background-color: #00aaff;"onclick="copyPrompt()">复制</button>
+          <button type="button" onclick="translatePrompt()">翻译</button>
+          <button type="button" style="background-color: #ffa500;"onclick="fillPrompt()">填入</button>
+        </div>
         <div class="input-group">
           <textarea id="translated-text" rows="4" readonly style="resize: none; margin: 0 auto; border: 2px dashed #ccc; padding: 8px; border-radius: 8px; max-width: 100%; cursor: pointer; position: relative; overflow: auto; min-height: 100px;"></textarea>
-
         </div>  
       </div>
-
       <div>
         <button id="generate-button" onclick="generateImage()">生成图片</button>
         <span class="loader"></span>
