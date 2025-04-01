@@ -546,22 +546,43 @@
       <option value="stabilityai/stable-diffusion-2-1">stabilityai/stable-diffusion-2-1</option>
       <option value="black-forest-labs/FLUX.1-dev">black-forest-labs/FLUX.1-dev(付费)</option>
     </select>
-
-    <script>
-      function setModelGuidanceScale() {
-        const model = document.getElementById('model').value;
-        if (model === "stabilityai/stable-diffusion-xl-base-1.0") {
-          document.getElementById('guidanceScale').value = "13";
-        } else if (model === "stabilityai/stable-diffusion-3-5-large") {
-          document.getElementById('guidanceScale').value = "3.5";
-        } else if (model === "stabilityai/stable-diffusion-2-1") {
-          document.getElementById('guidanceScale').value = "20";
-        } else if (model === "Kwai-Kolors/Kolors") {
-          document.getElementById('guidanceScale').value = "2.5";
-        } 
-      }
-    </script>
-
+    <label for="imageSize">图像尺寸（宽×高）：</label>
+    <select id="imageSize">
+      <option value="720x1280">默认720x1280 (9:16)</option>
+      <option disabled>————方图————</option>
+      <option value="512x512">512x512 (1:1)</option>
+      <option value="1024x1024">1024x1024 (1:1)</option>
+      <option value="1280x1280">1280x1280 (1:1)</option>
+      <option value="1440x1440">1440x1440 (1:1)</option>
+      <option value="1600x1600">1600x1600 (1:1)</option>
+      <option value="1792x1792">1792x1792 (1:1)</option>
+      <option value="2048x2048">2048x2048 (1:1)</option>
+      <option disabled>————竖图————</option>
+      <option value="480x640">480x640 (3:4)</option>
+      <option value="600x800">600x800 (3:4)</option>
+      <option value="768x1024">768x1024 (3:4)</option>
+      <option value="900x1200">800x1200 (3:4)</option>
+      <option value="960x1280">960x1280 (3:4)</option>
+      <option value="1080x1440">1080x1440 (3:4)</option>
+      <option value="1200x1600">1200x1600 (3:4)</option>
+      <option value="540x960">540x960 (9:16 qHD)</option>
+      <option value="720x1280">720x1280 (9:16 HD)</option>
+      <option value="810x1440">810x1440 (9:16 HD+)</option>
+      <option value="900x1600">900x1600 (9:16 HD+)</option>
+      <option value="1080x1920">1080x1920 (9:16 FHD)</option>
+      <option disabled>————横图————</option>
+      <option value="640x480">640x480 (4:3 VGA)</option>
+      <option value="800x600">800x600 (4:3 SVGA)</option>
+      <option value="1024x768">1024x768 (4:3 XGA)</option>
+      <option value="1280x960">1280x960 (4:3 QXGA)</option>
+      <option value="1440x1080">1440x1080 (4:3 QXGA+)</option>
+      <option value="1600x1200">1600x1200 (4:3 UXGA)</option>
+      <option value="960x540">960x540 (16:9 qHD)</option>
+      <option value="1280x720">1280x720 (16:9 HD)</option>
+      <option value="1440x810">1440x810 (16:9 HD+)</option>
+      <option value="1600x900">1600x900 (16:9 HD+)</option>
+      <option value="1920x1080">1920x1080 (16:9 FHD)</option>
+    </select>
     <label for="prompt">提示语:</label>
     <textarea id="prompt" placeholder="请输入提示词"></textarea>
     <div class="button-container">
@@ -576,6 +597,7 @@
           align-items: center; /* 垂直居中 SVG 和文本 (如果需要文本) */
           justify-content: center; /* 水平居中 SVG 和文本 (如果需要文本) */
           transition: border-color 0.3s; /* 添加过渡效果 */
+          width: 33%;
         "
         onmouseover="
           this.style.borderColor='#00aaff'
@@ -603,6 +625,7 @@
           align-items: center;
           justify-content: center;
           transition: border-color 0.3s;
+          width: 30%;
         "
         onmouseover="
           this.style.borderColor='gray'
@@ -629,6 +652,7 @@
           align-items: center;
           justify-content: center;
           transition: border-color 0.3s;
+          width: 33%;
         "
         onmouseover="
           this.style.borderColor='red'
@@ -689,49 +713,24 @@
         <p>拖放或点击选择图片</p>
         <img id="imagePreview" src="#" alt="图片预览" style="display: none;">
       </div>
+      <label for="negativePrompt">负面提示语:</label>
+      <input type="text" id="negativePrompt" placeholder="请输入负面提示词" value="bad quality, low quality, deformed, distorted, bad proportions, ugly">
+      <label for="numInferenceSteps">推理步数 (1-50):</label>
+      <input type="number" id="numInferenceSteps" value="50" min="1" max="50">
+  
+      <label for="guidanceScale">引导比例 (0-20):</label>
+      <input type="number" id="guidanceScale" value="2.5" min="0" max="20" step="0.1">
+  
+      <label for="seed">种子 (0-9999999999):</label>
+      <div class="seed-container">
+        <input type="number" id="seed" min="0" max="9999999999">
+        <button type="button" onclick="randomSeed()">随机</button>
+      </div>
     </div>
-    <label for="negativePrompt">负面提示语:</label>
-    <input type="text" id="negativePrompt" placeholder="请输入负面提示词" value="bad quality, low quality, deformed, distorted, bad proportions, ugly">
-    <label for="imageSize">图像尺寸（宽×高）：</label>
-    <select id="imageSize">
-      <option value="720x1280">默认720x1280 (9:16)</option>
-      <option disabled>————方图————</option>
-      <option value="512x512">512x512 (1:1)</option>
-      <option value="1024x1024">1024x1024 (1:1)</option>
-      <option value="1280x1280">1280x1280 (1:1)</option>
-      <option value="1440x1440">1440x1440 (1:1)</option>
-      <option value="1600x1600">1600x1600 (1:1)</option>
-      <option value="1792x1792">1792x1792 (1:1)</option>
-      <option value="2048x2048">2048x2048 (1:1)</option>
-      <option disabled>————竖图————</option>
-      <option value="480x640">480x640 (3:4)</option>
-      <option value="600x800">600x800 (3:4)</option>
-      <option value="768x1024">768x1024 (3:4)</option>
-      <option value="540x960">540x960 (9:16 qHD)</option>
-      <option value="720x1280">720x1280 (9:16 HD)</option>
-      <option value="900x1600">900x1600 (9:16 HD+)</option>
-      <option value="1080x1920">1080x1920 (9:16 FHD)</option>
-      <option disabled>————横图————</option>
-      <option value="640x480">640x480 (4:3 VGA)</option>
-      <option value="800x600">800x600 (4:3 SVGA)</option>
-      <option value="1024x768">1024x768 (4:3 XGA)</option>
-      <option value="960x540">960x540 (16:9 qHD)</option>
-      <option value="1280x720">1280x720 (16:9 HD)</option>
-      <option value="1600x900">1600x900 (16:9 HD+)</option>
-      <option value="1920x1080">1920x1080 (16:9 FHD)</option>
-    </select>
 
-    <label for="numInferenceSteps">推理步数 (1-50):</label>
-    <input type="number" id="numInferenceSteps" value="50" min="1" max="50">
 
-    <label for="guidanceScale">引导比例 (0-20):</label>
-    <input type="number" id="guidanceScale" value="2.5" min="0" max="20" step="0.1">
 
-    <label for="seed">种子 (0-9999999999):</label>
-    <div class="seed-container">
-      <input type="number" id="seed" min="0" max="9999999999">
-      <button type="button" onclick="randomSeed()">随机</button>
-    </div>
+
 
     <button id="generateButton" onclick="generateImage()" style="font-size: 14px; font-weight: bold; padding: 8px 16px;">生成图像</button>
   </div>
@@ -1481,6 +1480,19 @@
           "单击“确定”保存设置。"
         );
         return false; // 阻止链接跳转
+      }
+
+      function setModelGuidanceScale() {
+        const model = document.getElementById('model').value;
+        if (model === "stabilityai/stable-diffusion-xl-base-1.0") {
+          document.getElementById('guidanceScale').value = "13";
+        } else if (model === "stabilityai/stable-diffusion-3-5-large") {
+          document.getElementById('guidanceScale').value = "3.5";
+        } else if (model === "stabilityai/stable-diffusion-2-1") {
+          document.getElementById('guidanceScale').value = "20";
+        } else if (model === "Kwai-Kolors/Kolors") {
+          document.getElementById('guidanceScale').value = "2.5";
+        } 
       }
   </script>
 
