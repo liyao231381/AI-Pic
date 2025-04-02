@@ -778,7 +778,7 @@
     </div>
 
     <button id="generateButton" onclick="generateImage()" style="font-size: 14px; font-weight: bold; padding: 8px 16px;">生成图像</button>
-    <label for="ai-image-upload-container" style="margin-top: 10px;">参考图:</label>
+    <label for="ai-image-upload-container" style="margin-top: 10px;" id="aiImageUploadContainerLabel">参考图:</label>
     <div class="ai-image-upload-container" id="aiImageUploadContainer">
       <input type="file" id="aiImageUpload" accept="image/*" onchange="previewAiImage()">
       <p>拖放或点击选择图片<br>Korlors图生图</p>
@@ -1615,8 +1615,10 @@
         // 显示/隐藏 ai-image-upload-container
         if (model === "Kwai-Kolors/Kolors") {
           aiImageUploadContainer.style.display = "block";
+          aiImageUploadContainerLabel.style.display = "block";
         } else {
           aiImageUploadContainer.style.display = "none";
+          aiImageUploadContainerLabel.style.display = "none";
         }
       }
   </script>
