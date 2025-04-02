@@ -522,6 +522,55 @@
         transform: scale(1.0);
       }
     }
+    .ai-image-upload-container {
+      border: 2px dashed #ccc;
+      padding: 8px;
+      border-radius: 8px;
+      width: calc(100% - 20px); /* 减去左右边距 */
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-height: 60px;
+    }
+
+    .ai-image-upload-container input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .ai-image-upload-container p {
+      flex-grow: 1;  /* 标签占据剩余空间 */
+      text-align: center; /* 水平居中 */
+      justify-content: center;
+      color: gray; /* 设置灰色字 */
+    }
+
+    #aiImagePreview {
+      max-width: 100%;
+    }
+
+    #aiImageClearButton {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border: none;
+      border-radius: 50%;
+      padding: 4px 5px;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      display: none; /* 初始状态隐藏 */
+      z-index: 1; /* 确保按钮在图片上方 */
+    }
+    #aiImageClearButton:hover {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
 
   </style>
 </head>
@@ -728,11 +777,18 @@
       </div>
     </div>
 
-
-
-
-
     <button id="generateButton" onclick="generateImage()" style="font-size: 14px; font-weight: bold; padding: 8px 16px;">生成图像</button>
+    <label for="ai-image-upload-container" style="margin-top: 10px;">参考图:</label>
+    <div class="ai-image-upload-container" id="aiImageUploadContainer">
+      <input type="file" id="aiImageUpload" accept="image/*" onchange="previewAiImage()">
+      <p>拖放或点击选择图片<br>Korlors图生图</p>
+      <img id="aiImagePreview" src="#" alt="图片预览" style="display: none;">
+      <button type="button" id="aiImageClearButton" onclick="clearAiImage()" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="white">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+        </svg>
+      </button>
+    </div>
   </div>
 
   <div class="result-area">
@@ -1013,6 +1069,67 @@
       showNotification("已填入");
     }
 
+    let aiBase64Image = ""; // 用于存储Base64编码的图片
+
+    function previewAiImage() {
+      const file = document.getElementById("aiImageUpload").files[0];
+      const reader = new FileReader();
+
+      reader.onloadend = function() {
+        aiBase64Image = reader.result; // 保存Base64编码
+        document.getElementById("aiImagePreview").src = aiBase64Image;
+        document.getElementById("aiImagePreview").style.display = "block";
+        aiImageClearButton.style.display = "block"; // 显示清除按钮
+        document.querySelector("#aiImageUploadContainer p").style.display = "none"; // 隐藏提示文字
+      }
+
+      if (file) {
+        reader.readAsDataURL(file);
+      } else {
+        document.getElementById("aiImagePreview").src = "#";
+        document.getElementById("aiImagePreview").style.display = "none";
+        aiImageClearButton.style.display = "none"; // 隐藏清除按钮
+        document.querySelector("#aiImageUploadContainer p").style.display = "block"; // 显示提示文字
+        aiBase64Image = ""; // 清空Base64编码
+      }
+    }
+
+    function clearAiImage() {
+      const aiImageUpload = document.getElementById("aiImageUpload");
+      const aiImagePreview = document.getElementById("aiImagePreview");
+      const aiImageClearButton = document.getElementById("aiImageClearButton");
+      const aiImageUploadContainerP = document.querySelector("#aiImageUploadContainer p");
+
+      aiImageUpload.value = ""; // 清除文件选择
+      aiImagePreview.src = "#";
+      aiImagePreview.style.display = "none";
+      aiImageClearButton.style.display = "none"; // 隐藏清除按钮
+      aiImageUploadContainerP.style.display = "block"; // 显示提示文字
+      aiBase64Image = ""; // 清空Base64编码
+    }
+
+    const aiImageUploadContainer = document.getElementById("aiImageUploadContainer");
+
+    // 拖放事件
+    aiImageUploadContainer.addEventListener("dragover", function(event) {
+      event.preventDefault();
+      aiImageUploadContainer.style.backgroundColor = "#eee";
+    });
+
+    aiImageUploadContainer.addEventListener("dragleave", function(event) {
+      event.preventDefault();
+      aiImageUploadContainer.style.backgroundColor = "";
+    });
+
+    aiImageUploadContainer.addEventListener("drop", function(event) {
+      event.preventDefault();
+      aiImageUploadContainer.style.backgroundColor = "";
+
+      const file = event.dataTransfer.files[0];
+      document.getElementById("aiImageUpload").files = event.dataTransfer.files; // 兼容拖拽
+      previewAiImage();
+    });
+
     async function generateImage() {
       const apiKey = document.getElementById('apiKey').value;
       const model = document.getElementById('model').value;
@@ -1046,6 +1163,7 @@
         num_inference_steps: numInferenceSteps,
         guidance_scale: guidanceScale,
         seed: seed || undefined, // 只有当不为空时才包含
+        ...(model === 'Kwai-Kolors/Kolors' && aiBase64Image ? { image: aiBase64Image } : {}) // 根据模型添加 image 参数
       };
 
       try {
@@ -1493,6 +1611,13 @@
         } else if (model === "Kwai-Kolors/Kolors") {
           document.getElementById('guidanceScale').value = "2.5";
         } 
+
+        // 显示/隐藏 ai-image-upload-container
+        if (model === "Kwai-Kolors/Kolors") {
+          aiImageUploadContainer.style.display = "block";
+        } else {
+          aiImageUploadContainer.style.display = "none";
+        }
       }
   </script>
 
