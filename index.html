@@ -237,7 +237,7 @@
       margin-bottom: 10px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       transition: background-color 0.2s;
       cursor: pointer; /* 添加鼠标指针 */
       position: relative; /* 设置相对定位 */
@@ -250,7 +250,6 @@
     .history-item img {
       max-height: 100px;
       border-radius: 4px;
-      margin-right: 10px;
       vertical-align: middle;
     }
 
@@ -825,7 +824,7 @@
         <button type="button" id="deleteSelectedButton" onclick="deleteSelectedHistoryItems()" style="padding: 4px 8px; background-color: #c82333;">删除选中</button>
       </div>
       <div id="historyList"></div>
-      </div>    
+      </div>
   </div>
 
   <script>
@@ -889,10 +888,20 @@
       });
     }
 
-    // Function to save to IndexedDB
     async function saveHistory(data) {
+      // 注意：确保调用此函数时传入的是 data.base64Image 而不是 data.imageUrl
+      if (!db) {
+        console.error('IndexedDB is not initialized.');
+        showNotification('无法保存历史记录：数据库未初始化', true);
+        return;
+      }
+      if (!data.base64Image) {
+        console.error('无法保存历史记录：缺少图像数据');
+        showNotification('无法保存历史记录：缺少图像数据', true);
+        return;
+      }
+
       try {
-        const base64Image = await urlToBase64(data.imageUrl);
         const now = new Date();
         const creationTime = `${now.getFullYear().toString().slice(-2)}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
@@ -906,23 +915,99 @@
           numInferenceSteps: data.numInferenceSteps,
           guidanceScale: data.guidanceScale,
           seed: data.seed,
-          imageData: base64Image, // 存储 Base64 字符串
+          imageData: data.base64Image, // 直接使用传入的 Base64 数据
           creationTime: creationTime
+          // 'id' 将在添加成功后自动生成并获取
         };
 
-        store.add(item);
+        const addRequest = store.add(item); // 添加数据
+
+        addRequest.onsuccess = (event) => {
+          const newItemId = event.target.result; // 获取新添加项的 ID
+          console.log('数据保存到 IndexedDB 成功, ID:', newItemId);
+          item.id = newItemId; // 将 ID 添加回 item 对象，以便传递给 UI 函数
+          prependHistoryItemToUI(item); // 调用新函数将项添加到 UI 顶部
+        };
+
+        addRequest.onerror = (event) => {
+          console.error('添加数据到 IndexedDB 失败:', event.target.error);
+          showNotification('保存历史记录失败', true);
+        };
 
         tx.oncomplete = () => {
-          console.log('数据保存到 IndexedDB 成功');
-          displayHistory();
+          console.log('IndexedDB 保存事务完成');
+          // 此处不再调用 displayHistory()
         };
 
         tx.onerror = (event) => {
-          console.error('保存数据到 IndexedDB 失败:', event.target.error);
+          console.error('IndexedDB 保存事务错误:', event.target.error);
+          // 避免重复提示，addRequest.onerror 已处理
         };
       } catch (error) {
-        console.error('转换 URL 到 Base64 失败:', error);
+        // 这个 catch 主要捕获代码本身的同步错误
+        console.error('保存历史记录时发生错误:', error);
+        showNotification('保存历史记录时发生内部错误', true);
       }
+    }
+
+    // 函数：创建单个历史记录项的 DOM 元素
+    function createHistoryItemElement(item) {
+      const historyItem = document.createElement('div');
+      historyItem.classList.add('history-item');
+      historyItem.dataset.id = item.id; // 添加 data-id 属性，用于后续查找
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = item.id;
+      checkbox.style.marginRight = '5px';
+      // 阻止点击 checkbox 时触发 populateForm
+      checkbox.addEventListener('click', (event) => {
+        event.stopPropagation();
+      });
+      historyItem.appendChild(checkbox);
+
+      const imageContainer = document.createElement('div');
+      imageContainer.classList.add('image-container');
+      let imageElement = document.createElement('img');
+      imageElement.src = item.imageData; // 使用 Base64 字符串
+      imageElement.alt = "历史图像";
+      imageContainer.appendChild(imageElement);
+      historyItem.appendChild(imageContainer);
+
+      const textInfoContainer = document.createElement('div');
+      textInfoContainer.classList.add('text-info-container');
+
+      const promptElement = document.createElement('p');
+      promptElement.textContent = item.prompt;
+      textInfoContainer.appendChild(promptElement);
+
+      const creationTimeElement = document.createElement('p');
+      creationTimeElement.textContent = item.creationTime;
+      textInfoContainer.appendChild(creationTimeElement);
+
+      historyItem.appendChild(textInfoContainer);
+
+      const deleteButton = document.createElement('button');
+      deleteButton.classList.add('delete-button');
+      deleteButton.textContent = '×';
+      deleteButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        deleteHistoryItem(item.id); // 使用 id 删除
+      });
+
+      historyItem.appendChild(deleteButton);
+      // 点击历史项填充表单
+      historyItem.addEventListener('click', () => populateForm(item));
+
+      return historyItem;
+    }
+
+    // 函数：将新的历史记录项添加到 UI 列表的顶部
+    function prependHistoryItemToUI(item) {
+      const historyList = document.getElementById('historyList');
+      if (!historyList) return; // 安全检查
+      const historyItemElement = createHistoryItemElement(item); // 创建新项的 DOM 元素
+      historyList.prepend(historyItemElement); // 将新项添加到列表的开头
     }
 
     // Function to display history from IndexedDB
@@ -937,65 +1022,24 @@
 
       const tx = db.transaction(OBJECT_STORE_NAME, 'readonly');
       const store = tx.objectStore(OBJECT_STORE_NAME);
-      const request = store.getAll();
+      // 使用 IDBCursor 和 direction 'prev' 来直接获取降序排列的数据
+      const request = store.openCursor(null, 'prev'); // 按 ID 降序打开游标
 
       request.onsuccess = (event) => {
-        let history = event.target.result;
-
-        // 反转历史记录数组，先显示最新的记录
-        history = history.reverse();
-
-        history.forEach((item, index) => {
-          const historyItem = document.createElement('div');
-          historyItem.classList.add('history-item');
-
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.value = item.id; // 使用 id 作为 checkbox 的值
-          checkbox.style.marginRight = '5px';
-          historyItem.appendChild(checkbox);
-
-          // 创建图像容器
-          const imageContainer = document.createElement('div');
-          imageContainer.classList.add('image-container');
-          let imageElement = document.createElement('img');
-          imageElement.src = item.imageData; // 使用 Base64 字符串
-          imageElement.alt = "历史图像";
-          imageContainer.appendChild(imageElement);
-          historyItem.appendChild(imageContainer);
-
-          // 创建文本信息容器
-          const textInfoContainer = document.createElement('div');
-          textInfoContainer.classList.add('text-info-container');
-
-          const promptElement = document.createElement('p');
-          promptElement.textContent = item.prompt;
-          textInfoContainer.appendChild(promptElement);
-
-          const creationTimeElement = document.createElement('p');
-          creationTimeElement.textContent = item.creationTime;
-          textInfoContainer.appendChild(creationTimeElement);
-
-          historyItem.appendChild(textInfoContainer);
-
-          const deleteButton = document.createElement('button');
-          deleteButton.classList.add('delete-button');
-          deleteButton.textContent = '×';
-          deleteButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-            deleteHistoryItem(item.id); // 使用 id 删除
-          });
-
-          historyItem.appendChild(deleteButton);
-          historyItem.addEventListener('click', () => populateForm(item));
-          historyList.appendChild(historyItem);
-        });
+        const cursor = event.target.result;
+        if (cursor) {
+          const item = cursor.value;
+          const historyItemElement = createHistoryItemElement(item); // 使用新函数创建元素
+          historyList.appendChild(historyItemElement); // 添加到列表末尾（因为是倒序读取）
+          cursor.continue(); // 移动到下一个（更旧的）项目
+        }
       };
 
       request.onerror = (event) => {
         console.error('从 IndexedDB 读取历史记录失败:', event.target.error);
       };
     }
+
 
     function toggleSelectAll() {
       const checkboxes = document.querySelectorAll('#historyList input[type="checkbox"]');
@@ -1015,39 +1059,86 @@
         return;
       }
 
+      if (!db) {
+        console.error('IndexedDB 未初始化，无法删除');
+        showNotification('数据库错误，无法删除', true);
+        return;
+      }
+
       const tx = db.transaction(OBJECT_STORE_NAME, 'readwrite');
       const store = tx.objectStore(OBJECT_STORE_NAME);
+      const historyList = document.getElementById('historyList');
+      let deletedCount = 0;
+      let failedCount = 0;
 
       idsToDelete.forEach(id => {
-        store.delete(id);
+        const deleteRequest = store.delete(id);
+        deleteRequest.onsuccess = () => {
+          deletedCount++;
+          // 从 UI 中移除对应的元素
+          const itemToRemove = historyList.querySelector(`.history-item[data-id="${id}"]`);
+          if (itemToRemove) {
+            itemToRemove.remove(); // 直接从 DOM 中移除
+          } else {
+            console.warn(`尝试从 UI 删除历史记录项失败：未找到 data-id 为 ${id} 的元素。`);
+          }
+        };
+        deleteRequest.onerror = (event) => {
+          failedCount++;
+          console.error(`从 IndexedDB 删除 ID ${id} 失败:`, event.target.error);
+        };
       });
 
       tx.oncomplete = () => {
-        console.log('成功删除选定的历史记录项');
-        displayHistory();
-        showNotification('成功删除选定的历史记录项');
+        console.log(`删除选定项事务完成: ${deletedCount} 成功, ${failedCount} 失败`);
+        if (deletedCount > 0) {
+          showNotification(`成功删除 ${deletedCount} 项历史记录`);
+        }
+        if (failedCount > 0) {
+          showNotification(`有 ${failedCount} 项删除失败`, true);
+        }
+        // 清除全选状态（如果需要）
+        document.getElementById('selectAllButton').textContent = '全选';
+        checkboxes.forEach(cb => cb.checked = false); // 取消选中
+        // 不再调用 displayHistory()
       };
 
       tx.onerror = (event) => {
-        console.error('删除选定的历史记录项失败:', event.target.error);
-        showNotification('删除选定的历史记录项失败', true);
+        // 这个错误通常指示整个事务失败，可能没有项被删除
+        console.error('删除选定的历史记录项事务失败:', event.target.error);
+        showNotification('删除选定的历史记录项时发生错误', true);
       };
     }
 
-    // Function to delete a history item from IndexedDB
     function deleteHistoryItem(id) {
+      if (!db) {
+        console.error('IndexedDB 未初始化，无法删除');
+        showNotification('数据库错误，无法删除', true);
+        return;
+      }
       const tx = db.transaction(OBJECT_STORE_NAME, 'readwrite');
       const store = tx.objectStore(OBJECT_STORE_NAME);
       const request = store.delete(id);
 
       request.onsuccess = () => {
-        console.log('成功删除历史记录项', id);
-        displayHistory();
-        showNotification('成功删除历史记录项');
+        console.log('成功从 IndexedDB 删除历史记录项', id);
+        // 从 UI 中移除对应的元素
+        const historyList = document.getElementById('historyList');
+        const itemToRemove = historyList.querySelector(`.history-item[data-id="${id}"]`);
+        if (itemToRemove) {
+          itemToRemove.remove(); // 直接从 DOM 中移除
+          showNotification('成功删除历史记录项');
+        } else {
+          // 如果 UI 和 DB 不同步（理论上不应发生），记录警告
+          console.warn(`尝试从 UI 删除历史记录项失败：未找到 data-id 为 ${id} 的元素。`);
+          // 作为后备，可以考虑重新加载，但这会违背优化目标
+          // displayHistory();
+        }
+        // 不再调用 displayHistory()
       };
 
       request.onerror = (event) => {
-        console.error('删除历史记录项失败:', event.target.error);
+        console.error('从 IndexedDB 删除历史记录项失败:', event.target.error);
         showNotification('删除历史记录项失败', true);
       };
     }
@@ -1063,12 +1154,19 @@
 
       document.getElementById('generatedImage').src = item.imageData; // 使用 Base64 
       // 使用 Base64 字符串
-      document.getElementById('imageUrlLink').href = item.imageData; // 也可以将 Base64 字符串作为链接
-      document.getElementById('imageUrlLink').textContent = 'Base64 Image Data';
+      const imageUrlLink = document.getElementById('imageUrlLink');
+      imageUrlLink.href = '#'; // Base64太长，不适合做链接
+      imageUrlLink.textContent = '历史记录图像'; // 或者更友好的提示
+      imageUrlLink.title = '点击可全屏查看'; // 提示用户可以点击图像
+      // 使复制按钮复制当前显示的 Base64 数据
+      const copyUrlButton = document.getElementById('copyUrlButton');
+      // 移除旧监听器（如果存在）并添加新监听器
+      copyUrlButton.replaceWith(copyUrlButton.cloneNode(true)); // 简单克隆以移除监听器
+      document.getElementById('copyUrlButton').onclick = () => copyImageUrl(); // 使用通用的复制函数
 
       // Enable the download button
       document.getElementById('downloadButton').disabled = false;
-      showNotification("已填入");
+      showNotification("已从历史记录填入");
     }
 
     let aiBase64Image = ""; // 用于存储Base64编码的图片
@@ -1192,7 +1290,7 @@
           document.getElementById('imageUrlLink').href = base64Image;
           document.getElementById('imageUrlLink').textContent = 'Base64 Image Data'; // 更改文本
 
-          // Save history
+          // Save history using base64 data
           await saveHistory({
             prompt: prompt,
             negativePrompt: negativePrompt,
@@ -1200,7 +1298,7 @@
             numInferenceSteps: numInferenceSteps,
             guidanceScale: guidanceScale,
             seed: seed,
-            imageUrl: imageUrl // 仍然保存 URL，虽然不直接使用
+            base64Image: base64Image // 传递 Base64 数据
           });
 
           // Enable the download button
@@ -1260,15 +1358,20 @@
     }
 
     function copyImageUrl() {
-      const imageUrl = document.getElementById('imageUrlLink').textContent;
-      navigator.clipboard.writeText(imageUrl)
-        .then(() => {
-          showNotification('Base64 数据已复制到剪贴板！');
-        })
-        .catch(err => {
-          console.error('复制 Base64 失败: ', err);
-          showNotification('复制失败，请手动复制', true);
-        });
+      const imageUrl = document.getElementById('generatedImage').src; // 获取当前图像的 src
+      // 检查 src 是否是有效的 Base64 数据 URI
+      if (imageUrl && imageUrl.startsWith('data:image')) {
+        navigator.clipboard.writeText(imageUrl)
+          .then(() => {
+            showNotification('图像 Base64 数据已复制到剪贴板！');
+          })
+          .catch(err => {
+            console.error('复制 Base64 失败: ', err);
+            showNotification('复制失败，请检查浏览器权限或手动复制', true);
+          });
+      } else {
+        showNotification('没有有效的图像数据可复制', true);
+      }
     }
 
     // 新增的通知函数

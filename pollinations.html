@@ -156,6 +156,32 @@
             transform: scale(1.05);
         }
 
+        button.loading {
+            position: relative;
+            padding-right: 40px; /* 留出空间给加载动画 */
+            pointer-events: none; /* 禁用点击事件 */
+        }
+
+        button.loading::after {
+            content: '';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            margin-top: -10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         /* 结果显示容器样式 */
         #resultContainer {
             width: 50%;
@@ -743,15 +769,15 @@
         });
 
         async function generateImage() {
+            const generateButton = document.getElementById('generate-button'); // 获取按钮元素
+            generateButton.classList.add('loading'); // 添加 loading class
+            generateButton.disabled = true; // 禁用按钮
+
             const prompt = document.getElementById('prompt').value;
             const model = document.getElementById('selectedModel').value;
             let seed = document.getElementById('seed').value;
             const widthInput = document.getElementById('width').value;
             const heightInput = document.getElementById('height').value;
-            //const nologo = document.getElementById('nologo').checked;
-            //const privateFlag = document.getElementById('private').checked;
-            //const enhance = document.getElementById('enhance').checked;
-            //const safe = document.getElementById('safe').checked;
             const resolutionPreset = document.getElementById('resolutionPreset').value;
 
             const nologo = document.getElementById('nologo').classList.contains('active');
@@ -796,7 +822,7 @@
             } else {
                 url += `&enhance=false`;
             }
-             if (safe) {
+            if (safe) {
                 url += `&safe=true`;
             } else {
                 url += `&safe=false`;
@@ -840,6 +866,9 @@
 
             } catch (error) {
                 alert('生成图像出错: ' + error);
+            } finally {
+                generateButton.classList.remove('loading'); // 移除 loading class
+                generateButton.disabled = false; // 启用按钮
             }
         }
 
