@@ -407,7 +407,9 @@
 <body>
     <div class="main-container">
         <div class="container">
-            <h1>Pollinations AI</h1>
+            <a href="./index.html" style="text-decoration: none; color: inherit;">
+                <h1>Pollinations AI</h1>
+            </a>
             <div style="display: flex; justify-content: center; align-items: center;">
                 <button onclick="window.history.back()" style="margin-right: 4px; font-size: 14px; color: #007bff; text-decoration: none;display: block; text-align: center; background-color: none; background: none; font-weight: 500; padding: 0;">返回</button>
                 |
@@ -565,7 +567,7 @@
         </div>
 
         <div id="resultContainer">
-            <img id="imageResult" src="" alt="生成的图像">
+            <img id="imageResult" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像">
             <div style="display: flex; flex-direction: row; align-items: center; margin-top: 10px;">
                 <input type="text" id="filenameInput" placeholder="输入文件名" style="margin-top: 10px; padding: 5px; border: 1px solid #ddd; border-radius: 5px;">
                 <button onclick="downloadImage()" id="download-button">下载图片</button>
@@ -886,7 +888,7 @@
                 downloadImage(); // 触发下载函数
             }
         });
-        
+
         function downloadImage() {
             const imageBase64 = document.getElementById('imageResult').src;
             const filename = document.getElementById('filenameInput').value || 'image';
