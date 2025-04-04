@@ -349,6 +349,29 @@
              #resultContainer img{
                 max-height: 500px;
              }
+
+            #historyList {
+                padding: 0 10px; /* 添加左右内边距 */
+            }
+
+            .historyItem {
+                padding: 10px; /* 减小内边距 */
+            }
+
+            .historyItem img {
+                max-width: 80px; /* 缩小图片 */
+                max-height: 80px;
+                margin-right: 10px; /* 减少间距 */
+            }
+
+            .historyItem .promptText {
+                font-size: 14px; /* 缩小字体 */
+            }
+
+            .historyItem button {
+                font-size: 10px; /* 缩小字体 */
+                padding: 2px 4px; /* 减小内边距 */
+            }
         }
     </style>
 </head>
@@ -439,11 +462,167 @@
     </div>
 
     <script>
-        // 从本地存储加载历史记录
-        let history = JSON.parse(localStorage.getItem('imageHistory') || '[]');
-        updateHistoryList();
+        const DB_NAME = 'imageHistoryDB';
+        const DB_VERSION = 1; // Use integer型 version number
+        const OBJECT_STORE_NAME = 'imageHistoryStore';
 
-        document.addEventListener('DOMContentLoaded', function() {
+        let db;
+
+        // 初始化 IndexedDB
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = window.indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error("Database error: " + event.target.errorCode);
+                    reject(event.target.errorCode);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log("Database opened successfully");
+                    resolve();
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+
+                    // 如果对象仓库不存在，则创建一个
+                    if (!db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
+                        const objectStore = db.createObjectStore(OBJECT_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                        objectStore.createIndex('prompt', 'params.prompt', { unique: false });//可以根据prompt搜索
+                        console.log("Object store created");
+                    }
+                };
+            });
+        }
+
+        // 从 IndexedDB 加载历史记录
+        async function updateHistoryList() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = ''; // 清空列表
+
+            const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+            const request = objectStore.openCursor(null, 'prev'); // 从最新到最旧
+
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const item = cursor.value;
+
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('historyItem');
+
+                    const img = document.createElement('img');
+                    img.src = item.imageUrl;
+                    img.alt = item.params?.prompt || 'No Prompt';
+
+                    const promptText = document.createElement('div');
+                    promptText.classList.add('promptText');
+                    promptText.textContent = item.params?.prompt || 'No Prompt';
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = '删除';
+                    deleteButton.onclick = (event) => {
+                        event.stopPropagation();
+                        deleteHistoryItem(item.id); // 使用 ID 删除
+                    };
+
+                    listItem.appendChild(img);
+                    listItem.appendChild(promptText);
+                    listItem.appendChild(deleteButton);
+
+                    listItem.onclick = () => {
+                        loadHistoryItem(item.id); // 使用 ID 加载
+                    };
+
+                    historyList.appendChild(listItem);
+                    cursor.continue();
+                }
+            };
+
+            transaction.onerror = (event) => {
+                console.error("Transaction error: " + event.target.errorCode);
+            };
+        }
+
+        // 从 IndexedDB 删除历史记录项
+        function deleteHistoryItem(id) {
+            const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+            const request = objectStore.delete(id);
+
+            request.onsuccess = () => {
+                updateHistoryList();
+            };
+
+            transaction.onerror = (event) => {
+                console.error("Transaction error: " + event.target.errorCode);
+            };
+        }
+
+        // 从 IndexedDB 加载历史记录项
+        function loadHistoryItem(id) {
+            const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+            const request = objectStore.get(id);
+
+            request.onsuccess = (event) => {
+                const item = event.target.result;
+                if (item) {
+                    document.getElementById('prompt').value = item.params?.prompt || '';
+
+                    // 移除所有模型按钮的 active 类
+                    document.querySelectorAll('.model-button').forEach(button => {
+                        button.classList.remove('active');
+                    });
+
+                    // 根据历史记录中的模型选择对应的按钮
+                    const model = item.params?.model || 'flux'; // 默认值设置为 'flux'
+                    document.getElementById(`model${model.charAt(0).toUpperCase() + model.slice(1)}Btn`).classList.add('active');
+                    document.getElementById('selectedModel').value = model;
+
+                    document.getElementById('seed').value = item.params?.seed || '';
+                    document.getElementById('width').value = item.params?.width || '';
+                    document.getElementById('height').value = item.params?.height || '';
+
+                    // 设置按钮的 active 状态
+                    document.getElementById('nologo').classList.toggle('active', item.params?.nologo);
+                    document.getElementById('private').classList.toggle('active', item.params?.privateFlag);
+                    document.getElementById('enhance').classList.toggle('active', item.params?.enhance);
+                    document.getElementById('safe').classList.toggle('active', item.params?.safe);
+                    document.getElementById('resolutionPreset').value = item.params?.resolutionPreset || '';
+
+                    document.getElementById('imageResult').src = item.imageUrl;
+                }
+            };
+
+            transaction.onerror = (event) => {
+                console.error("Transaction error: " + event.target.errorCode);
+            };
+        }
+
+        // 将图片数据保存到 IndexedDB
+        function saveImageToDB(imageData) {
+            const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+            const request = objectStore.add(imageData);
+
+            request.onsuccess = () => {
+                updateHistoryList();
+            };
+
+            request.onerror = (event) => {
+                console.error("Transaction error: " + event.target.errorCode);
+            };
+        }
+
+        // 页面加载时初始化数据库并加载历史记录
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initDB();
+            await updateHistoryList();
+
             const checkboxGroup = document.querySelector('.checkbox-group');
 
             checkboxGroup.addEventListener('click', function(event) {
@@ -563,9 +742,7 @@
                         },
                         imageUrl: base64data // Store Base64 string
                     };
-                    history.push(imageData);
-                    localStorage.setItem('imageHistory', JSON.stringify(history));
-                    updateHistoryList();
+                    saveImageToDB(imageData);
                 }
                 reader.readAsDataURL(blob); // Start reading the blob as Data URL
 
@@ -573,76 +750,6 @@
             } catch (error) {
                 alert('生成图像出错: ' + error);
             }
-        }
-
-        function updateHistoryList() {
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = ''; // 清空列表
-
-            history.forEach((item, index) => {
-                const listItem = document.createElement('li');
-                listItem.classList.add('historyItem');
-
-                const img = document.createElement('img');
-                img.src = item.imageUrl; // Use Base64 string directly
-                img.alt = item.params?.prompt || 'No Prompt'; // 使用可选链操作符
-
-                const promptText = document.createElement('div');
-                promptText.classList.add('promptText');
-                promptText.textContent = item.params?.prompt || 'No Prompt'; // 使用可选链操作符
-
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = '删除';
-                deleteButton.onclick = (event) => {
-                    event.stopPropagation(); // 阻止点击事件冒泡到 historyItem
-                    deleteHistoryItem(index);
-                };
-
-                listItem.appendChild(img);
-                listItem.appendChild(promptText);
-                listItem.appendChild(deleteButton);
-
-                listItem.onclick = () => {
-                    loadHistoryItem(index);
-                };
-
-                historyList.appendChild(listItem);
-            });
-        }
-
-        function deleteHistoryItem(index) {
-            history.splice(index, 1);
-            localStorage.setItem('imageHistory', JSON.stringify(history));
-            updateHistoryList();
-        }
-
-        function loadHistoryItem(index) {
-            const item = history[index];
-
-            document.getElementById('prompt').value = item.params?.prompt || '';
-
-            // 移除所有模型按钮的 active 类
-            document.querySelectorAll('.model-button').forEach(button => {
-                button.classList.remove('active');
-            });
-
-            // 根据历史记录中的模型选择对应的按钮
-            const model = item.params?.model || 'flux'; // 默认值设置为 'flux'
-            document.getElementById(`model${model.charAt(0).toUpperCase() + model.slice(1)}Btn`).classList.add('active');
-            document.getElementById('selectedModel').value = model;
-
-            document.getElementById('seed').value = item.params?.seed || '';
-            document.getElementById('width').value = item.params?.width || '';
-            document.getElementById('height').value = item.params?.height || '';
-
-            // 设置按钮的 active 状态
-            document.getElementById('nologo').classList.toggle('active', item.params?.nologo);
-            document.getElementById('private').classList.toggle('active', item.params?.privateFlag);
-            document.getElementById('enhance').classList.toggle('active', item.params?.enhance);
-            document.getElementById('safe').classList.toggle('active', item.params?.safe);
-            document.getElementById('resolutionPreset').value = item.params?.resolutionPreset || '';
-
-            document.getElementById('imageResult').src = item.imageUrl; // Load Base64 string
         }
 
         // 回车键触发生成按钮
