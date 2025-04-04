@@ -54,7 +54,7 @@
             transition: background-color 0.3s;
             min-width: fit-content;
             font-weight: bold;
-            width: 100%;
+            width: fit-content;
         }
 
         button:hover {
@@ -216,9 +216,13 @@
     <div class="container">
         <div class="left-panel">
             <h1>Gemini对话生图编辑</h1>
-            <a href="./index.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">返回主页</a>
+            <div style="display: flex; justify-content: center; align-items: center;">
+            <button onclick="window.history.back()" style="margin-right: 4px; font-size: 14px; color: #007bff; text-decoration: none;display: block; text-align: center; background-color: none; background: none; font-weight: 500; padding: 0;">返回</button>
             |
-            <a href="./together.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">together.ai</a>
+            <a href="./together.html" style="font-size: 14px; color: #007bff; text-decoration: none; margin-left: 4px; margin-right: 4px;">together.ai</a>
+            |
+            <a href="./pollinations.html" style=" font-size: 14px; color: #007bff; text-decoration: none; margin-left: 4px;">pollinations</a>
+            </div>
             <label for="apiKey">API Key:</label>
             <input type="text" id="apiKey" name="apiKey" placeholder="输入谷歌API密钥" onchange="saveApiKey()">
             <div id="apiKeyAlert" class="alert" style="display: none;"></div>
@@ -233,7 +237,7 @@
               <img id="imagePreview" src="#" alt="图片预览" style="display: none;">
             </div>
 
-            <button onclick="generateImage()">
+            <button onclick="generateImage()" style="width: 100%;">
                 <span class="button-text">Go</span>
                 <div class="loader" id="loader"></div>
             </button>
