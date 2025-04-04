@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI 图像生成器</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0; /* 重要：移除 body 的 padding */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh; /* 重要：设置 body 的高度为 100vh */
+            overflow: hidden; /* 重要：防止 body 出现滚动条 */
+        }
+
+        h1 {
+            color: #4285f4;
+            margin-bottom: 20px;
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 25%;
+            max-width: none;
+            margin-bottom: 0;
+            overflow-y: auto; /* 允许参数区域滚动 */
+            height: 100%;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+            color: #333;
+        }
+
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .model-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .model-button {
+            background-color: #f4f4f4;
+            color: #333;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 添加阴影 */
+        }
+
+        .model-button:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-2px); /* 悬停时向上移动 */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* 增加阴影 */
+        }
+
+        .model-button.active {
+            background-color: #4285f4;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* 增加阴影 */
+        }
+
+        .model-button:focus {
+            outline: none; /* 移除焦点时的默认边框 */
+        }
+
+        .radio-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .radio-group label {
+            margin-top: 0;
+            margin-right: 20px;
+            font-weight: normal;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4285f4;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #4285f4;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        button {
+            background-color: #ffa500;
+            color: white;
+            padding: 6px 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #00aaff;
+            transform: scale(1.05);
+        }
+
+        /* 结果显示容器样式 */
+        #resultContainer {
+            width: 50%;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content:center; /* 内容顶部对齐 */
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+            border-left: 1px solid #ccc;
+            border-right: 1px solid #ccc;
+        }
+
+        #imageResult {
+            max-width: 95%;
+            height: 90%; /* 调整为按钮留出空间 */
+            cursor: pointer;
+            object-fit: contain;
+        }
+
+        #download-button {
+            font-size: small;
+            min-width: fit-content;
+            margin-left: 4px;
+            padding: 6px 8px;
+
+        }
+
+        /* 历史记录容器样式 */
+        #historyContainer {
+            margin-top: 0;
+            width: 25%;
+            height: 100vh;
+            overflow-y: auto; /* 允许历史记录区域滚动 */
+            background-color: #fff;
+        }
+
+        #historyList {
+            list-style: none;
+            padding: 0;
+        }
+
+        .historyItem {
+            background-color: #fff;
+            border-bottom: #ccc 1px solid;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .historyItem:hover {
+            background-color: #fffbda;
+            transform: scale(1.02);
+        }
+
+        .historyItem img {
+            max-width: 100px;
+            max-height: 100px;
+            margin-right: 15px;
+            border-radius: 5px;
+        }
+
+        .historyItem .promptText {
+            flex-grow: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        .historyItem button {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: #e53935;
+            color: white;
+            font-size: smaller;
+            border: none;
+            padding: 4px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .historyItem button:hover {
+            background-color: #c62828;
+        }
+
+        h2 {
+            padding: 15px;
+            margin: 0;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+            justify-content: space-between;
+        }
+
+        .checkbox-group button {
+            background-color: #eee;
+            color: #333;
+            border: none;
+            width: calc(25% - 5px); /* 4个按钮一行 */
+            padding: 4px 4px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .checkbox-group button.active {
+            background-color: #4285f4;
+            color: white;
+        }
+
+        /* 桌面端布局 */
+        @media (max-width: 768px) {
+            body {
+                height: fit-content; /* 允许 body 高度自适应内容 */
+                overflow: auto; /* 允许 body 滚动 */
+                align-items: center; /* 居中对齐 */
+                justify-content: center;
+            }
+
+            .main-container {
+                max-width: none; /* 移除最大宽度限制 */
+                flex-direction: column;
+                height: fit-content;
+            }
+
+            .container {
+                width: calc(100% - 20px); /* 设置为 100% 减去边距 */
+                border-radius: 0%;
+            }
+
+            #resultContainer {
+                width: 100%;
+                max-height: fit-content; /* 设置为 100vh 以填充屏幕 */
+                justify-content: center; /* 内容顶部对齐 */
+                align-self: center;
+                border: none;
+            }
+
+            .imageResult {
+                max-width: calc(100% - 20px);
+                max-height: fit-content; /* 调整为按钮留出空间 */
+            }
+
+            #historyContainer {
+                width: 100%;
+                height: fit-content;
+            }
+
+             #resultContainer img{
+                max-height: 500px;
+             }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="container">
+            <h1>AI 图像生成器</h1>
+            <label for="prompt">提示词 (Prompt):</label>
+            <input type="text" id="prompt" name="prompt" required>
+
+            <label>模型 (Model):</label>
+            <div class="model-buttons">
+                <button type="button" id="modelFluxBtn" data-model="flux" class="model-button active">Flux</button>
+                <button type="button" id="modelTurboBtn" data-model="turbo" class="model-button">Turbo</button>
+                <input type="hidden" id="selectedModel" name="model" value="flux">
+            </div>
+            
+
+            <label for="seed">种子 (Seed):</label>
+            <input type="text" id="seed" name="seed">
+
+            <label for="resolutionPreset">分辨率预设:</label>
+            <select id="resolutionPreset" name="resolutionPreset">
+                <option value="720x1280">默认720x1280 (9:16)</option>
+                <option disabled>————方图————</option>
+                <option value="512x512">512x512 (1:1)</option>
+                <option value="1024x1024">1024x1024 (1:1)</option>
+                <option value="1280x1280">1280x1280 (1:1)</option>
+                <option value="1440x1440">1440x1440 (1:1)</option>
+                <option value="1600x1600">1600x1600 (1:1)</option>
+                <option value="1792x1792">1792x1792 (1:1)</option>
+                <option value="2048x2048">2048x2048 (1:1)</option>
+                <option disabled>————竖图————</option>
+                <option value="480x640">480x640 (3:4)</option>
+                <option value="600x800">600x800 (3:4)</option>
+                <option value="768x1024">768x1024 (3:4)</option>
+                <option value="900x1200">800x1200 (3:4)</option>
+                <option value="960x1280">960x1280 (3:4)</option>
+                <option value="1080x1440">1080x1440 (3:4)</option>
+                <option value="1200x1600">1200x1600 (3:4)</option>
+                <option value="540x960">540x960 (9:16 qHD)</option>
+                <option value="720x1280">720x1280 (9:16 HD)</option>
+                <option value="810x1440">810x1440 (9:16 HD+)</option>
+                <option value="900x1600">900x1600 (9:16 HD+)</option>
+                <option value="1080x1920">1080x1920 (9:16 FHD)</option>
+                <option disabled>————横图————</option>
+                <option value="640x480">640x480 (4:3 VGA)</option>
+                <option value="800x600">800x600 (4:3 SVGA)</option>
+                <option value="1024x768">1024x768 (4:3 XGA)</option>
+                <option value="1280x960">1280x960 (4:3 QXGA)</option>
+                <option value="1440x1080">1440x1080 (4:3 QXGA+)</option>
+                <option value="1600x1200">1600x1200 (4:3 UXGA)</option>
+                <option value="960x540">960x540 (16:9 qHD)</option>
+                <option value="1280x720">1280x720 (16:9 HD)</option>
+                <option value="1440x810">1440x810 (16:9 HD+)</option>
+                <option value="1600x900">1600x900 (16:9 HD+)</option>
+                <option value="1920x1080">1920x1080 (16:9 FHD)</option>
+            </select>
+            <div style="display: flex; justify-content: flex-start; align-items: center;">
+                <input type="text" id="width" name="width" placeholder="宽度" style="width: 48%; max-width: 100px; margin-right: 5px;">
+                <input type="text" id="height" name="height" placeholder="高度" style="width: 48%; max-width: 100px;">
+                <button type="button" onclick="clearWidthHeight()" style="padding: 6px 8px; cursor: pointer; margin-bottom: 10px; margin-left: 5px; font-size: 12px; font-weight: 500; background-color: #c62828;">清除</button>
+            </div>
+
+            <div class="checkbox-group">
+                <button type="button" id="nologo" data-name="nologo" class="active">无Logo</button>
+                <button type="button" id="private" data-name="private" class="active">私有</button>
+                <button type="button" id="enhance" data-name="enhance" class="active">增强</button>
+                <button type="button" id="safe" data-name="safe">安全</button>
+            </div>
+
+            <button onclick="generateImage()">生成图像</button>
+        </div>
+
+        <div id="resultContainer">
+            <img id="imageResult" src="" alt="生成的图像">
+            <div style="display: flex; flex-direction: row; align-items: center; margin-top: 10px;">
+                <input type="text" id="filenameInput" placeholder="输入文件名" style="margin-top: 10px; padding: 5px; border: 1px solid #ddd; border-radius: 5px;">
+                <button onclick="downloadImage()" id="download-button">下载图片</button>
+            </div>
+        </div>
+
+        <div id="historyContainer">
+            <h2>历史记录</h2>
+            <ul id="historyList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // 从本地存储加载历史记录
+        let history = JSON.parse(localStorage.getItem('imageHistory') || '[]');
+        updateHistoryList();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxGroup = document.querySelector('.checkbox-group');
+
+            checkboxGroup.addEventListener('click', function(event) {
+                if (event.target.tagName === 'BUTTON') {
+                    const button = event.target;
+                    button.classList.toggle('active');
+                }
+            });
+
+            // 模型选择按钮的点击事件
+            const modelButtons = document.querySelector('.model-buttons');
+            modelButtons.addEventListener('click', function(event) {
+                if (event.target.classList.contains('model-button')) {
+                    // 移除所有按钮的 active 类
+                    document.querySelectorAll('.model-button').forEach(button => {
+                        button.classList.remove('active');
+                    });
+
+                    // 将 active 类添加到当前点击的按钮
+                    const button = event.target;
+                    button.classList.add('active');
+
+                    // 更新隐藏的 input 字段的值
+                    document.getElementById('selectedModel').value = button.dataset.model;
+                }
+            });
+        });
+
+        async function generateImage() {
+            const prompt = document.getElementById('prompt').value;
+            const model = document.getElementById('selectedModel').value;
+            let seed = document.getElementById('seed').value;
+            const widthInput = document.getElementById('width').value;
+            const heightInput = document.getElementById('height').value;
+            //const nologo = document.getElementById('nologo').checked;
+            //const privateFlag = document.getElementById('private').checked;
+            //const enhance = document.getElementById('enhance').checked;
+            //const safe = document.getElementById('safe').checked;
+            const resolutionPreset = document.getElementById('resolutionPreset').value;
+
+            const nologo = document.getElementById('nologo').classList.contains('active');
+            const privateFlag = document.getElementById('private').classList.contains('active');
+            const enhance = document.getElementById('enhance').classList.contains('active');
+            const safe = document.getElementById('safe').classList.contains('active');
+
+            if (!seed) {
+                seed = Math.floor(Math.random() * 999999999) + 1;
+            }
+
+            let width = widthInput;
+            let height = heightInput;
+
+            if (resolutionPreset) {
+                if (!widthInput && !heightInput) {
+                    [width, height] = resolutionPreset.split('x');
+                }
+            }
+
+
+            let url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=${model}&seed=${seed}`;
+
+            if (width) {
+                url += `&width=${width}`;
+            }
+            if (height) {
+                url += `&height=${height}`;
+            }
+            if (nologo) {
+                url += `&nologo=true`;
+            } else {
+                url += `&nologo=false`;
+            }
+            if (privateFlag) {
+                url += `&private=true`;
+            } else {
+                url += `&private=false`;
+            }
+            if (enhance) {
+                url += `&enhance=true`;
+            } else {
+                url += `&enhance=false`;
+            }
+             if (safe) {
+                url += `&safe=true`;
+            } else {
+                url += `&safe=false`;
+            }
+
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const blob = await response.blob();
+
+                // Convert blob to Base64
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    const base64data = reader.result;
+
+                    document.getElementById('imageResult').src = base64data;
+
+                    // Save to history
+                    const imageData = {
+                        params: {
+                            prompt: prompt,
+                            model: model,
+                            seed: seed,
+                            width: width,
+                            height: height,
+                            nologo: nologo,
+                            privateFlag: privateFlag,
+                            enhance: enhance,
+                            safe: safe,
+                            resolutionPreset: resolutionPreset
+                        },
+                        imageUrl: base64data // Store Base64 string
+                    };
+                    history.push(imageData);
+                    localStorage.setItem('imageHistory', JSON.stringify(history));
+                    updateHistoryList();
+                }
+                reader.readAsDataURL(blob); // Start reading the blob as Data URL
+
+
+            } catch (error) {
+                alert('生成图像出错: ' + error);
+            }
+        }
+
+        function updateHistoryList() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = ''; // 清空列表
+
+            history.forEach((item, index) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('historyItem');
+
+                const img = document.createElement('img');
+                img.src = item.imageUrl; // Use Base64 string directly
+                img.alt = item.params?.prompt || 'No Prompt'; // 使用可选链操作符
+
+                const promptText = document.createElement('div');
+                promptText.classList.add('promptText');
+                promptText.textContent = item.params?.prompt || 'No Prompt'; // 使用可选链操作符
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '删除';
+                deleteButton.onclick = (event) => {
+                    event.stopPropagation(); // 阻止点击事件冒泡到 historyItem
+                    deleteHistoryItem(index);
+                };
+
+                listItem.appendChild(img);
+                listItem.appendChild(promptText);
+                listItem.appendChild(deleteButton);
+
+                listItem.onclick = () => {
+                    loadHistoryItem(index);
+                };
+
+                historyList.appendChild(listItem);
+            });
+        }
+
+        function deleteHistoryItem(index) {
+            history.splice(index, 1);
+            localStorage.setItem('imageHistory', JSON.stringify(history));
+            updateHistoryList();
+        }
+
+        function loadHistoryItem(index) {
+            const item = history[index];
+
+            document.getElementById('prompt').value = item.params?.prompt || '';
+
+            // 移除所有模型按钮的 active 类
+            document.querySelectorAll('.model-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // 根据历史记录中的模型选择对应的按钮
+            const model = item.params?.model || 'flux'; // 默认值设置为 'flux'
+            document.getElementById(`model${model.charAt(0).toUpperCase() + model.slice(1)}Btn`).classList.add('active');
+            document.getElementById('selectedModel').value = model;
+
+            document.getElementById('seed').value = item.params?.seed || '';
+            document.getElementById('width').value = item.params?.width || '';
+            document.getElementById('height').value = item.params?.height || '';
+
+            // 设置按钮的 active 状态
+            document.getElementById('nologo').classList.toggle('active', item.params?.nologo);
+            document.getElementById('private').classList.toggle('active', item.params?.privateFlag);
+            document.getElementById('enhance').classList.toggle('active', item.params?.enhance);
+            document.getElementById('safe').classList.toggle('active', item.params?.safe);
+            document.getElementById('resolutionPreset').value = item.params?.resolutionPreset || '';
+
+            document.getElementById('imageResult').src = item.imageUrl; // Load Base64 string
+        }
+
+        // 回车键触发生成按钮
+        document.getElementById('prompt').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // 阻止默认行为，例如提交表单
+                generateImage(); // 触发生成图像函数
+            }
+        });
+
+        function downloadImage() {
+            const imageBase64 = document.getElementById('imageResult').src;
+            const filename = document.getElementById('filenameInput').value || 'image';
+            const a = document.createElement('a');
+            a.href = imageBase64;
+            a.download = filename + '.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function clearWidthHeight() {
+            document.getElementById('width').value = '';
+            document.getElementById('height').value = '';
+        }
+    </script>
+</body>
+</html>
