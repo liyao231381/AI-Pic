@@ -880,6 +880,13 @@
             }
         });
 
+        document.getElementById('filenameInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // 阻止默认行为，例如提交表单
+                downloadImage(); // 触发下载函数
+            }
+        });
+        
         function downloadImage() {
             const imageBase64 = document.getElementById('imageResult').src;
             const filename = document.getElementById('filenameInput').value || 'image';
