@@ -1153,11 +1153,6 @@
       document.getElementById('seed').value = item.seed || '';
 
       document.getElementById('generatedImage').src = item.imageData; // 使用 Base64 
-      // 使用 Base64 字符串
-      const imageUrlLink = document.getElementById('imageUrlLink');
-      imageUrlLink.href = '#'; // Base64太长，不适合做链接
-      imageUrlLink.textContent = '历史记录图像'; // 或者更友好的提示
-      imageUrlLink.title = '点击可全屏查看'; // 提示用户可以点击图像
       // 使复制按钮复制当前显示的 Base64 数据
       const copyUrlButton = document.getElementById('copyUrlButton');
       // 移除旧监听器（如果存在）并添加新监听器
@@ -1287,8 +1282,6 @@
           const base64Image = await urlToBase64(imageUrl); // 转换为 Base64
 
           document.getElementById('generatedImage').src = base64Image; // 显示 Base64
-          document.getElementById('imageUrlLink').href = base64Image;
-          document.getElementById('imageUrlLink').textContent = 'Base64 Image Data'; // 更改文本
 
           // Save history using base64 data
           await saveHistory({
@@ -1738,6 +1731,46 @@ A cute fluffy cat playing in a lush green meadow, sunlight filtering through the
           aiImageUploadContainerLabel.style.display = "none";
         }
       }
+
+      // 获取提示语输入框和生成按钮的引用
+      const promptTextarea = document.getElementById('prompt');
+      const generateButton = document.getElementById('generateButton');
+
+      // 为提示语输入框添加键盘按下事件监听器
+      promptTextarea.addEventListener('keydown', function(event) {
+        // 检查按下的键是否是 Enter 键 (key 代码 'Enter' 或 keyCode 13)
+        // 同时检查 Shift 键是否没有被按下 (允许 Shift+Enter 换行)
+        if (event.key === 'Enter' && !event.shiftKey) {
+          // 阻止 Enter 键的默认行为 (即在文本区域中插入换行符)
+          event.preventDefault();
+
+          // 检查生成按钮当前是否可用 (不是 disabled 状态)
+          if (!generateButton.disabled) {
+            // 触发生成按钮的 click 事件
+            generateButton.click();
+          }
+        }
+      });
+
+      // 获取自定义文件名输入框和下载按钮的引用
+      const filenameInput = document.getElementById('filenameInput');
+      const downloadButton = document.getElementById('downloadButton');
+
+      // 为自定义文件名输入框添加键盘按下事件监听器
+      filenameInput.addEventListener('keydown', function(event) {
+        // 检查按下的键是否是 Enter 键 (key 代码 'Enter' 或 keyCode 13)
+        if (event.key === 'Enter') {
+          // 阻止 Enter 键的默认行为 (例如触发表单提交，虽然这里没有表单)
+          event.preventDefault();
+
+          // 检查下载按钮当前是否可用 (不是 disabled 状态)
+          if (!downloadButton.disabled) {
+            // 触发下载按钮的 click 事件
+            downloadButton.click();
+          }
+        }
+      });
+
   </script>
 
 </body>
