@@ -401,6 +401,39 @@
                 font-size: 10px; /* 缩小字体 */
                 padding: 2px 4px; /* 减小内边距 */
             }
+
+            .checkbox-group button {
+            background-color: #eee;
+            color: #333;
+            border: none;
+            width: calc(25% - 5px); /* 4个按钮一行 */
+            max-width: 60px;
+            min-width: fit-content;
+            padding: 4px 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); /* 添加阴影 */
+        }
+
+        .checkbox-group button:hover {
+            background-color: #666;
+            color: #fff370;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            transition: none;
+        }
+
+        .checkbox-group button.active {
+            background-color: #666;
+            color: #fff370;
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .checkbox-group button.active:hover {
+            color: #fff;
+            transition: none;
+        }
         }
     </style>
 </head>
@@ -423,9 +456,12 @@
                 <button type="button" id="modelTurboBtn" data-model="turbo" class="model-button">Turbo</button>
                 <input type="hidden" id="selectedModel" name="model" value="flux">
             </div>
-
-            <label for="seed">种子:</label>
-            <input type="text" id="seed" name="seed">
+            
+            <label for="seed">种子 (Seed):</label>
+            <div style="display: flex; justify-content: flex-start; align-items: center;">
+                <input type="text" id="seed" name="seed">
+                <button type="button" onclick="document.getElementById('seed').value = Math.floor(Math.random() * 999999999) + 1" style="padding: 6px 8px; cursor: pointer; margin-left: 5px; font-size: 12px; font-weight: 500; background-color: #ffa500; min-width: fit-content; margin-bottom: 10px;">随机</button>
+            </div>
 
             <label for="resolutionPreset">分辨率:</label>
             <select id="resolutionPreset" name="resolutionPreset">
