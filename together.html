@@ -1,348 +1,224 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<title>AI 图片生成器</title>
+<title>FLUX Schnell AI 图片生成器</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="AI 图片生成器，使用 FLUX Schnell 无限模型生成图片。">
 <meta name="keywords" content="AI, 图片生成器, FLUX Schnell 无限, together.ai, API, 生成图片">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-  /* 基本 CSS 重置 */
-  body, h1, h2, h3, p, input, select, button, textarea {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  /* Custom styles */
+  :root {
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --secondary: #f59e0b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --dark: #1e293b;
+    --light: #f8fafc;
   }
-
+  
   body {
-    font-family: sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-    line-height: 1.6;
-    display: flex;
-    min-height: 100vh;
+    @apply bg-gray-50 text-gray-800 font-sans;
     height: 100vh;
     overflow: hidden;
   }
-
-  .left-column {
-    width: 25%;
-    padding: 20px;
-    background-color: #fff;
-    border-right: 1px solid #ccc;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
-  .middle-column {
-    width: 50%;
-    padding: 10px;
-    background-color: #f2fcff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start; /* 内容顶部对齐 */
-    height: 100%;
-    overflow-y: auto;
+  
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
   }
-
-  .right-column {
-    width: 25%;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-left: 1px solid #ccc;
-    overflow-y: auto;
-    height: 100%;
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-
-
-    /* 通用样式 */
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #007bff;
-    }
-
-    @media (max-width: 1200px) {
-      h1 {
-        font-size: 20px;
-        margin-bottom: 0;
-      }
-      .custom {
-        display: none;
-      }
-    }
-    @media (max-width: 800px) {
-      body {
-        flex-direction: column;
-        height: auto;
-        overflow: auto;
-      }
-
-      .left-column, .middle-column, .right-column {
-        width: calc(100% - 30px);
-        height: auto;
-        border: none;
-        padding: 15px;
-      }
-
-      .left-column {
-        border-bottom: 1px solid #ccc;
-      }
-
-      .middle-column {
-        border-bottom: 1px solid #ccc;
-      }
-
-      #history-container {
-        overflow-x: auto;
-        white-space: nowrap;
-        padding-bottom: 10px;
-        overflow-x: hidden;
-      }
-
-      #history-container > div {
-        display: inline-block;
-        vertical-align: top;
-        width: 100%; /* 调整为合适的宽度 */
-        margin-right: 10px;
-        padding: 5px;
-        box-sizing: border-box;
-        border-radius: 5px;
-        border: none;
-      }
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 3px;
-      font-weight: bold;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    select,
-    textarea {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 8px;
-      border: 1px solid #ddd;
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+      background: var(--gray);
       border-radius: 4px;
-      font-size: 14px;
-      transition: border-color 0.3s;
-      resize: vertical;
-    }
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+  }
 
-    textarea {
-      min-height: 80px;
-    }
-
-    input[type="text"]:focus,
-    input[type="number"]:focus,
-    select:focus,
-    textarea:focus {
-      border-color: #007bff;
-      outline: none;
-      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    }
-
-    input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-      color: #999;
-      opacity: 1; /* Firefox */
-    }
-
-    input:-ms-input-placeholder { /* Internet Explorer 10-11 */
-      color: #999;
-    }
-
-    input::-ms-input-placeholder { /* Microsoft Edge */
-      color: #999;
-    }
-
-    select {
-      appearance: none;
-      background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23343a40"><path d="M7 10l5 5 5-5z"/></svg>');
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      background-size: 16px;
-    }
-
-    button {
-      background-color: #007bff;
+  .tooltip {
+    position: relative;
+  }
+  
+  .tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  .tooltip-text {
+    @apply bg-gray-800 text-white text-xs rounded py-1 px-2;
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    transition: all 0.3s;
+  }
+  
+  /* 新增的生成按钮样式 */
+  #generate-button {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%);
       color: white;
-      padding: 6px 10px;
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+      transition: all 0.3s ease;
       border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-      min-width: fit-content;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-
-    .buttons button {
-      margin-right: 4px;
-      width: calc(25% - 4px);
-      max-width: fit-content;
-      margin-bottom: 10px;
-    }
-    #random-seed-button {
-      padding: 6px 10px;
-      max-width: fit-content;
-      margin-left: 5px;
-    }
-
-  /* 加载动画样式 */
-  .loader {
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #3498db;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    animation: spin 2s linear infinite;
-    display: none; /* 初始状态隐藏 */
-    margin-left: 5px; /* 调整与文字的间距 */
-    vertical-align: middle;
   }
 
+  #generate-button:hover {
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #1E40AF 100%);
+      box-shadow: 0 6px 8px rgba(37, 99, 235, 0.4);
+      transform: translateY(-2px);
+  }
+
+  #generate-button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+  }
+
+  #generate-button:disabled {
+      background: linear-gradient(135deg, #93C5FD 0%, #60A5FA 50%, #3B82F6 100%);
+      transform: none;
+      box-shadow: none;
+  }
+
+  .history-item {
+    transition: all 0.2s;
+  }
+  
+  .history-item:hover {
+    @apply bg-orange-100;
+    transform: translateX(2px);
+  }
+  
+  .copy-notification {
+    @apply fixed top-1/2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg z-50;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .copy-notification.show {
+    opacity: 1;
+  }
+  
+  .loader {
+    @apply inline-block w-5 h-5 border-2 border-gray-200 border-t-primary rounded-full;
+    animation: spin 1s linear infinite;
+  }
+  
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+  
+  /* Responsive adjustments */
+  @media (max-width: 1024px) {
+    body {
+      flex-direction: column;
+      height: auto;
+      overflow: auto;
+    }
+    
+    .left-column, .middle-column, .right-column {
+      width: 100% !important;
+      height: auto !important;
+    }
+    
+    .left-column {
+      border-right: none !important;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .middle-column {
+      border-bottom: 1px solid #e2e8f0;
+    }
 
-  #image-container {
-    text-align: center;
-    width: 100%;
-    height: calc(100% - 40px); /* 占据整个结果区域高度 */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center; /* 垂直居中图像 */
-  }
-
-  #output-image {
-    width: 98%;
-    max-height: 95%; /* 调整为按钮留出空间 */
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 10px;
-    padding: 4px;
-    cursor: pointer;
-    object-fit: contain;
-    background-color: #fff;
-  }
-
-  /* 图片和按钮间距 */
-  #error-message {
-    color: red;
-    margin-top: 10px;
-  }
-
-  .delete-button {
-    background-color: red;
-    color: white;
-    padding: 0 4px;
-    border: none;
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  #toggleTranslateArea {
-    background-color: white;
-    color: #ccc;
-    padding: 4px 8px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: background-color 0.3s;
-    margin-top: 10px;
-  }
-  .setting-area {
-    display: none;
-    border-bottom: 2px dashed #FFA500;
-    padding-bottom: 10px;
-  }
-  /* 添加在style标签内 */
-  .copy-notification {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.6);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-  }
-
-  .copy-notification.show {
-    opacity: 1;
+    .right-column {
+      max-height: 70vh;
+    }
   }
 </style>
 </head>
 
-<body>
-    <div class="left-column">
-      <a href="./index.html" style="text-decoration: none; color: inherit;">
-        <h1>FLUX Schnell无限</h1>
-      </a>
-      <div style="display: flex; justify-content: center; align-items: center;">
-        <button onclick="window.history.back()" style="margin-right: 4px; font-size: 14px; color: #007bff; text-decoration: none;display: block; text-align: center; background-color: none; background: none; font-weight: 500; padding: 0;">返回</button>
-        |
-        <a href="./pollinations.html" style="font-size: 14px; color: #007bff; text-decoration: none; margin-right: 4px; margin-left: 4px;;">Pollinations AI</a>
-        |
-        <a href="./edit.html" style=" font-size: 14px; color: #007bff; text-decoration: none; margin-left: 4px;">谷歌图像编辑</a>
+<body class="flex">
+  <!-- Left Column - Controls -->
+  <div class="left-column w-1/4 h-full bg-white border-r border-gray-200 overflow-y-auto scrollbar-hide p-4 flex flex-col space-y-4">
+    <div class="flex flex-col items-center space-y-2">
+      <h1 class="text-2xl font-bold text-primary flex items-center">
+        <i class="fas fa-robot mr-2"></i>
+        FLUX Schnell
+      </h1>
+      <div class="flex space-x-2 text-sm text-primary">
+        <button onclick="window.history.back()" class="hover:underline flex items-center">
+          <i class="fas fa-arrow-left mr-1"></i> 
+        </button>
+        <a href="./pollinations.html" class="hover:underline flex items-center">
+          <i class="fas fa-image mr-1"></i> 
+        </a>
+
+        <a href="./edit.html" class="hover:underline flex items-center">
+          <i class="fas fa-edit mr-1"></i>
+        </a>
       </div>
-      <button type="button" id="toggleTranslateArea">————显示/隐藏 参数设置————</button>
-      <div class="setting-area">
-        <div class="input-group">
-          <label for="api-key">API Key:</label>
-          <input type="text" id="api-key" name="api-key" placeholder="请输入您的API Key">
+    </div>
+    
+    <button type="button" id="toggleTranslateArea" class="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+      <i class="fas fa-cog mr-2"></i>
+      <span>参数设置</span>
+      <i class="fas fa-chevron-down ml-2 text-xs"></i>
+    </button>
+    
+    <div class="setting-area bg-gray-50 rounded-lg p-4 hidden fade-in">
+      <div class="space-y-4">
+        <div>
+          <label for="api-key" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+            <i class="fas fa-key mr-2 text-primary"></i> API Key
+          </label>
+          <div class="relative">
+            <input type="text" id="api-key" name="api-key" placeholder="请输入您的API Key" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+            <button onclick="copyToClipboard('api-key')" class="absolute right-2 top-2 text-gray-400 hover:text-primary">
+              <i class="far fa-copy"></i>
+            </button>
+          </div>
         </div>
-        <div class="input-group">
-          <strong class="custom">自定义：</strong>
-          <input type="number" id="width" name="width" min="64" max="1792" style="min-width: 60px; width: 15%; display: inline-block;"
-            placeholder="宽度">
-          <span> × </span>
-          <input type="number" id="height" name="height" min="64" max="1792" style="min-width: 60px; width: 15%; display: inline-block;"
-            placeholder="高度">
-          <p style="margin-top: 0px; font-style: italic; color: #9a9a9a; font-size: small;"> 宽和高都要为16的整数倍，64~1792之间。</p>
-        </div>
-
-        <div class="input-group">
-          <label for="steps">步数 (Steps):</label>
-          <input type="range" id="steps" name="steps" min="1" max="4" value="4" step="1"
-            oninput="updateStepsValue(this.value)" style="width: 80%;">
-          <span id="stepsValue" style="margin-left: 10px; font-weight: bold; font-size: larger; color: #007bff;">4</span>
-        </div>
-
-        <div class="input-group">
-          <label for="seed">种子数 (Seed, 可选):</label>
-          <input type="number" id="seed" name="seed" placeholder="留空则随机" style="width: calc(100% - 100px); display: inline-block;">
-          <button type="button" id="random-seed-button" onclick="randomSeed()">随机</button>
-        </div>
-        <div class="input-group">
-          <label>翻译设置:</label>
-          <input type="text" id="translation-api-key" name="translation-api-key" placeholder="Gemini API Key">
-          <select id="modelSelect">
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+            <i class="fas fa-language mr-2 text-primary"></i> 翻译设置
+          </label>
+          <input type="text" id="translation-api-key" name="translation-api-key" placeholder="Gemini API Key"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary mb-2">
+          <select id="modelSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
             <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
             <option value="gemini-2.0-flash">gemini-2.0-flash</option>
             <option value="gemini-2.0-flas-001">gemini-2.0-flas-001</option>
@@ -359,10 +235,56 @@
             <option value="gemma-3-27b-it">gemma-3-27b-it</option>
           </select>
         </div>
+
+        <div>
+          <label for="steps" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+            <i class="fas fa-tachometer-alt mr-2 text-primary"></i> 步数 (Steps)
+          </label>
+          <div class="flex items-center space-x-4">
+            <input type="range" id="steps" name="steps" min="1" max="4" value="4" step="1"
+                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                   oninput="updateStepsValue(this.value)">
+            <span id="stepsValue" class="text-primary font-bold text-lg">4</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+            <i class="fas fa-ruler-combined mr-2 text-primary"></i> 自定义尺寸
+          </label>
+          <div class="flex items-center space-x-2">
+            <input type="number" id="width" name="width" min="64" max="1792" placeholder="宽度"
+                   class="w-1/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+            <span class="text-gray-500">×</span>
+            <input type="number" id="height" name="height" min="64" max="1792" placeholder="高度"
+                   class="w-1/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+          </div>
+          <p class="mt-1 text-xs text-gray-500">宽和高都要为16的整数倍，64~1792之间。</p>
+        </div>
+        
+        <div>
+          <label for="seed" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+            <i class="fas fa-seedling mr-2 text-primary"></i> 种子数 (Seed)
+          </label>
+          <div class="flex">
+            <input type="number" id="seed" name="seed" placeholder="留空则随机"
+                   class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+            <button type="button" id="random-seed-button" onclick="clearSeed()"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-r-md transition-colors">
+              <i class="fas fa-eraser"></i>
+            </button>
+          </div>
+        </div>
+
       </div>
-      <div class="input-group" style="margin-top: 10px;">
-        <label for="imageSize">预设分辨率:</label>
-        <select id="imageSize">
+    </div>
+    
+    <div class="space-y-4">
+      <div>
+        <label for="imageSize" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+          <i class="fas fa-expand mr-2 text-primary"></i> 预设分辨率
+        </label>
+        <select id="imageSize" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
           <option value="1008x1792">默认 1008x1792 (9:16)</option>
           <option disabled>————方图————</option>
           <option value="512x512">512x512</option>
@@ -397,42 +319,89 @@
           <option value="1792x1008">1792x1008</option>
         </select>
       </div>
-      <div class="input-group">
-        <label for="prompt">提示词 (Prompt):</label>
-        <textarea id="prompt" name="prompt" placeholder="请输入【英文】提示词"></textarea>
-        <div class="buttons" style="display: flex; justify-content: flex-start;">
-          <button type="button" style="background-color: #00c7b0;"onclick="pastePrompt()">粘贴</button>
-          <button type="button" style="background-color: #00aaff;"onclick="copyPrompt()">复制</button>
-          <button type="button" onclick="translatePrompt()">翻译</button>
-          <button type="button" style="background-color: #ffa500;"onclick="fillPrompt()">填入</button>
-        </div>
-        <div class="input-group">
-          <textarea id="translated-text" rows="4" readonly style="resize: none; margin: 0 auto; border: 2px dashed #ccc; padding: 8px; border-radius: 8px; max-width: 100%; cursor: pointer; position: relative; overflow: auto; min-height: 100px;"></textarea>
-        </div>  
-      </div>
+      
       <div>
-        <button id="generate-button" onclick="generateImage()">生成图片</button>
-        <span class="loader"></span>
-        <span id="error-message"></span>
-      </div>
-    </div>
-
-    <div class="middle-column">
-      <div id="image-container">
-        <img id="output-image" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的AI图片">
-        <div class="download-container" style="display: flex; justify-content: center;">
-          <input type="text" id="filename" placeholder="自定义文件名" style="margin-right: 5px; width: 150px; display: inline-block;">
-          <button onclick="downloadImage()" style="padding: 8px 8px; height: fit-content;">下载图片</button>
+        <label for="prompt" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+          <i class="fas fa-comment-dots mr-2 text-primary"></i> 提示词 (Prompt)
+        </label>
+        <textarea id="prompt" name="prompt" placeholder="请输入【英文】提示词"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary h-32"></textarea>
+        <div class="flex space-x-2 mt-2">
+          <button type="button" onclick="pastePrompt()" class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-800 py-2 px-3 rounded flex items-center justify-center tooltip">
+            <i class="fas fa-paste"></i>
+            <span class="tooltip-text">从剪贴板粘贴</span>
+          </button>
+          <button type="button" onclick="copyPrompt()" class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-800 py-2 px-3 rounded flex items-center justify-center tooltip">
+            <i class="far fa-copy"></i>
+            <span class="tooltip-text">复制到剪贴板</span>
+          </button>
+          <button type="button" onclick="translatePrompt()" class="flex-1 bg-green-100 hover:bg-green-200 text-green-800 py-2 px-3 rounded flex items-center justify-center tooltip">
+            <i class="fas fa-language"></i>
+            <span class="tooltip-text">翻译为英文</span>
+          </button>
+          <button type="button" onclick="fillPrompt()" class="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-800 py-2 px-3 rounded flex items-center justify-center tooltip">
+            <i class="fas fa-arrow-down"></i>
+            <span class="tooltip-text">填入翻译结果</span>
+          </button>
+        </div>
+        
+        <div class="mt-2">
+          <textarea id="translated-text" rows="1" readonly
+                    class="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-md bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                    placeholder="翻译结果将显示在这里"></textarea>
         </div>
       </div>
+      
+      <div class="flex items-center">
+        <button id="generate-button" onclick="generateImage()"
+                class="flex-1 bg-primary hover:bg-primary-hover text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center">
+          <i class="fas fa-magic mr-2"></i>
+          <span>生成图片</span>
+        </button>
+        <div id="loader" class="ml-3 hidden">
+          <div class="loader"></div>
+        </div>
+      </div>
+      <div id="error-message" class="text-red-500 text-sm mt-1"></div>
     </div>
-
-    <div class="right-column">
-      <h3>历史记录</h3>
-      <div id="history-container">
-        <!-- 历史记录内容将在这里动态生成 -->
+  </div>
+  
+  <!-- Middle Column - Image Display -->
+  <div class="middle-column w-2/4 h-full bg-gray-100 overflow-y-auto scrollbar-hide flex flex-col items-center p-4">
+    <div id="image-container" class="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl shadow-md p-4">
+      <img id="output-image" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的AI图片"
+           class="w-full max-h-[85vh] object-contain rounded-lg cursor-zoom-in hover:shadow-lg transition-shadow">
+      <div class="flex items-center mt-4 w-full max-w-md">
+        <input type="text" id="filename" placeholder="自定义文件名"
+               class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+        <button onclick="downloadImage()"
+                class="bg-gray-400 hover:bg-orange-400 text-white font-bold py-2 px-4 rounded-r-md shadow-sm transition-colors flex items-center">
+          <i class="fas fa-download mr-2"></i>
+          <span>下载</span>
+        </button>
       </div>
     </div>
+  </div>
+  
+  <!-- Right Column - History -->
+  <div class="right-column w-1/4 h-full bg-white border-l border-gray-200 overflow-y-auto scrollbar-hide p-4">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-800 flex items-center">
+        <i class="fas fa-history mr-2 text-primary"></i>
+        历史记录
+      </h3>
+      <button onclick="clearHistory()" class="text-sm text-red-500 hover:text-red-700 flex items-center">
+        <i class="fas fa-trash-alt mr-1"></i>
+        清空
+      </button>
+    </div>
+    <div id="history-container" class="space-y-2">
+      <!-- 历史记录内容将在这里动态生成 -->
+    </div>
+  </div>
+  
+  <!-- Notification -->
+  <div id="notification" class="copy-notification"></div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -445,11 +414,43 @@
       if (cachedTranslationApiKey) {
         document.getElementById('translation-api-key').value = cachedTranslationApiKey;
       }
+      
+      // 初始化历史记录
+      updateHistory();
+      
+      // 设置区域切换
+      const toggleTranslateAreaButton = document.getElementById('toggleTranslateArea');
+      const translateArea = document.querySelector('.setting-area');
+      const chevronIcon = toggleTranslateAreaButton.querySelector('.fa-chevron-down');
+      
+      toggleTranslateAreaButton.addEventListener('click', function() {
+        translateArea.classList.toggle('hidden');
+        chevronIcon.classList.toggle('fa-chevron-down');
+        chevronIcon.classList.toggle('fa-chevron-up');
+      });
+      
+      // 图片点击放大/缩小
+      const outputImage = document.getElementById('output-image');
+      outputImage.addEventListener('click', function() {
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          outputImage.requestFullscreen();
+        }
+      });
+      
+      // 翻译结果点击复制
+      const translatedText = document.getElementById('translated-text');
+      translatedText.addEventListener('click', function() {
+        this.select();
+        document.execCommand('copy');
+        showNotification('翻译结果已复制');
+      });
     });
 
     async function generateImage() {
       const generateButton = document.getElementById('generate-button');
-      const loader = document.querySelector('.loader');
+      const loader = document.getElementById('loader');
       const apiKey = document.getElementById('api-key').value;
       const prompt = document.getElementById('prompt').value;
       let width = document.getElementById('width').value;
@@ -466,17 +467,15 @@
       }
       const steps = parseInt(document.getElementById('steps').value);
       const seedInput = document.getElementById('seed').value;
-      const seed = seedInput ? parseInt(seedInput) : null; // 如果留空则为 null
+      const seed = seedInput ? parseInt(seedInput) : null;
       const errorMessageDiv = document.getElementById('error-message');
-      errorMessageDiv.textContent = ''; // 清空错误信息
+      errorMessageDiv.textContent = '';
 
       if (!apiKey) {
-        //errorMessageDiv.textContent = 'API Key 不能为空！';
         showNotification('API Key 不能为空！', true);
         return;
       }
       if (!prompt) {
-        //errorMessageDiv.textContent = '提示词不能为空！';
         showNotification('提示词不能为空！', true);
         return;
       }
@@ -488,22 +487,25 @@
       };
       const requestBody = {
         "model": "black-forest-labs/FLUX.1-schnell-Free",
-        "prompt": prompt,  // 修正：直接使用 prompt 字符串，不再放入数组
+        "prompt": prompt,
         "width": width,
         "height": height,
         "steps": steps,
         "n": 1,
         "response_format": "b64_json",
         "stop": [],
-        "update_at": new Date().toISOString() // 使用当前时间
+        "update_at": new Date().toISOString()
       };
 
       if (seed !== null) {
-        requestBody.seed = seed; // 只有当 seed 不为 null 时才添加到请求体中
+        requestBody.seed = seed;
       }
+      
       // 禁用按钮并显示加载动画
       generateButton.disabled = true;
-      loader.style.display = 'inline-block';
+      generateButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i><span>生成中...</span>';
+      loader.classList.remove('hidden');
+      
       try {
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -515,10 +517,11 @@
 
         if (!response.ok) {
           const errorData = await response.json();
-          console.error("API error:", errorData); // 打印详细错误信息到控制台
-          //errorMessageDiv.textContent = `生成图片失败: ${response.status} ${response.statusText} - ${errorData.message || '请查看控制台错误信息'}`;
-          showNotification(`生成图片失败: ${response.status} ${response.statusText} - ${errorData.message || '请查看控制台错误信息'}`, true)
+          console.error("API error:", errorData);
+          showNotification(`生成图片失败: ${errorData.error || '请查看控制台错误信息'}`, true);
           generateButton.disabled = false;
+          generateButton.innerHTML = '<i class="fas fa-magic mr-2"></i><span>生成图片</span>';
+          loader.classList.add('hidden');
           return;
         }
 
@@ -528,8 +531,7 @@
           const imageUrl = `data:image/png;base64,${base64Image}`;
           const outputImage = document.getElementById('output-image');
           outputImage.src = imageUrl;
-          document.getElementById('image-container').style.display = 'block'; // 显示图片容器
-          errorMessageDiv.textContent = ''; // 清空错误信息
+          errorMessageDiv.textContent = '';
 
           // 请求成功后缓存 API Key
           localStorage.setItem('apiKey_image_generator', apiKey);
@@ -549,42 +551,47 @@
 
           // 更新历史记录显示
           updateHistory();
-          showNotification('生成图片成功!');
+          showNotification('图片生成成功!');
         } else {
-          //errorMessageDiv.textContent = '未能在响应中找到图片数据。请检查API响应格式。';
-          showNotification('未能在响应中找到图片数据。请检查API响应格式。', true);
-          console.error("Unexpected API response format:", data); // 打印完整的响应数据到控制台
+          showNotification('未能在响应中找到图片数据', true);
+          console.error("Unexpected API response format:", data);
           generateButton.disabled = false;
+          generateButton.innerHTML = '<i class="fas fa-magic mr-2"></i><span>生成图片</span>';
+          loader.classList.add('hidden');
         }
 
       } catch (error) {
         console.error("Fetch error:", error);
-        //errorMessageDiv.textContent = '网络请求错误，请检查网络连接或稍后再试。';
-        showNotification('网络请求错误，请检查网络连接或稍后再试。', true);
+        showNotification('网络请求错误，请检查网络连接', true);
         generateButton.disabled = false;
-      } finally {
-        // 隐藏加载动画并启用按钮（如果倒计时结束）
-        loader.style.display = 'none';
+        generateButton.innerHTML = '<i class="fas fa-magic mr-2"></i><span>生成图片</span>';
+        loader.classList.add('hidden');
       }
     }
 
     function downloadImage() {
       const imageUrl = document.getElementById('output-image').src;
       const filenameInput = document.getElementById('filename');
-      const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : 'together'; // 获取文件名，如果为空则使用默认值
+      const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : 'ai-image-' + new Date().toISOString().slice(0, 10);
       const downloadLink = document.createElement('a');
       downloadLink.href = imageUrl;
-      downloadLink.download = `${filename}.png`; // 下载的文件名
+      downloadLink.download = `${filename}.png`;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
-      showNotification("图像已开始下载");
+      showNotification("图片下载中...");
     }
 
     function randomSeed() {
       const seedInput = document.getElementById('seed');
       const randomSeedValue = Math.floor(Math.random() * 100000000000000) + 1;
       seedInput.value = randomSeedValue;
+      showNotification('随机种子已生成');
+    }
+
+    function clearSeed() {
+      document.getElementById('seed').value = '';
+      showNotification('已清除种子');
     }
 
     function updateStepsValue(value) {
@@ -593,23 +600,26 @@
 
     function startCountdown(seconds) {
       const generateButton = document.getElementById('generate-button');
+      const loader = document.getElementById('loader');
       let remainingTime = seconds;
 
       // 更新按钮文本显示倒计时
-      generateButton.textContent = `生成图片 (${remainingTime}s)`;
+      generateButton.innerHTML = `<span>请等待 (${remainingTime}s)</span>`;
 
       // 禁用按钮
       generateButton.disabled = true;
+      loader.classList.remove('hidden');
 
       const countdownInterval = setInterval(() => {
         remainingTime--;
 
         if (remainingTime >= 0) {
-          generateButton.textContent = `生成图片 (${remainingTime}s)`;
+          generateButton.innerHTML = `<span>请等待 (${remainingTime}s)</span>`;
         } else {
           clearInterval(countdownInterval);
-          generateButton.textContent = '生成图片';
+          generateButton.innerHTML = '<i class="fas fa-magic mr-2"></i><span>生成图片</span>';
           generateButton.disabled = false;
+          loader.classList.add('hidden');
         }
       }, 1000);
     }
@@ -621,70 +631,64 @@
         ...data,
         timestamp: new Date().toISOString()
       });
+      
+      // 限制历史记录数量为20条
+      if (history.length > 20) {
+        history = history.slice(0, 20);
+      }
+      
       localStorage.setItem('image_history', JSON.stringify(history));
     }
 
     // 更新历史记录显示
     function updateHistory() {
       const historyContainer = document.getElementById('history-container');
-      historyContainer.innerHTML = ''; // 清空历史记录
+      historyContainer.innerHTML = '';
 
       let history = JSON.parse(localStorage.getItem('image_history') || '[]');
 
+      if (history.length === 0) {
+        historyContainer.innerHTML = `
+          <div class="text-center py-8 text-gray-400">
+            <i class="fas fa-image fa-2x mb-2"></i>
+            <p>暂无历史记录</p>
+          </div>
+        `;
+        return;
+      }
+
       history.forEach((item, index) => {
         const historyItem = document.createElement('div');
-        historyItem.style.borderBottom = '1px solid #ccc';
-        historyItem.style.padding = '10px';
-        historyItem.style.display = 'flex';
-        historyItem.style.alignItems = 'flex-start'; /* 顶部对齐 */
-        historyItem.style.position = 'relative'; /* 为删除按钮定位 */
-        historyItem.style.transition = 'background-color 0.3s ease'; /* 添加过渡效果 */
-        historyItem.addEventListener('mouseenter', () => {
-            historyItem.style.backgroundColor = '#ffa500'; /* 悬停时的背景颜色 */
-        });
-        historyItem.addEventListener('mouseleave', () => {
-            historyItem.style.backgroundColor = ''; /* 恢复默认背景颜色 */
-        });
-
+        historyItem.className = 'history-item bg-white p-3 rounded-lg shadow-sm cursor-pointer flex items-start relative hover:shadow-md transition-all';
+        
         const imagePreview = document.createElement('img');
         imagePreview.src = item.imageUrl;
         imagePreview.alt = '历史图片';
-        imagePreview.style.width = 'auto'; /* 1/3 宽度 */
-        imagePreview.style.maxHeight = '100px';
-        imagePreview.style.marginRight = '10px';
+        imagePreview.className = 'w-16 h-16 object-cover rounded-md mr-3';
         historyItem.appendChild(imagePreview);
 
         const textContainer = document.createElement('div');
-        textContainer.style.width = '75%'; /* 2/3 宽度 */
-        textContainer.style.display = 'flex';
-        textContainer.style.flexDirection = 'column';
+        textContainer.className = 'flex-1 overflow-hidden';
 
-        const promptText = document.createElement('span');
+        const promptText = document.createElement('p');
         promptText.textContent = item.prompt;
-        promptText.style.flexGrow = '1';
-        promptText.style.userSelect = 'none'; /* 提示词不可复制 */
-        promptText.style.overflow = 'hidden'; /* 隐藏超出部分 */
-        promptText.style.textOverflow = 'ellipsis'; /* 显示省略号 */
-        promptText.style.display = '-webkit-box';
-        promptText.style.webkitLineClamp = '3'; /* 最多显示3行 */
-        promptText.style.webkitBoxOrient = 'vertical';
+        promptText.className = 'text-sm text-gray-700 truncate';
         textContainer.appendChild(promptText);
 
-        const timestampText = document.createElement('span');
-        timestampText.textContent = new Date(item.timestamp).toLocaleString();
-        timestampText.style.fontSize = '0.8em';
-        timestampText.style.color = '#666';
-        timestampText.style.fontStyle = 'italic'; /* 斜体 */
-        textContainer.appendChild(timestampText);
+        const detailsText = document.createElement('p');
+        detailsText.className = 'text-xs text-gray-500 mt-1';
+        detailsText.innerHTML = `
+          ${item.width}×${item.height} · 步数: ${item.steps} · ${new Date(item.timestamp).toLocaleString()}
+        `;
+        textContainer.appendChild(detailsText);
 
         historyItem.appendChild(textContainer);
 
         const deleteButton = document.createElement('button');
-        deleteButton.textContent = '×';
-        deleteButton.style.background = 'red';
-        deleteButton.className = 'delete-button';
+        deleteButton.className = 'absolute top-0 right-1 text-gray-400 hover:text-red-500 transition-colors';
+        deleteButton.innerHTML = '<i class="fas fa-times"></i>';
         deleteButton.onclick = function (event) {
-          event.stopPropagation(); /* 阻止事件冒泡 */
+          event.stopPropagation();
           deleteHistoryItem(index);
         };
         historyItem.appendChild(deleteButton);
@@ -702,7 +706,7 @@
       try {
         const text = await navigator.clipboard.readText();
         promptInput.value = text;
-        showNotification('已粘贴');
+        showNotification('已从剪贴板粘贴');
       } catch (err) {
         console.error('Failed to read clipboard contents: ', err);
         showNotification('无法读取剪贴板内容', true);
@@ -713,7 +717,7 @@
       const promptInput = document.getElementById('prompt');
       promptInput.select();
       document.execCommand('copy');
-      showNotification('已复制');
+      showNotification('提示词已复制');
     }
     
     async function translatePrompt() {
@@ -723,13 +727,11 @@
       const translatedTextarea = document.getElementById('translated-text');
 
       if (!apiKey) {
-        //alert('翻译 API Key 不能为空！');
         showNotification('翻译 API Key 不能为空！', true);
         return;
       }
 
       if (!prompt) {
-        //alert('提示词不能为空！');
         showNotification('提示词不能为空！', true);
         return;
       }
@@ -751,6 +753,11 @@
       };
 
       try {
+        const translateButton = document.querySelector('button[onclick="translatePrompt()"]');
+        const originalText = translateButton.innerHTML;
+        translateButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i><span>翻译中...</span>';
+        translateButton.disabled = true;
+
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: headers,
@@ -760,8 +767,9 @@
         if (!response.ok) {
           const errorData = await response.json();
           console.error("API error:", errorData);
-          //alert(`翻译失败: ${response.status} ${response.statusText} - ${errorData.message || '请查看控制台错误信息'}`);
-          showNotification(`翻译失败: ${response.status} ${response.statusText} - ${errorData.message || '请查看控制台错误信息'}`, true);
+          showNotification(`翻译失败: ${errorData.error || '请查看控制台错误信息'}`, true);
+          translateButton.innerHTML = originalText;
+          translateButton.disabled = false;
           return;
         }
 
@@ -774,22 +782,24 @@
           localStorage.setItem('translationApiKey', apiKey);
           showNotification('翻译成功');
         } else {
-          //alert('未能成功翻译，请检查API响应格式。');
           showNotification('未能成功翻译，请检查API响应格式。', true);
           console.error("Unexpected API response format:", data);
         }
 
       } catch (error) {
         console.error("Fetch error:", error);
-        //alert('网络请求错误，请检查网络连接或稍后再试。');
-        showNotification('网络请求错误，请检查网络连接或稍后再试。', true);
+        showNotification('网络请求错误，请检查网络连接', true);
+      } finally {
+        const translateButton = document.querySelector('button[onclick="translatePrompt()"]');
+        translateButton.innerHTML = '<i class="fas fa-language mr-2"></i><span>翻译</span>';
+        translateButton.disabled = false;
       }
     }
 
     function fillPrompt() {
       const translatedText = document.getElementById('translated-text').value;
       document.getElementById('prompt').value = translatedText;
-      showNotification('已填入');
+      showNotification('翻译结果已填入');
     }
 
     // 删除历史记录项
@@ -797,8 +807,17 @@
       let history = JSON.parse(localStorage.getItem('image_history') || '[]');
       history.splice(index, 1);
       localStorage.setItem('image_history', JSON.stringify(history));
-      updateHistory(); // 刷新历史记录显示
-      showNotification('已删除');
+      updateHistory();
+      showNotification('历史记录已删除');
+    }
+    
+    // 清空历史记录
+    function clearHistory() {
+      if (confirm('确定要清空所有历史记录吗？此操作不可撤销。')) {
+        localStorage.removeItem('image_history');
+        updateHistory();
+        showNotification('历史记录已清空');
+      }
     }
 
     // 填充表单
@@ -835,69 +854,27 @@
 
       const outputImage = document.getElementById('output-image');
       outputImage.src = item.imageUrl;
-      document.getElementById('image-container').style.display = 'block';
-      showNotification('已填充');
+      showNotification('历史记录已加载');
     }
 
-    // 页面加载时更新历史记录
-    document.addEventListener('DOMContentLoaded', function () {
-      // 页面加载时检查本地缓存的 API Key
-      const cachedApiKey = localStorage.getItem('apiKey_image_generator');
-      if (cachedApiKey) {
-        document.getElementById('api-key').value = cachedApiKey;
-      }
-      updateHistory();
-    });
-
-    // 获取图片元素
-    const outputImage = document.getElementById('output-image');
-
-    // 检查浏览器是否支持全屏 API
-    if (outputImage && outputImage.requestFullscreen) {
-      // 添加点击事件监听器
-      outputImage.addEventListener('click', function() {
-        // 进入全屏模式
-        if (document.fullscreenElement) {
-          document.exitFullscreen();
-        } else {
-          outputImage.requestFullscreen();
-        }
-      });
+    // 复制文本到剪贴板
+    function copyToClipboard(elementId) {
+      const element = document.getElementById(elementId);
+      element.select();
+      document.execCommand('copy');
+      showNotification('已复制到剪贴板');
     }
 
-    const toggleTranslateAreaButton = document.getElementById('toggleTranslateArea');
-    const translateArea = document.querySelector('.setting-area');
-
-    // 添加点击事件监听器
-    toggleTranslateAreaButton.addEventListener('click', function() {
-      // 切换翻译区域的显示状态
-      if (translateArea.style.display === 'none') {
-        translateArea.style.display = 'block';
-      } else {
-        translateArea.style.display = 'none';
-      }
-    });
-
-     // 新增的通知函数
+    // 显示通知
     function showNotification(message, isError = false) {
-      const notification = document.createElement('div');
-      notification.className = 'copy-notification show';
+      const notification = document.getElementById('notification');
       notification.textContent = message;
+      notification.className = isError ? 'copy-notification show bg-red-500' : 'copy-notification show bg-green-500';
       
-      if (isError) {
-        notification.style.backgroundColor = '#dc3545';
-      }
-
-      document.body.appendChild(notification);
-
       setTimeout(() => {
         notification.classList.remove('show');
-        setTimeout(() => {
-          document.body.removeChild(notification);
-        }, 300);
       }, 2000);
     }
   </script>
 </body>
-
 </html>
