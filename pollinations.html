@@ -385,17 +385,45 @@
                 };
                 
                 request.onupgradeneeded = (event) => {
+                    console.log("onupgradeneeded event triggered. Old version:", event.oldVersion, "New version:", event.newVersion); // 添加日志
                     const db = event.target.result;
-                    
+                    let objectStore;
+
+                    // 检查对象存储是否存在
                     if (!db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
-                        const objectStore = db.createObjectStore(OBJECT_STORE_NAME, { 
-                            keyPath: 'id', 
-                            autoIncrement: true 
+                        // 不存在，则创建对象存储和所有索引
+                        objectStore = db.createObjectStore(OBJECT_STORE_NAME, {
+                            keyPath: 'id',
+                            autoIncrement: true
                         });
+                        console.log("Object store created:", OBJECT_STORE_NAME);
                         objectStore.createIndex('prompt', 'params.prompt', { unique: false });
+                        console.log("Index created: prompt");
                         objectStore.createIndex('timestamp', 'timestamp', { unique: false });
-                        console.log("Object store created");
+                        console.log("Index created: timestamp");
+                    } else {
+                        // 对象存储已存在，获取它并检查索引
+                        // 注意：在 onupgradeneeded 中获取 objectStore 需要通过 transaction
+                        objectStore = event.target.transaction.objectStore(OBJECT_STORE_NAME);
+                        console.log("Object store already exists:", OBJECT_STORE_NAME);
+
+                        // 检查 'prompt' 索引是否存在，不存在则创建
+                        if (!objectStore.indexNames.contains('prompt')) {
+                            objectStore.createIndex('prompt', 'params.prompt', { unique: false });
+                            console.log("Index created (upgrade): prompt");
+                        } else {
+                            console.log("Index already exists: prompt");
+                        }
+
+                        // 检查 'timestamp' 索引是否存在，不存在则创建 (这是关键修复)
+                        if (!objectStore.indexNames.contains('timestamp')) {
+                            objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                            console.log("Index created (upgrade): timestamp"); // <--- 应该会看到这个日志
+                        } else {
+                            console.log("Index already exists: timestamp");
+                        }
                     }
+                    console.log("onupgradeneeded processing finished.");
                 };
             });
         }
