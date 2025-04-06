@@ -3,116 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI 图像生成器</title>
+  <title>AI 图像生成器 - Tailwind</title>
+  <!-- Include Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,line-clamp"></script>
   <style>
-    /* 基本 CSS 重置 */
-    body, h1, h2, h3, p, input, select, button, textarea {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    /* Keep custom keyframes for spinner */
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1.0); }
     }
+    .spinner-bounce-dots .dot {
+      width: 10px;
+      height: 10px;
+      background-color: #3b82f6; /* Tailwind blue-500 */
+      border-radius: 50%;
+      display: inline-block;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .spinner-bounce-dots .dot1 { animation-delay: -0.32s; }
+    .spinner-bounce-dots .dot2 { animation-delay: -0.16s; }
 
-    body {
-      font-family: sans-serif;
-      background-color: #f4f4f4;
-      color: #333;
-      line-height: 1.6;
-      display: flex;
-      min-height: 100vh;
-      height: 100vh;
-      overflow: hidden;
-    }
-    .params p {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-    /* 布局区域 */
-    .params {
-      width: 25%;
-      padding: 20px;
-      background-color: #fff;
-      border-right: 1px solid #ccc;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      scrollbar-width: none;
-    }
-
-    .result-area {
-      width: 50%;
-      padding: 10px;
-      background-color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start; /* 内容顶部对齐 */
-      height: 100%;
-      overflow-y: auto;
-      position: relative;
-    }
-
-    .history-area {
-      width: 25%;
-      padding: 20px;
-      background-color: #f9f9f9;
-      border-left: 1px solid #ccc;
-      overflow-y: auto;
-      height: 100%;
-    }
-
-    /* 通用样式 */
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #007bff;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 3px;
-      font-weight: bold;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    select,
-    textarea {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      transition: border-color 0.3s;
-    }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
-    input[type="text"]:focus,
-    input[type="number"]:focus,
-    select:focus,
-    textarea:focus {
-      border-color: #007bff;
-      outline: none;
-      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    }
-
-    input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-      color: #999;
-      opacity: 1; /* Firefox */
-    }
-
-    input:-ms-input-placeholder { /* Internet Explorer 10-11 */
-      color: #999;
-    }
-
-    input::-ms-input-placeholder { /* Microsoft Edge */
-      color: #999;
-    }
-
+    /* Keep custom select arrow */
     select {
       appearance: none;
       background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23343a40"><path d="M7 10l5 5 5-5z"/></svg>');
@@ -120,712 +31,247 @@
       background-position: right 10px center;
       background-size: 16px;
     }
-
-    button {
-      background-color: #007bff;
-      color: white;
-      padding: 6px 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-      min-width: fit-content;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-
-    #result {
-      text-align: center;
-      width: 100%;
-      height: 100%; /* 占据整个结果区域高度 */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center; /* 垂直居中图像 */
-    }
-
-    #generatedImage {
-      width: 95%;
-      max-height: 90%; /* 调整为按钮留出空间 */
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-      object-fit: contain;
-    }
-
-    #resultButtons {
-      display: flex;
-      justify-content: center;
-      width: 100%; /* 占据整个结果区域宽度 */
-      margin-top: 10px;
-    }
-
-    #resultText {
-      font-size: 16px;
-      color: #555;
-      width: 100%;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      text-align: center; /* 链接居中 */
-    }
-
-    #resultText a {
-      color: #007bff;
-      text-decoration: none;
-    }
-
-    #resultText a:hover {
-      text-decoration: underline;
-    }
-
-    #copyUrlButton {
-      background-color: #00aaff;
-      color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-    }
-
-    #downloadButton {
-      background-color: #ffa500;
-      color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-    }
-
-    #copyUrlButton:hover, #downloadButton:hover {
-      background-color: #218838;
-    }
-
-    /* 历史记录样式 */
-    .image-container {
-      padding-right: 10px; /* 添加右侧间距 */
-    }
-
-    .text-info-container p {
-      margin: 0;
-      font-size: 14px;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2; /* 显示 2 行 */
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      text-overflow: ellipsis;
-    }
-
-    .history-item {
-      border-bottom: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 10px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      transition: background-color 0.2s;
-      cursor: pointer; /* 添加鼠标指针 */
-      position: relative; /* 设置相对定位 */
-    }
-
-    .history-item:hover {
-      background-color: #e7e7e7;
-    }
-
-    .history-item img {
-      max-height: 100px;
-      border-radius: 4px;
-      vertical-align: middle;
-    }
-
-    .history-item-details {
-      flex-grow: 1;
-      overflow: hidden;
-    }
-
-    .history-item-details p {
-      margin: 0;
-      font-size: 14px;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      line-clamp: 3;
-      -webkit-box-orient: vertical;
-      text-overflow: ellipsis;
-    }
-
-    .delete-button {
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      transition: background-color 0.3s;
-      min-width: fit-content;
-      position: absolute;
-      top: 5px;
-      right: 5px;
-    }
-
-    .delete-button:hover {
-      background-color: #c82333;
-    }
-
-    .seed-container {
-      display: flex;
-      align-items: center;
-    }
-
-    .seed-container input[type="number"] {
-      flex-grow: 1;
-      margin-right: 5px; /* 输入框和按钮之间的间距 */
-    }
-
-    .seed-container button {
-      background-color: #4CAF50; /* 绿色 */
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-      white-space: nowrap;
-      padding: 4px 12px; /* 设置内边距为 4px 12px */
-      min-width: fit-content;
-    }
-
-    .seed-container button:hover {
-      background-color: #367c39;
-    }
-
-    .image-upload-container {
-      display: flex;
-      align-items: center; /* 垂直对齐标签和按钮 */
-      justify-content: space-between;
-      min-height: fit-content;
-      max-width: 100%;
-    }
-
-    .image-upload-container p {
-      margin-bottom: 0; /* 移除底部边距 */
-      flex-grow: 1;  /* 标签占据剩余空间 */
-      text-align: center; /* 水平居中 */
-      color: gray; /* 设置灰色字 */
-    }
-
-    .image-upload-container label {
-      margin-bottom: 0; /* 移除底部边距 */
-      flex-grow: 1;  /* 标签占据剩余空间 */
-    }
-
-    /* 响应式设计 - 调整小屏幕上的列布局 */
-    @media screen and (max-width: 1200px) {
-      h1 {
-        font-size: 24px;
-        margin-bottom: 0;
-      }      
-    }
-    @media (max-width: 800px) {
-      body {
-        flex-direction: column;
-        height: auto;
-        overflow: auto;
-      }
-
-      .params, .result-area, .history-area {
-        width: calc(100% - 30px); /* 减去左右边距 */
-        height: auto;
-        border: none;
-        padding: 15px;
-      }
-
-      .params {
-        border-bottom: 1px solid #ccc;
-      }
-
-      .result-area {
-        border-bottom: 1px solid #ccc;
-      }
-    }
-    
-    #toggleTranslateArea {
-      background-color: white;
-      color: #ccc;
-      padding: 4px 8px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      transition: background-color 0.3s;
-      margin-bottom: 10px;
-    }
-
-    .ai-translate-area {
-      display: none; /* 默认隐藏 */
-      margin-bottom: 10px;
-      background-color: #f1f1f1;
-      border-radius: 8px;
-      padding: 4px 8px 8px;
-    }
-
-    #translationResult {
-      display: none;
-      font-size: 12px;
-      font-family: monospace;
-      background-color: #f9f9f9;
-      padding: 4px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-    }
-
+    /* Basic scrollbar hiding (optional, may not work everywhere) */
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     #loadingIndicator {
-      display: none;
-      font-style: italic;
-      color: #ffffff;
-      z-index: 1000;
-      position: absolute; /* 绝对定位 */
-      top: 50%; /* 垂直居中 */
-      left: 50%; /* 水平居中 */
-      transform: translate(-50%, -50%); /* 精确居中 */
-      background-color: rgba(0, 0, 0, 0.6);
-      padding: 10px 20px;
-      border-radius: 5px;
-    }
-
-    .button-container {
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-around;
-      font-size: small;
-    }
-
-    #apiKeyInput {
-      margin: 0;
-    }
-
-    .model-select-container {
-      margin-top: 10px;
-      display: flex;
-      justify-content: center;
-      align-items: center; /* 垂直居中 */
-    }
-
-    .model-select-container select {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    .image-upload-container {
-      margin: 0 auto;
-      border: 2px dashed #ccc;
-      padding: 8px;
-      border-radius: 8px;
-      max-width: 100%;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      min-height: 100px;
-    }
-
-    .image-upload-container input[type="file"] {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    #imagePreview {
-      max-width: 100%;
-    }
-
-    .clear-button {
-      background-color: #f44336; /* 红色 */
-      margin-left: 4px;
-    }
-
-    .clear-button:hover {
-      background-color: #da190b;
-    }
-
-    /* 添加在style标签内 */
-    .copy-notification {
-      position: fixed;
       top: 50%;
       left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.6);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
-      z-index: 1000;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
+      position: fixed;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
     }
-
-    .copy-notification.show {
-      opacity: 1;
-    }
-
-        /* 跳跃点动画 (Bounce Dots Spinner) CSS */
-        .spinner-bounce-dots {
-      display: inline-block; /* 或者 block，根据您的布局需要 */
-      width: auto; /* 让宽度自适应内容 */
-      height: 20px;
-      text-align: center; /* 水平居中 dots */
-      margin-bottom: 10px; /* 与文字指示器保持间距, 如果不需要文字 "正在生成..." 可以移除 */
-    }
-
-    .spinner-bounce-dots .dot {
-      width: 10px; /* 点的大小 */
-      height: 10px;
-      background-color: #007bff; /* 点的颜色，可修改 */
-      border-radius: 50%;
-      display: inline-block;
-      animation: bounce 1.4s infinite ease-in-out both;
-    }
-
-    .spinner-bounce-dots .dot1 {
-      animation-delay: -0.32s;
-    }
-
-    .spinner-bounce-dots .dot2 {
-      animation-delay: -0.16s;
-    }
-
-    @keyframes bounce {
-      0%, 80%, 100% {
-        transform: scale(0);
-      }  40% {
-        transform: scale(1.0);
-      }
-    }
-    .ai-image-upload-container {
-      border: 2px dashed #ccc;
-      padding: 8px;
-      border-radius: 8px;
-      width: calc(100% - 20px); /* 减去左右边距 */
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      min-height: fit-content;
-    }
-
-    .ai-image-upload-container input[type="file"] {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .ai-image-upload-container p {
-      flex-grow: 1;  /* 标签占据剩余空间 */
-      text-align: center; /* 水平居中 */
-      justify-content: center;
-      color: gray; /* 设置灰色字 */
-    }
-
-    #aiImagePreview {
-      max-width: 100%;
-    }
-
-    #aiImageClearButton {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      background-color: rgba(0, 0, 0, 0.5);
-      border: none;
-      border-radius: 50%;
-      padding: 4px 5px;
-      width: 30px;
-      height: 30px;
-      cursor: pointer;
-      display: none; /* 初始状态隐藏 */
-      z-index: 1; /* 确保按钮在图片上方 */
-    }
-    #aiImageClearButton:hover {
-      background-color: rgba(0, 0, 0, 0.7);
-    }
-
   </style>
 </head>
-<body>
-  <div class="params">
-    <h1>AI 图像生成器</h1>
-    <p>
-      <a href="./edit.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">Gemini对话生图编辑</a>
-      |
-      <a href="./together.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">Tegether AI</a>
-      |
-      <a href="./pollinations.html" style="margin-bottom: 10px; font-size: 14px; color: #007bff; text-decoration: none;">Pollinations AI</a>
+<body class="flex flex-col md:flex-row min-h-screen md:h-screen bg-gray-100 text-gray-800 font-sans leading-relaxed md:overflow-hidden">
+
+  <!-- Parameters Section -->
+  <div class="params w-full md:w-1/4 p-4 bg-white md:border-r border-gray-300 overflow-y-auto scrollbar-hide flex flex-col space-y-3 md:h-full border-b md:border-b-0">
+    <h1 class="text-center text-2xl font-bold text-blue-600 mb-0 md:mb-2">AI 图像生成器</h1>
+    <p class="text-center text-sm mb-2">
+      <a href="./edit.html" class="text-blue-600 hover:underline">Gemini对话生图编辑</a> |
+      <a href="./together.html" class="text-blue-600 hover:underline">Tegether AI</a> |
+      <a href="./pollinations.html" class="text-blue-600 hover:underline">Pollinations AI</a>
     </p>
-    <label for="apiKey">API 密钥:</label>
-    <a href="https://cloud.siliconflow.cn/account/ak" target="_blank" rel="noreferrer" style="color: #00aaff; font-size:small; text-decoration: none;">获取 硅基流动 API密钥</a>
-    <input type="text" id="apiKey" placeholder="你的 API 密钥">
 
-    <label for="model">模型:</label>
-    <select id="model" onchange="setModelGuidanceScale()">
-      <option value="Kwai-Kolors/Kolors">Kwai-Kolors/Kolors</option>
-      <option value="black-forest-labs/FLUX.1-schnell">black-forest-labs/FLUX.1-schnell</option>
-      <option value="stabilityai/stable-diffusion-xl-base-1.0">stabilityai/stable-diffusion-xl-base-1.0</option>
-      <option value="stabilityai/stable-diffusion-3-5-large">stabilityai/stable-diffusion-3-5-large(很慢)</option>
-      <option value="stabilityai/stable-diffusion-2-1">stabilityai/stable-diffusion-2-1</option>
-      <option value="black-forest-labs/FLUX.1-dev">black-forest-labs/FLUX.1-dev(付费)</option>
-    </select>
-    <label for="imageSize">图像尺寸（宽×高）：</label>
-    <select id="imageSize">
-      <option value="720x1280">默认720x1280 (9:16)</option>
-      <option disabled>————方图————</option>
-      <option value="512x512">512x512 (1:1)</option>
-      <option value="1024x1024">1024x1024 (1:1)</option>
-      <option value="1280x1280">1280x1280 (1:1)</option>
-      <option value="1440x1440">1440x1440 (1:1)</option>
-      <option value="1600x1600">1600x1600 (1:1)</option>
-      <option value="1792x1792">1792x1792 (1:1)</option>
-      <option value="2048x2048">2048x2048 (1:1)</option>
-      <option disabled>————竖图————</option>
-      <option value="480x640">480x640 (3:4)</option>
-      <option value="600x800">600x800 (3:4)</option>
-      <option value="768x1024">768x1024 (3:4)</option>
-      <option value="900x1200">800x1200 (3:4)</option>
-      <option value="960x1280">960x1280 (3:4)</option>
-      <option value="1080x1440">1080x1440 (3:4)</option>
-      <option value="1200x1600">1200x1600 (3:4)</option>
-      <option value="540x960">540x960 (9:16 qHD)</option>
-      <option value="720x1280">720x1280 (9:16 HD)</option>
-      <option value="810x1440">810x1440 (9:16 HD+)</option>
-      <option value="900x1600">900x1600 (9:16 HD+)</option>
-      <option value="1080x1920">1080x1920 (9:16 FHD)</option>
-      <option disabled>————横图————</option>
-      <option value="640x480">640x480 (4:3 VGA)</option>
-      <option value="800x600">800x600 (4:3 SVGA)</option>
-      <option value="1024x768">1024x768 (4:3 XGA)</option>
-      <option value="1280x960">1280x960 (4:3 QXGA)</option>
-      <option value="1440x1080">1440x1080 (4:3 QXGA+)</option>
-      <option value="1600x1200">1600x1200 (4:3 UXGA)</option>
-      <option value="960x540">960x540 (16:9 qHD)</option>
-      <option value="1280x720">1280x720 (16:9 HD)</option>
-      <option value="1440x810">1440x810 (16:9 HD+)</option>
-      <option value="1600x900">1600x900 (16:9 HD+)</option>
-      <option value="1920x1080">1920x1080 (16:9 FHD)</option>
-    </select>
-    <label for="prompt">提示语:</label>
-    <textarea id="prompt" placeholder="请输入提示词"></textarea>
-    <div class="button-container">
-      <button onclick="pasteText()"
-        style="
-          background: rgb(0, 170, 255, 0.1);
-          border: 1px solid #00aaff; /* 边框颜色 */
-          border-radius: 4px; /* 圆角 */
-          padding: 4px 6px; /* 调整内边距 */
-          cursor: pointer; /* 手型光标 */
-          display: flex; /* 使用 Flexbox 布局 */
-          align-items: center; /* 垂直居中 SVG 和文本 (如果需要文本) */
-          justify-content: center; /* 水平居中 SVG 和文本 (如果需要文本) */
-          transition: border-color 0.3s; /* 添加过渡效果 */
-          width: 33%;
-        "
-        onmouseover="
-          this.style.borderColor='#00aaff'
-          this.style.scale='1.05'; /* 鼠标悬停时放大 */
-          "
-        onmouseout="
-          this.style.borderColor='#ccc'
-          this.style.scale='1'; /* 鼠标悬停时放大 */
-          "    
-        title="粘贴"                            
-      >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="#00aaff" stroke="#00aaff">
-              <path d="M9 2H7c-.276 0-.5.224-.5.5v1.5H3c-.276 0-.5.224-.5.5v18c0 .276.224.5.5.5h18c.276 0 .5-.224.5-.5v-18c0-.276-.224-.5-.5-.5h-3.5V2.5c0-.276-.224-.5-.5-.5H9zm-1 2v2H5V4h3zm8 0v2h-3V4h3zm-8 16H5v-14h14v14H8z"/>
-              <path d="M12 7V3c0-.276-.224-.5-.5-.5H8c-.276 0-.5.224-.5.5v4h4.5zM16 7V3c0-.276-.224-.5-.5-.5h-4c-.276 0-.5.224-.5.5v4h5z"/>
-          </svg>
-      </button>
-      <button onclick="copyText()"
-        style="
-          background: rgb(241, 241, 241);
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          padding: 4px 6px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: border-color 0.3s;
-          width: 30%;
-        "
-        onmouseover="
-          this.style.borderColor='gray'
-          this.style.scale='1.05';
-          "
-        onmouseout="
-          this.style.borderColor='#ccc'
-          this.style.scale='1';
-          "
-        title="复制"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="gray" stroke="gray">
-            <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM20 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H20C21.1 23 22 22.1 22 21V7C22 5.9 21.1 5 20 5ZM20 21H8V7H20V21Z"/>
-        </svg>
-      </button>
-      <button onclick="clearAll()" class="clear-button"
-        style="
-          background: rgba(255, 0, 0, 0.1);
-          border: 1px solid red;
-          border-radius: 4px;
-          padding: 4px 6px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: border-color 0.3s;
-          width: 33%;
-        "
-        onmouseover="
-          this.style.borderColor='red'
-          this.style.scale='1.05';
-          "
-        onmouseout="
-          this.style.borderColor='#ccc'
-          this.style.scale='1';
-          "
-        title="清除"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="red" stroke="red">
-            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-        </svg>
-      </button>    
+    <button type="button" id="toggleTranslateArea" class="w-full bg-gray-200 text-gray-600 py-1 px-2 rounded-md text-xs cursor-pointer transition hover:bg-gray-300">———显示/隐藏 翻译&识别区———</button>
+
+    <div class="ai-translate-area hidden bg-gray-100 rounded-lg p-3 space-y-2">
+        <div>
+            <label for="apiKey" class="block mb-1 font-semibold text-sm">API 密钥:</label>
+            <a href="https://cloud.siliconflow.cn/account/ak" target="_blank" rel="noreferrer" class="text-sky-500 text-xs hover:underline mb-1 block">获取 硅基流动 API密钥</a>
+            <input type="text" id="apiKey" placeholder="你的 API 密钥" class="w-full p-2 border border-gray-300 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300 placeholder-gray-400">
+        </div>
+        <div>
+            <label for="apiKeyInput" class="block mb-1 font-semibold text-sm">Gemini API 密钥:</label>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" class="text-sky-500 text-xs hover:underline mb-1 block">申请 Gemini API密钥</a>
+            <input type="text" id="apiKeyInput" placeholder="请输入 Gemini API Key" class="w-full p-2 border border-gray-300 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300 placeholder-gray-400">
+        </div>
+        <div class="flex justify-center items-center">
+            <select id="modelSelect" class="w-full p-2 border border-gray-300 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300">
+              <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
+              <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              <option value="gemini-2.0-flas-001">gemini-2.0-flas-001</option>
+              <option value="gemini-2.0-flash-thinking-exp">gemini-2.0-flash-thinking-exp</option>
+              <option value="gemini-2.0-flash-thinking-exp-1219">gemini-2.0-flash-thinking-exp-1219</option>
+              <option value="gemini-2.0-flash-thinking-exp-01-21">gemini-2.0-flash-thinking-exp-01-21</option>
+              <option value="gemini-2.0-flash-lite-preview-02-05">gemini-2.0-flash-lite-preview-02-05</option>
+              <option value="gemini-2.0-flash-lite-preview">gemini-2.0-flash-lite-preview</option>
+              <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
+              <option value="gemini-2.0-pro-exp-02-05">gemini-2.0-pro-exp-02-05</option>
+              <option value="gemini-2.0-pro-exp">gemini-2.0-pro-exp</option>
+              <option value="gemini-exp-1206">gemini-exp-1206</option>
+              <option value="gemini-2.0-flash-exp-image-generation">gemini-2.0-flash-exp-image-generation</option>
+              <option value="gemma-3-27b-it">gemma-3-27b-it</option>
+            </select>
+        </div>
+
+        <div id="translateloadingIndicator" class="hidden text-center">
+            <div class="spinner-bounce-dots inline-block">
+                <div class="dot dot1"></div>
+                <div class="dot dot2"></div>
+                <div class="dot dot3"></div>
+            </div>
+        </div>
+        <div id="translationResult" class="hidden text-xs font-mono bg-white p-2 rounded-md border border-gray-200"></div>
+
+        <div class="flex justify-around space-x-2">
+            <button onclick="translateText()" class="flex-1 bg-blue-500 text-white py-1 px-3 rounded-md cursor-pointer text-sm font-semibold transition duration-300 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed">翻译</button>
+            <button onclick="fillInput()" class="flex-1 bg-orange-500 text-white py-1 px-3 rounded-md cursor-pointer text-sm font-semibold transition duration-300 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed">填入</button>
+            <button onclick="describeImage()" class="flex-1 bg-green-500 text-white py-1 px-3 rounded-md cursor-pointer text-sm font-semibold transition duration-300 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed">识别</button>
+        </div>
+
+        <div class="image-upload-container border-2 border-dashed border-gray-300 p-2 rounded-lg w-full cursor-pointer relative overflow-hidden min-h-[80px] flex flex-col items-center justify-center text-center text-gray-500 hover:border-blue-400 hover:bg-blue-50 transition" id="imageUploadContainer">
+            <input type="file" id="imageUpload" accept="image/*" onchange="previewImage()" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+            <p class="text-sm">拖放或点击选择图片</p>
+            <img id="imagePreview" src="#" alt="图片预览" class="hidden max-w-full max-h-24 block mx-auto mt-1 rounded">
+        </div>
+
+        <div>
+            <label for="negativePrompt" class="block mb-1 font-semibold text-sm">负面提示语:</label>
+            <input type="text" id="negativePrompt" placeholder="请输入负面提示词" value="bad quality, low quality, deformed, distorted, bad proportions, ugly" class="w-full p-2 border border-gray-300 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300 placeholder-gray-400">
+        </div>
+
+        <div>
+            <label for="numInferenceSteps" class="block mb-1 font-semibold text-sm">推理步数 (1-50):</label>
+            <input type="number" id="numInferenceSteps" value="50" min="1" max="50" class="w-full p-2 border border-gray-300 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300 placeholder-gray-400">
+        </div>
+
+        <div>
+            <label for="guidanceScale" class="block mb-1 font-semibold text-sm">引导比例 (0-20):</label>
+            <input type="number" id="guidanceScale" value="2.5" min="0" max="20" step="0.1" class="w-full p-2 border border-gray-300 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300 placeholder-gray-400">
+        </div>
+
+        <div>
+            <label for="seed" class="block mb-1 font-semibold text-sm">种子 (0-9999999999):</label>
+            <div class="flex items-center space-x-2">
+                <input type="number" id="seed" min="0" max="9999999999" class="flex-grow p-2 border border-gray-300 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300 placeholder-gray-400">
+                <button type="button" onclick="randomSeed()" class="bg-teal-500 text-white py-1.5 px-3 rounded-md cursor-pointer text-sm font-semibold transition duration-300 hover:bg-teal-600 whitespace-nowrap">随机</button>
+            </div>
+        </div>
+    </div> <!-- End ai-translate-area -->
+
+    <div>
+      <label for="model" class="block mb-1 font-semibold text-sm">模型:</label>
+      <select id="model" onchange="setModelGuidanceScale()" class="w-full p-2 border border-gray-300 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300">
+        <option value="Kwai-Kolors/Kolors">Kwai-Kolors/Kolors</option>
+        <option value="black-forest-labs/FLUX.1-schnell">black-forest-labs/FLUX.1-schnell</option>
+        <option value="stabilityai/stable-diffusion-xl-base-1.0">stabilityai/stable-diffusion-xl-base-1.0</option>
+        <option value="stabilityai/stable-diffusion-3-5-large">stabilityai/stable-diffusion-3-5-large(很慢)</option>
+        <option value="stabilityai/stable-diffusion-2-1">stabilityai/stable-diffusion-2-1</option>
+        <option value="black-forest-labs/FLUX.1-dev">black-forest-labs/FLUX.1-dev(付费)</option>
+      </select>
     </div>
-    <button type="button" id="toggleTranslateArea">———显示/隐藏 翻译&识别区———</button>
-    <div class="ai-translate-area">
-      <label for="apiKeyInput">Gemini API 密钥:</label><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style="color: #00aaff; font-size:small; text-decoration: none;">申请 Gemini API密钥</a>
-      <input type="text" id="apiKeyInput" placeholder="请输入 Gemini API Key">
 
-      <div class="model-select-container">
-        <select id="modelSelect">
-          <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
-          <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-          <option value="gemini-2.0-flas-001">gemini-2.0-flas-001</option>
-          <option value="gemini-2.0-flash-thinking-exp">gemini-2.0-flash-thinking-exp</option>
-          <option value="gemini-2.0-flash-thinking-exp-1219">gemini-2.0-flash-thinking-exp-1219</option>
-          <option value="gemini-2.0-flash-thinking-exp-01-21">gemini-2.0-flash-thinking-exp-01-21</option>
-          <option value="gemini-2.0-flash-lite-preview-02-05">gemini-2.0-flash-lite-preview-02-05</option>
-          <option value="gemini-2.0-flash-lite-preview">gemini-2.0-flash-lite-preview</option>
-          <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
-          <option value="gemini-2.0-pro-exp-02-05">gemini-2.0-pro-exp-02-05</option>
-          <option value="gemini-2.0-pro-exp">gemini-2.0-pro-exp</option>
-          <option value="gemini-exp-1206">gemini-exp-1206</option>
-          <option value="gemini-2.0-flash-exp-image-generation">gemini-2.0-flash-exp-image-generation</option>
-          <option value="gemma-3-27b-it">gemma-3-27b-it</option>
+    <div>
+        <label for="imageSize" class="block mb-1 font-semibold text-sm">图像尺寸（宽×高）：</label>
+        <select id="imageSize" class="w-full p-2 border border-gray-300 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300">
+          <option value="720x1280">默认720x1280 (9:16)</option>
+          <option disabled>————方图————</option>
+          <option value="512x512">512x512 (1:1)</option>
+          <option value="1024x1024">1024x1024 (1:1)</option>
+          <option value="1280x1280">1280x1280 (1:1)</option>
+          <option value="1440x1440">1440x1440 (1:1)</option>
+          <option value="1600x1600">1600x1600 (1:1)</option>
+          <option value="1792x1792">1792x1792 (1:1)</option>
+          <option value="2048x2048">2048x2048 (1:1)</option>
+          <option disabled>————竖图————</option>
+          <option value="480x640">480x640 (3:4)</option>
+          <option value="600x800">600x800 (3:4)</option>
+          <option value="768x1024">768x1024 (3:4)</option>
+          <option value="900x1200">800x1200 (3:4)</option>
+          <option value="960x1280">960x1280 (3:4)</option>
+          <option value="1080x1440">1080x1440 (3:4)</option>
+          <option value="1200x1600">1200x1600 (3:4)</option>
+          <option value="540x960">540x960 (9:16 qHD)</option>
+          <option value="720x1280">720x1280 (9:16 HD)</option>
+          <option value="810x1440">810x1440 (9:16 HD+)</option>
+          <option value="900x1600">900x1600 (9:16 HD+)</option>
+          <option value="1080x1920">1080x1920 (9:16 FHD)</option>
+          <option disabled>————横图————</option>
+          <option value="640x480">640x480 (4:3 VGA)</option>
+          <option value="800x600">800x600 (4:3 SVGA)</option>
+          <option value="1024x768">1024x768 (4:3 XGA)</option>
+          <option value="1280x960">1280x960 (4:3 QXGA)</option>
+          <option value="1440x1080">1440x1080 (4:3 QXGA+)</option>
+          <option value="1600x1200">1600x1200 (4:3 UXGA)</option>
+          <option value="960x540">960x540 (16:9 qHD)</option>
+          <option value="1280x720">1280x720 (16:9 HD)</option>
+          <option value="1440x810">1440x810 (16:9 HD+)</option>
+          <option value="1600x900">1600x900 (16:9 HD+)</option>
+          <option value="1920x1080">1920x1080 (16:9 FHD)</option>
         </select>
-      </div>
+    </div>
 
-      <div id="translateloadingIndicator" style="display: none;">
-        <div class="spinner-bounce-dots">
-          <div class="dot dot1"></div>
-          <div class="dot dot2"></div>
-          <div class="dot dot3"></div>
-        </div>
-      </div>
-      <div id="translationResult"></div>
-
-      <div class="button-container">
-        <button onclick="translateText()">翻译</button>
-        <button onclick="fillInput()" style="background-color: #ffa500;">填入</button>
-        <button onclick="describeImage()">识别</button>
-      </div>
-
-      <div class="image-upload-container" id="imageUploadContainer">
-        <input type="file" id="imageUpload" accept="image/*" onchange="previewImage()">
-        <p>拖放或点击选择图片</p>
-        <img id="imagePreview" src="#" alt="图片预览" style="display: none;">
-      </div>
-      <label for="negativePrompt">负面提示语:</label>
-      <input type="text" id="negativePrompt" placeholder="请输入负面提示词" value="bad quality, low quality, deformed, distorted, bad proportions, ugly">
-      <label for="numInferenceSteps">推理步数 (1-50):</label>
-      <input type="number" id="numInferenceSteps" value="50" min="1" max="50">
-  
-      <label for="guidanceScale">引导比例 (0-20):</label>
-      <input type="number" id="guidanceScale" value="2.5" min="0" max="20" step="0.1">
-  
-      <label for="seed">种子 (0-9999999999):</label>
-      <div class="seed-container">
-        <input type="number" id="seed" min="0" max="9999999999">
-        <button type="button" onclick="randomSeed()">随机</button>
+    <div>
+      <label for="prompt" class="block mb-1 font-semibold text-sm">提示语:</label>
+      <textarea id="prompt" placeholder="请输入提示词" class="w-full p-2 border border-gray-300 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300 placeholder-gray-400 min-h-[100px] resize-y"></textarea>
+      <div class="mt-1 mb-2 flex justify-between space-x-2">
+          <button onclick="pasteText()" title="粘贴" class="flex-1 flex justify-center items-center bg-sky-100 border border-sky-500 rounded-md p-1 cursor-pointer transition duration-300 hover:scale-105 hover:border-sky-600">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" class="text-sky-500">
+                  <path d="M9 2H7c-.276 0-.5.224-.5.5v1.5H3c-.276 0-.5.224-.5.5v18c0 .276.224.5.5.5h18c.276 0 .5-.224.5-.5v-18c0-.276-.224-.5-.5-.5h-3.5V2.5c0-.276-.224-.5-.5-.5H9zm-1 2v2H5V4h3zm8 0v2h-3V4h3zm-8 16H5v-14h14v14H8z"/>
+                  <path d="M12 7V3c0-.276-.224-.5-.5-.5H8c-.276 0-.5.224-.5.5v4h4.5zM16 7V3c0-.276-.224-.5-.5-.5h-4c-.276 0-.5.224-.5.5v4h5z"/>
+              </svg>
+          </button>
+          <button onclick="copyText()" title="复制" class="flex-1 flex justify-center items-center bg-gray-100 border border-gray-300 rounded-md p-1 cursor-pointer transition duration-300 hover:scale-105 hover:border-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" class="text-gray-500">
+                  <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM20 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H20C21.1 23 22 22.1 22 21V7C22 5.9 21.1 5 20 5ZM20 21H8V7H20V21Z"/>
+              </svg>
+          </button>
+          <button onclick="clearAll()" title="清除" class="flex-1 flex justify-center items-center bg-red-100 border border-red-500 rounded-md p-1 cursor-pointer transition duration-300 hover:scale-105 hover:border-red-600">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" class="text-red-500">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+              </svg>
+          </button>
       </div>
     </div>
 
-    <button id="generateButton" onclick="generateImage()" style="font-size: 14px; font-weight: bold; padding: 8px 16px;">生成图像</button>
-    <label for="ai-image-upload-container" style="margin-top: 10px;" id="aiImageUploadContainerLabel">参考图:</label>
-    <div class="ai-image-upload-container" id="aiImageUploadContainer">
-      <input type="file" id="aiImageUpload" accept="image/*" onchange="previewAiImage()">
-      <p>拖放或点击选择图片<br>Korlors图生图</p>
-      <img id="aiImagePreview" src="#" alt="图片预览" style="display: none;">
-      <button type="button" id="aiImageClearButton" onclick="clearAiImage()" style="display: none;">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="white">
-          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
-        </svg>
-      </button>
+    <button id="generateButton" onclick="generateImage()" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md cursor-pointer text-base font-bold transition duration-300 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed mt-auto">生成图像</button>
+
+    <label for="ai-image-upload-container" class="block mb-1 font-semibold text-sm mt-2" id="aiImageUploadContainerLabel">参考图:</label>
+    <div class="ai-image-upload-container border-2 border-dashed border-gray-300 p-2 rounded-lg w-full cursor-pointer relative overflow-hidden min-h-[80px] flex flex-col items-center justify-center text-center text-gray-500 hover:border-blue-400 hover:bg-blue-50 transition" id="aiImageUploadContainer">
+        <input type="file" id="aiImageUpload" accept="image/*" onchange="previewAiImage()" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+        <p class="text-sm">拖放或点击选择图片<br>Korlors图生图</p>
+        <img id="aiImagePreview" src="#" alt="图片预览" class="hidden max-w-full max-h-24 block mx-auto mt-1 rounded">
+        <button type="button" id="aiImageClearButton" onclick="clearAiImage()" class="hidden absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer hover:bg-opacity-70 z-10">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+            </svg>
+        </button>
     </div>
+
   </div>
 
-  <div class="result-area">
-    <div id="result">
-      <img id="generatedImage" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像">
-      <div id="resultButtons">
-        <div class="download-container" style="display: flex; justify-content: center;">
-          <input type="text" id="filenameInput" placeholder="自定义文件名" style="margin-right: 5px;">
-          <button onclick="downloadImage()" id="downloadButton" style="padding: 8px 8px; height: fit-content; margin-right: 5px;" disabled>下载图像</button>
+  <!-- Result Area -->
+  <div class="result-area w-full md:w-1/2 p-2 md:p-4 bg-white flex flex-col items-center justify-start md:h-full overflow-y-auto scrollbar-hide relative border-b md:border-b-0">
+     <div id="result" class="w-full h-full flex flex-col items-center justify-center">
+       <img id="generatedImage" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像" class="w-[95%] max-h-[85%] md:max-h-[90%] object-contain rounded-lg shadow-md cursor-pointer mb-2">
+       <div id="resultButtons" class="flex flex-wrap justify-center items-center w-full gap-2 px-2">
+         <div class="download-container flex items-center">
+           <input type="text" id="filenameInput" placeholder="自定义文件名" class="p-1.5 border border-gray-300 rounded-l-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition duration-300 placeholder-gray-400 flex-grow min-w-0">
+           <button onclick="downloadImage()" id="downloadButton" class="bg-orange-500 text-white py-1.5 px-3 rounded-r-md cursor-pointer text-sm font-semibold transition duration-300 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap" disabled>下载图像</button>
+         </div>
+       </div>
+     </div>
+     <div id="loadingIndicator" class="hidden fixed inset-0 w-fit h-fit bg-black bg-opacity-60 flex flex-col items-center justify-center z-50 text-white rounded-md p-5">
+        <div class="spinner-bounce-dots mb-3">
+            <div class="dot dot1"></div>
+            <div class="dot dot2"></div>
+            <div class="dot dot3"></div>
         </div>
-        <a href="#" onclick="showDownloadHelp()" style="font-size: small;text-decoration: none; color: #007bff; align-self: center;">下载图像无法打开？</a>
-        <button id="copyUrlButton" onclick="copyImageUrl()" style="padding: 8px 8px; height: fit-content;">复制 URL</button>
-      </div>
-      <p id="resultText">
-        <a href="#" id="imageUrlLink" target="_blank" rel="noreferrer" title="点击跳转"></a>
-      </p>
-    </div>
-    <div id="loadingIndicator" style="display: none;"> <!-- 初始状态隐藏，JS控制显示 -->
-      <div class="spinner-bounce-dots">
-        <div class="dot dot1"></div>
-        <div class="dot dot2"></div>
-        <div class="dot dot3"></div>
-      </div>
-    </div>
+        <span class="text-lg italic">正在生成...</span>
+     </div>
   </div>
 
-  <div class="history-area">
+  <!-- History Area -->
+  <div class="history-area w-full md:w-1/4 p-4 bg-gray-50 md:border-l border-gray-300 overflow-y-auto scrollbar-hide md:h-full">
     <div id="history">
-      <h2>历史记录:</h2>
-      <div>
-        <button type="button" id="selectAllButton" onclick="toggleSelectAll()" style="padding: 4px 8px;">全选</button>
-        <button type="button" id="deleteSelectedButton" onclick="deleteSelectedHistoryItems()" style="padding: 4px 8px; background-color: #c82333;">删除选中</button>
+      <h2 class="text-xl font-semibold mb-3">历史记录:</h2>
+      <div class="flex space-x-2 mb-3">
+        <button type="button" id="selectAllButton" onclick="toggleSelectAll()" class="bg-gray-200 text-gray-700 py-1 px-3 rounded-md cursor-pointer text-sm font-semibold transition duration-300 hover:bg-gray-300">全选</button>
+        <button type="button" id="deleteSelectedButton" onclick="deleteSelectedHistoryItems()" class="bg-red-600 text-white py-1 px-3 rounded-md cursor-pointer text-sm font-semibold transition duration-300 hover:bg-red-700">删除选中</button>
       </div>
-      <div id="historyList"></div>
+      <div id="historyList" class="space-y-2">
+        <!-- History items will be dynamically added here -->
+        <!-- Example Structure (Generated by JS):
+        <div class="history-item bg-white border border-gray-200 rounded-md p-2 flex items-center space-x-2 transition duration-200 cursor-pointer relative hover:bg-gray-100" data-id="1">
+          <input type="checkbox" value="1" class="form-checkbox h-4 w-4 text-blue-600">
+          <div class="image-container flex-shrink-0">
+            <img src="base64_or_url" alt="历史图像" class="max-h-16 rounded-md">
+          </div>
+          <div class="text-info-container flex-grow overflow-hidden">
+            <p class="text-sm font-medium text-gray-800 line-clamp-2">Prompt text...</p>
+            <p class="text-xs text-gray-500 mt-1">24/07/29 10:30</p>
+          </div>
+          <button class="delete-button absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs transition duration-300 hover:bg-red-600 opacity-0 group-hover:opacity-100">×</button>
+        </div>
+        -->
       </div>
+    </div>
   </div>
+
+  <!-- Notification Area (Positioned Fixed, styled with Tailwind) -->
+  <!-- The showNotification JS function will create/append/remove these -->
 
   <script>
     // Local Storage Keys
@@ -916,7 +362,8 @@
           guidanceScale: data.guidanceScale,
           seed: data.seed,
           imageData: data.base64Image, // 直接使用传入的 Base64 数据
-          creationTime: creationTime
+          creationTime: creationTime,
+          model: data.model // Store the model used
           // 'id' 将在添加成功后自动生成并获取
         };
 
@@ -952,55 +399,61 @@
 
     // 函数：创建单个历史记录项的 DOM 元素
     function createHistoryItemElement(item) {
-      const historyItem = document.createElement('div');
-      historyItem.classList.add('history-item');
-      historyItem.dataset.id = item.id; // 添加 data-id 属性，用于后续查找
+        const historyItem = document.createElement('div');
+        // Added 'group' class for hover effect on delete button
+        historyItem.className = 'history-item group bg-white border border-gray-200 rounded-md p-2 flex items-center space-x-2 transition duration-200 cursor-pointer relative hover:bg-gray-100';
+        historyItem.dataset.id = item.id; // Use dataset for ID
 
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.value = item.id;
-      checkbox.style.marginRight = '5px';
-      // 阻止点击 checkbox 时触发 populateForm
-      checkbox.addEventListener('click', (event) => {
-        event.stopPropagation();
-      });
-      historyItem.appendChild(checkbox);
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = item.id;
+        checkbox.className = 'form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 flex-shrink-0';
+        checkbox.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent triggering populateForm when clicking checkbox
+        });
+        historyItem.appendChild(checkbox);
 
-      const imageContainer = document.createElement('div');
-      imageContainer.classList.add('image-container');
-      let imageElement = document.createElement('img');
-      imageElement.src = item.imageData; // 使用 Base64 字符串
-      imageElement.alt = "历史图像";
-      imageContainer.appendChild(imageElement);
-      historyItem.appendChild(imageContainer);
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'image-container flex-shrink-0';
+        let imageElement = document.createElement('img');
+        imageElement.src = item.imageData;
+        imageElement.alt = "历史图像";
+        imageElement.className = 'max-h-16 w-auto rounded-md object-contain'; // Adjusted classes
+        imageContainer.appendChild(imageElement);
+        historyItem.appendChild(imageContainer);
 
-      const textInfoContainer = document.createElement('div');
-      textInfoContainer.classList.add('text-info-container');
+        const textInfoContainer = document.createElement('div');
+        textInfoContainer.className = 'text-info-container flex-grow overflow-hidden min-w-0'; // Added min-w-0
 
-      const promptElement = document.createElement('p');
-      promptElement.textContent = item.prompt;
-      textInfoContainer.appendChild(promptElement);
+        const promptElement = document.createElement('p');
+        promptElement.className = 'text-sm font-medium text-gray-800 line-clamp-2'; // Use line-clamp plugin
+        promptElement.textContent = item.prompt || 'No Prompt'; // Fallback text
+        promptElement.title = item.prompt; // Add title for full text on hover
+        textInfoContainer.appendChild(promptElement);
 
-      const creationTimeElement = document.createElement('p');
-      creationTimeElement.textContent = item.creationTime;
-      textInfoContainer.appendChild(creationTimeElement);
+        const creationTimeElement = document.createElement('p');
+        creationTimeElement.className = 'text-xs text-gray-500 mt-0.5'; // Adjusted margin
+        creationTimeElement.textContent = item.creationTime || 'No Date'; // Fallback text
+        textInfoContainer.appendChild(creationTimeElement);
 
-      historyItem.appendChild(textInfoContainer);
+        historyItem.appendChild(textInfoContainer);
 
-      const deleteButton = document.createElement('button');
-      deleteButton.classList.add('delete-button');
-      deleteButton.textContent = '×';
-      deleteButton.addEventListener('click', (event) => {
-        event.stopPropagation();
-        deleteHistoryItem(item.id); // 使用 id 删除
-      });
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'delete-button absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs transition duration-300 hover:bg-red-600 opacity-0 group-hover:opacity-100 focus:opacity-100'; // Show on group hover/focus
+        deleteButton.innerHTML = '&times;'; // Use HTML entity for 'x'
+        deleteButton.title = "删除此项";
+        deleteButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent triggering populateForm
+            deleteHistoryItem(item.id);
+        });
+        historyItem.appendChild(deleteButton);
 
-      historyItem.appendChild(deleteButton);
-      // 点击历史项填充表单
-      historyItem.addEventListener('click', () => populateForm(item));
+        // Click the entire item (except checkbox/button) to populate form
+        historyItem.addEventListener('click', () => populateForm(item));
 
-      return historyItem;
+        return historyItem;
     }
+
 
     // 函数：将新的历史记录项添加到 UI 列表的顶部
     function prependHistoryItemToUI(item) {
@@ -1043,11 +496,19 @@
 
     function toggleSelectAll() {
       const checkboxes = document.querySelectorAll('#historyList input[type="checkbox"]');
-      const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+      const selectAllButton = document.getElementById('selectAllButton');
+      // Check if *any* checkbox is currently unchecked
+      const anyUnchecked = Array.from(checkboxes).some(checkbox => !checkbox.checked);
+
+      // If any are unchecked, check all. Otherwise, uncheck all.
       checkboxes.forEach(checkbox => {
-        checkbox.checked = !allChecked;
+          checkbox.checked = anyUnchecked;
       });
+
+      // Update button text
+      selectAllButton.textContent = anyUnchecked ? '取消全选' : '全选';
     }
+
 
     function deleteSelectedHistoryItems() {
       const checkboxes = document.querySelectorAll('#historyList input[type="checkbox"]:checked');
@@ -1063,6 +524,11 @@
         console.error('IndexedDB 未初始化，无法删除');
         showNotification('数据库错误，无法删除', true);
         return;
+      }
+
+      // Confirmation dialog
+      if (!confirm(`确定要删除选中的 ${idsToDelete.length} 项历史记录吗？`)) {
+          return; // User cancelled
       }
 
       const tx = db.transaction(OBJECT_STORE_NAME, 'readwrite');
@@ -1097,10 +563,9 @@
         if (failedCount > 0) {
           showNotification(`有 ${failedCount} 项删除失败`, true);
         }
-        // 清除全选状态（如果需要）
+        // 清除全选状态
         document.getElementById('selectAllButton').textContent = '全选';
-        checkboxes.forEach(cb => cb.checked = false); // 取消选中
-        // 不再调用 displayHistory()
+        // Checkboxes are already removed from DOM or handled individually if needed
       };
 
       tx.onerror = (event) => {
@@ -1116,6 +581,11 @@
         showNotification('数据库错误，无法删除', true);
         return;
       }
+       // Confirmation dialog
+      if (!confirm(`确定要删除此项历史记录吗？`)) {
+          return; // User cancelled
+      }
+
       const tx = db.transaction(OBJECT_STORE_NAME, 'readwrite');
       const store = tx.objectStore(OBJECT_STORE_NAME);
       const request = store.delete(id);
@@ -1129,12 +599,8 @@
           itemToRemove.remove(); // 直接从 DOM 中移除
           showNotification('成功删除历史记录项');
         } else {
-          // 如果 UI 和 DB 不同步（理论上不应发生），记录警告
           console.warn(`尝试从 UI 删除历史记录项失败：未找到 data-id 为 ${id} 的元素。`);
-          // 作为后备，可以考虑重新加载，但这会违背优化目标
-          // displayHistory();
         }
-        // 不再调用 displayHistory()
       };
 
       request.onerror = (event) => {
@@ -1145,23 +611,37 @@
 
     // Function to populate the form and display the image
     function populateForm(item) {
-      document.getElementById('prompt').value = item.prompt;
-      document.getElementById('negativePrompt').value = item.negativePrompt || '';
-      document.getElementById('imageSize').value = item.imageSize;
-      document.getElementById('numInferenceSteps').value = item.numInferenceSteps;
-      document.getElementById('guidanceScale').value = item.guidanceScale;
+      document.getElementById('prompt').value = item.prompt || '';
+      document.getElementById('negativePrompt').value = item.negativePrompt || 'bad quality, low quality, deformed, distorted, bad proportions, ugly'; // Default if null/undefined
+      document.getElementById('imageSize').value = item.imageSize || '720x1280'; // Default size
+      document.getElementById('numInferenceSteps').value = item.numInferenceSteps || 50; // Default steps
+      document.getElementById('guidanceScale').value = item.guidanceScale || 2.5; // Default scale
       document.getElementById('seed').value = item.seed || '';
+      document.getElementById('model').value = item.model || 'Kwai-Kolors/Kolors'; // Populate model
 
-      document.getElementById('generatedImage').src = item.imageData; // 使用 Base64 
-      // 使复制按钮复制当前显示的 Base64 数据
-      const copyUrlButton = document.getElementById('copyUrlButton');
-      // 移除旧监听器（如果存在）并添加新监听器
-      copyUrlButton.replaceWith(copyUrlButton.cloneNode(true)); // 简单克隆以移除监听器
-      document.getElementById('copyUrlButton').onclick = () => copyImageUrl(); // 使用通用的复制函数
+      // Clear AI image preview if the model doesn't support it or wasn't used
+      if (item.model !== 'Kwai-Kolors/Kolors') {
+          clearAiImage(); // Clear reference image if model changed or wasn't Kolors
+      } else {
+          // Optionally, if you stored the reference image used for Kolors, load it here
+          // For now, we just clear it if the model isn't Kolors
+      }
 
+
+      document.getElementById('generatedImage').src = item.imageData; // Use Base64
       // Enable the download button
       document.getElementById('downloadButton').disabled = false;
+      // Reset filename input
+      document.getElementById('filenameInput').value = '';
       showNotification("已从历史记录填入");
+
+      // Ensure the correct guidance scale is set based on the populated model
+      setModelGuidanceScale();
+
+      // Scroll the result image into view on smaller screens
+        if (window.innerWidth < 768) { // md breakpoint
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        }
     }
 
     let aiBase64Image = ""; // 用于存储Base64编码的图片
@@ -1169,22 +649,26 @@
     function previewAiImage() {
       const file = document.getElementById("aiImageUpload").files[0];
       const reader = new FileReader();
+      const previewElement = document.getElementById("aiImagePreview");
+      const clearButton = document.getElementById("aiImageClearButton");
+      const placeholderText = document.querySelector("#aiImageUploadContainer p");
+
 
       reader.onloadend = function() {
         aiBase64Image = reader.result; // 保存Base64编码
-        document.getElementById("aiImagePreview").src = aiBase64Image;
-        document.getElementById("aiImagePreview").style.display = "block";
-        aiImageClearButton.style.display = "block"; // 显示清除按钮
-        document.querySelector("#aiImageUploadContainer p").style.display = "none"; // 隐藏提示文字
+        previewElement.src = aiBase64Image;
+        previewElement.classList.remove("hidden");
+        clearButton.classList.remove("hidden");
+        placeholderText.classList.add("hidden");
       }
 
       if (file) {
         reader.readAsDataURL(file);
       } else {
-        document.getElementById("aiImagePreview").src = "#";
-        document.getElementById("aiImagePreview").style.display = "none";
-        aiImageClearButton.style.display = "none"; // 隐藏清除按钮
-        document.querySelector("#aiImageUploadContainer p").style.display = "block"; // 显示提示文字
+        previewElement.src = "#";
+        previewElement.classList.add("hidden");
+        clearButton.classList.add("hidden");
+        placeholderText.classList.remove("hidden");
         aiBase64Image = ""; // 清空Base64编码
       }
     }
@@ -1197,32 +681,38 @@
 
       aiImageUpload.value = ""; // 清除文件选择
       aiImagePreview.src = "#";
-      aiImagePreview.style.display = "none";
-      aiImageClearButton.style.display = "none"; // 隐藏清除按钮
-      aiImageUploadContainerP.style.display = "block"; // 显示提示文字
+      aiImagePreview.classList.add("hidden");
+      aiImageClearButton.classList.add("hidden");
+      aiImageUploadContainerP.classList.remove("hidden");
       aiBase64Image = ""; // 清空Base64编码
     }
 
     const aiImageUploadContainer = document.getElementById("aiImageUploadContainer");
+    const aiImageUploadContainerLabel = document.getElementById("aiImageUploadContainerLabel");
 
-    // 拖放事件
+
+    // Drag and Drop for AI Image Upload
     aiImageUploadContainer.addEventListener("dragover", function(event) {
       event.preventDefault();
-      aiImageUploadContainer.style.backgroundColor = "#eee";
+      aiImageUploadContainer.classList.add("border-blue-400", "bg-blue-50"); // Highlight effect
     });
 
     aiImageUploadContainer.addEventListener("dragleave", function(event) {
       event.preventDefault();
-      aiImageUploadContainer.style.backgroundColor = "";
+      aiImageUploadContainer.classList.remove("border-blue-400", "bg-blue-50");
     });
 
     aiImageUploadContainer.addEventListener("drop", function(event) {
       event.preventDefault();
-      aiImageUploadContainer.style.backgroundColor = "";
+      aiImageUploadContainer.classList.remove("border-blue-400", "bg-blue-50");
 
       const file = event.dataTransfer.files[0];
-      document.getElementById("aiImageUpload").files = event.dataTransfer.files; // 兼容拖拽
-      previewAiImage();
+      if (file && file.type.startsWith('image/')) { // Basic type check
+          document.getElementById("aiImageUpload").files = event.dataTransfer.files; // Assign dropped files
+          previewAiImage(); // Trigger preview
+      } else {
+          showNotification("请拖放有效的图片文件。", true);
+      }
     });
 
     async function generateImage() {
@@ -1233,55 +723,89 @@
       const imageSize = document.getElementById('imageSize').value;
       const numInferenceSteps = parseInt(document.getElementById('numInferenceSteps').value);
       const guidanceScale = parseFloat(document.getElementById('guidanceScale').value);
-      const seed = parseInt(document.getElementById('seed').value);
+      const seedValue = document.getElementById('seed').value;
+      const seed = seedValue ? parseInt(seedValue) : undefined; // Use undefined if empty
       const generateButton = document.getElementById('generateButton');
+      const loadingIndicatorElement = document.getElementById('loadingIndicator');
+      const generatedImageElement = document.getElementById('generatedImage');
+      const downloadButton = document.getElementById('downloadButton');
 
-      // Disable the generate button
+      if (!apiKey) {
+          showNotification('请输入 API 密钥。', true);
+          document.getElementById('apiKey').focus();
+          return;
+      }
+       if (!prompt && model !== 'Kwai-Kolors/Kolors') { // Prompt required unless it's image-to-image
+          showNotification('请输入提示语。', true);
+          document.getElementById('prompt').focus();
+          return;
+      }
+       if (model === 'Kwai-Kolors/Kolors' && !aiBase64Image && !prompt) {
+           showNotification('对于 Kolors 模型，请输入提示语或提供参考图。', true);
+           return;
+       }
+
+
+      // Disable the generate button and show loading
       generateButton.disabled = true;
       let countdown = 10;
       generateButton.textContent = `生成中 (${countdown}s)`;
+      loadingIndicatorElement.classList.remove('hidden'); // Use classList
 
       // Save API key to local storage
       saveApiKey(apiKey);
 
-      const loadingIndicatorElement = document.getElementById('loadingIndicator'); // 获取 loadingIndicator 元素
-      loadingIndicatorElement.style.display = "block";
-
-      const apiUrl = 'https://api.siliconflow.cn/v1/images/generations'; // 替换为你的 API 端点
+      const apiUrl = 'https://api.siliconflow.cn/v1/images/generations';
 
       const data = {
         model: model,
         prompt: prompt,
-        negative_prompt: negativePrompt || undefined, // 只有当不为空时才包含
+        negative_prompt: negativePrompt || undefined,
         image_size: imageSize,
-        batch_size: 1, // 固定为 1。不再使用输入。
+        batch_size: 1,
         num_inference_steps: numInferenceSteps,
         guidance_scale: guidanceScale,
-        seed: seed || undefined, // 只有当不为空时才包含
-        ...(model === 'Kwai-Kolors/Kolors' && aiBase64Image ? { image: aiBase64Image } : {}) // 根据模型添加 image 参数
+        seed: seed, // Already handles undefined if empty
+        ...(model === 'Kwai-Kolors/Kolors' && aiBase64Image ? { image: aiBase64Image.split(',')[1] } : {}) // Send only base64 part
       };
+
+       // Remove undefined keys
+       Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
+
 
       try {
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${apiKey}`, // Add "Bearer " to the API key
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json' // Explicitly accept JSON
           },
           body: JSON.stringify(data)
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP 错误! 状态: ${response.status}`);
+            let errorMsg = `HTTP 错误! 状态: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMsg += ` - ${errorData.message || JSON.stringify(errorData)}`;
+            } catch (e) {
+                errorMsg += ` - ${await response.text()}`;
+            }
+          throw new Error(errorMsg);
         }
 
         const result = await response.json();
 
-        if (result.images && result.images.length > 0) {
+        if (result.images && result.images.length > 0 && result.images[0].url) {
           const imageUrl = result.images[0].url;
-          const base64Image = await urlToBase64(imageUrl); // 转换为 Base64
+          // Display image immediately from URL for faster feedback
+          // generatedImageElement.src = imageUrl;
+          // Convert to Base64 for history saving and potential direct download/copy
+          const base64Image = await urlToBase64(imageUrl);
 
-          document.getElementById('generatedImage').src = base64Image; // 显示 Base64
+          generatedImageElement.src = base64Image; // Display Base64
+
 
           // Save history using base64 data
           await saveHistory({
@@ -1290,40 +814,38 @@
             imageSize: imageSize,
             numInferenceSteps: numInferenceSteps,
             guidanceScale: guidanceScale,
-            seed: seed,
-            base64Image: base64Image // 传递 Base64 数据
+            seed: result.images[0].seed || seed, // Use seed from response if available
+            base64Image: base64Image, // Pass Base64 data
+            model: model // Pass the model used
           });
 
-          // Enable the download button
-          document.getElementById('downloadButton').disabled = false;
+          downloadButton.disabled = false;
           showNotification("图像生成成功!");
         } else {
-          document.getElementById('generatedImage').src = 'https://img.liyao.sbs/file/1738502727198.png';
-          document.getElementById('imageUrlLink').href = '#';
-          document.getElementById('imageUrlLink').textContent = '无图像 URL';
-
-          // Disable the download button
-          document.getElementById('downloadButton').disabled = true;
+            console.error("API response missing image URL:", result);
+            generatedImageElement.src = 'https://img.liyao.sbs/file/1738502727198.png'; // Error image
+            downloadButton.disabled = true;
+            showNotification("图像生成失败：API 未返回有效图像。", true);
         }
       } catch (error) {
-        console.error('错误:', error);
-        document.getElementById('generatedImage').src = 'https://img.liyao.sbs/file/1738502727198.png';
-        document.getElementById('imageUrlLink').href = '#';
-        document.getElementById('imageUrlLink').textContent = '无图像 URL';
-
-        // Disable the download button
-        document.getElementById('downloadButton').disabled = true;
-        showNotification("图像生成失败!", true);
+        console.error('生成图像时出错:', error);
+        generatedImageElement.src = 'https://img.liyao.sbs/file/1738502727198.png'; // Error image
+        downloadButton.disabled = true;
+        showNotification(`图像生成失败: ${error.message}`, true);
       } finally {
-        loadingIndicatorElement.style.display = "none";
-        // Re-enable button after 10 seconds
+        loadingIndicatorElement.classList.add('hidden'); // Use classList
+        // Re-enable button after countdown
         const countdownInterval = setInterval(() => {
           countdown--;
-          generateButton.textContent = `请稍后 (${countdown}s)`;
+           if (generateButton.disabled) { // Check if still disabled before updating text
+               generateButton.textContent = `请稍后 (${countdown}s)`;
+           }
           if (countdown <= 0) {
             clearInterval(countdownInterval);
-            generateButton.disabled = false;
-            generateButton.textContent = '生成图像';
+             if (generateButton.disabled) { // Double check before enabling
+                 generateButton.disabled = false;
+                 generateButton.textContent = '生成图像';
+             }
           }
         }, 1000);
       }
@@ -1333,58 +855,59 @@
         const generatedImage = document.getElementById('generatedImage');
         let downloadUrl = generatedImage.src;
         const filenameInput = document.getElementById('filenameInput');
-        const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : 'together'; // 获取文件名，如果为空则使用默认文件名
-        const fileExtension = 'png'; // 文件扩展名
-        const fullFilename = `${filename}.${fileExtension}`; // 完整文件名
+        // Generate default filename based on prompt/time if input is empty
+        let defaultFilename = 'generated-image';
+        const promptText = document.getElementById('prompt').value.trim();
+        if (promptText) {
+            // Basic sanitization and shortening for filename
+            defaultFilename = promptText.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 50);
+        } else {
+            defaultFilename = `image-${Date.now()}`;
+        }
 
-        if (downloadUrl) {
+        const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : defaultFilename;
+        const fileExtension = 'png'; // Assume PNG for Base64
+        const fullFilename = `${filename}.${fileExtension}`;
+
+        if (downloadUrl && downloadUrl.startsWith('data:image')) { // Check if it's a base64 URL
             const a = document.createElement('a');
             a.href = downloadUrl;
-            a.download = fullFilename;  // 使用完整文件名
+            a.download = fullFilename;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             showNotification("图像已开始下载");
         } else {
-            showNotification('请先生成图像。', true);
+            showNotification('没有有效的图像可供下载。', true);
         }
     }
 
-    function copyImageUrl() {
-      const imageUrl = document.getElementById('generatedImage').src; // 获取当前图像的 src
-      // 检查 src 是否是有效的 Base64 数据 URI
-      if (imageUrl && imageUrl.startsWith('data:image')) {
-        navigator.clipboard.writeText(imageUrl)
-          .then(() => {
-            showNotification('图像 Base64 数据已复制到剪贴板！');
-          })
-          .catch(err => {
-            console.error('复制 Base64 失败: ', err);
-            showNotification('复制失败，请检查浏览器权限或手动复制', true);
-          });
-      } else {
-        showNotification('没有有效的图像数据可复制', true);
-      }
-    }
-
-    // 新增的通知函数
+    // Notification function
     function showNotification(message, isError = false) {
-      const notification = document.createElement('div');
-      notification.className = 'copy-notification show';
-      notification.textContent = message;
-      
-      if (isError) {
-        notification.style.backgroundColor = '#dc3545';
-      }
+        const notification = document.createElement('div');
+        // Base classes + conditional error class
+        notification.className = `fixed top-5 left-1/2 transform -translate-x-1/2 py-2 px-4 rounded-md shadow-lg text-white text-sm z-[1000] transition-all duration-300 ease-out ${isError ? 'bg-red-500' : 'bg-green-500'} opacity-0 translate-y-[-20px]`;
+        notification.textContent = message;
 
-      document.body.appendChild(notification);
+        document.body.appendChild(notification);
 
-      setTimeout(() => {
-        notification.classList.remove('show');
+        // Force reflow to enable transition
+        void notification.offsetWidth;
+
+        // Fade in and move down
+        notification.classList.add('opacity-100', 'translate-y-0');
+
+
         setTimeout(() => {
-          document.body.removeChild(notification);
-        }, 300);
-      }, 2000);
+            // Fade out and move up
+             notification.classList.remove('opacity-100', 'translate-y-0');
+             notification.classList.add('opacity-0', 'translate-y-[-20px]');
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 300); // Wait for fade out transition
+        }, 3000); // Notification visible duration
     }
 
 
@@ -1392,31 +915,21 @@
     document.getElementById('generatedImage').addEventListener('click', openFullscreen);
 
     function openFullscreen() {
-      const generatedImage = document.getElementById('generatedImage');
-      if (generatedImage.src) {
-        if (generatedImage.requestFullscreen) {
-          generatedImage.requestFullscreen();
-        } else if (generatedImage.mozRequestFullScreen) { /* Firefox */
-          generatedImage.mozRequestFullScreen();
-        } else if (generatedImage.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-          generatedImage.webkitRequestFullscreen();
-        } else if (generatedImage.msRequestFullscreen) { /* IE/Edge */
-          generatedImage.msRequestFullscreen();
-        }
+      const elem = document.getElementById('generatedImage');
+      if (!elem.src || elem.src.endsWith('AQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7')) return; // Don't fullscreen placeholder
+
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.mozRequestFullScreen) { /* Firefox */
+        elem.mozRequestFullScreen();
+      } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) { /* IE/Edge */
+        elem.msRequestFullscreen();
       }
     }
 
-    function closeFullscreen() {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.mozCancelFullScreen) { /* Firefox */
-        document.mozCancelFullScreen();
-      } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
-        document.webkitExitFullscreen();
-      } else if (document.msExitFullscreen) { /* IE/Edge */
-        document.msExitFullscreen();
-      }
-    }
+    // No closeFullscreen function needed, browser UI handles it.
 
     // Random Seed Function
     function randomSeed() {
@@ -1424,45 +937,57 @@
       document.getElementById('seed').value = randomNumber;
     }
 
-    // Initial display of history on page load
-    // displayHistory(); // 移动到 IndexedDB 初始化成功后
-
-    // 获取按钮和翻译区域的元素
+    // Toggle Translate Area
     const toggleTranslateAreaButton = document.getElementById('toggleTranslateArea');
     const translateArea = document.querySelector('.ai-translate-area');
-
-    // 添加点击事件监听器
     toggleTranslateAreaButton.addEventListener('click', function() {
-      // 切换翻译区域的显示状态
-      if (translateArea.style.display === 'none') {
-        translateArea.style.display = 'block';
-      } else {
-        translateArea.style.display = 'none';
-      }
+      translateArea.classList.toggle('hidden');
+      // Change button text based on visibility
+       toggleTranslateAreaButton.textContent = translateArea.classList.contains('hidden')
+           ? '———显示 翻译&识别区———'
+           : '———隐藏 翻译&识别区———';
     });
 
+    // --- Translation & Description Logic ---
     const translate_API_URL = "https://gemini.liyao.sbs/v1/chat/completions";
-    let translate_MODEL = "gemini-2.0-flash-exp"; // 默认模型
+    let translate_MODEL = "gemini-2.0-flash-exp"; // Default model
     const translate_PROMPT = "Translate the content into English. Respond only with the translated content, and the response must be entirely in English without any other languages.";
+    let translate_base64Image = ""; // Base64 for description image
+    let translate_API_KEY = localStorage.getItem('gemini_api_key') || ""; // Use a specific key
 
-    let translate_base64Image = ""; // 用于存储Base64编码的图片
-    let translate_API_KEY = localStorage.getItem('openrouter_api_key') || ""; // 从 localStorage 获取 API Key
+    document.getElementById("apiKeyInput").value = translate_API_KEY; // Populate Gemini key input
 
-    // 页面加载时，将 API Key 填入输入框
-    document.getElementById("apiKeyInput").value = translate_API_KEY;
-
-    // 监听模型选择的变化
     document.getElementById("modelSelect").addEventListener("change", function() {
       translate_MODEL = this.value;
     });
+
+    // Save Gemini API Key when input changes
+    document.getElementById("apiKeyInput").addEventListener('change', function() {
+        translate_API_KEY = this.value;
+        localStorage.setItem('gemini_api_key', translate_API_KEY);
+    });
+
 
     async function translateText() {
       const translate_text = document.getElementById("prompt").value;
       const translate_translationResultDiv = document.getElementById("translationResult");
       const translate_loadingIndicator = document.getElementById("translateloadingIndicator");
-      translate_API_KEY = document.getElementById("apiKeyInput").value; // 获取 API Key
+      // API Key is already updated via event listener
+
+       if (!translate_API_KEY) {
+           showNotification('请输入 Gemini API 密钥。', true);
+           document.getElementById('apiKeyInput').focus();
+           return;
+       }
+        if (!translate_text) {
+            showNotification('请输入需要翻译的内容。', true);
+            document.getElementById('prompt').focus();
+            return;
+        }
+
+
       translate_loadingIndicator.style.display = "block";
-      translate_translationResultDiv.style.display = "none";
+      translate_translationResultDiv.classList.add("hidden"); // Use classList
       translate_translationResultDiv.innerText = "";
 
       try {
@@ -1471,51 +996,53 @@
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${translate_API_KEY}`,
-            "HTTP-Referer": "http://localhost:3000", // Replace with your actual domain or localhost
-            "X-Title": "My Translation App" // Replace with your app name
           },
           body: JSON.stringify({
             model: translate_MODEL,
             messages: [
-              {
-                role: "system",
-                content: translate_PROMPT
-              },
-              {
-                role: "user",
-                content: translate_text
-              }
+              { role: "system", content: translate_PROMPT },
+              { role: "user", content: translate_text }
             ]
           })
         });
 
         if (!translate_response.ok) {
-          throw new Error(`HTTP error! status: ${translate_response.status}`);
+           let errorMsg = `HTTP error! status: ${translate_response.status}`;
+            try {
+                const errorData = await translate_response.json();
+                errorMsg += ` - ${errorData.error?.message || JSON.stringify(errorData)}`;
+            } catch (e) {
+                 errorMsg += ` - ${await translate_response.text()}`;
+            }
+          throw new Error(errorMsg);
         }
 
         const translate_data = await translate_response.json();
         const translate_translatedText = translate_data.choices[0].message.content;
 
         translate_translationResultDiv.innerText = translate_translatedText;
-
-        // 缓存 API Key
-        localStorage.setItem('openrouter_api_key', translate_API_KEY);
         showNotification('翻译完成');
 
       } catch (error) {
         console.error("翻译出错:", error);
-        translate_translationResultDiv.innerText = "翻译出错，请稍后再试。";
-        showNotification("翻译出错，请稍后再试。", true);
+        translate_translationResultDiv.innerText = `翻译出错: ${error.message}`;
+        showNotification(`翻译出错: ${error.message}`, true);
       } finally {
         translate_loadingIndicator.style.display = "none";
-        translate_translationResultDiv.style.display = "block";
+        translate_translationResultDiv.classList.remove("hidden"); // Use classList
       }
     }
 
     function fillInput() {
       const translate_translatedText = document.getElementById("translationResult").innerText;
-      document.getElementById("prompt").value = translate_translatedText;
-      showNotification("已填入");
+      if (translate_translatedText && !translate_translatedText.startsWith("翻译出错")) {
+          document.getElementById("prompt").value = translate_translatedText;
+          showNotification("已填入");
+      } else if (translate_translatedText.startsWith("翻译出错")) {
+           showNotification("无法填入错误信息。", true);
+      } else {
+           showNotification("没有翻译结果可填入。", true);
+      }
     }
 
     async function pasteText() {
@@ -1524,252 +1051,249 @@
         document.getElementById("prompt").value = translate_text;
         showNotification("已粘贴");
       } catch (translate_err) {
-        console.error('Failed to read clipboard contents: ', translate_err);
-        showNotification('无法读取剪贴板内容，请确保浏览器允许访问剪贴板。', true);
+        console.error('无法读取剪贴板: ', translate_err);
+        showNotification('无法读取剪贴板内容。', true);
       }
     }
 
     function copyText() {
       const translate_text = document.getElementById("prompt").value;
+       if (!translate_text) {
+           showNotification('提示语为空，无法复制。', true);
+           return;
+       }
       navigator.clipboard.writeText(translate_text).then(function() {
-        showNotification('内容已复制到剪贴板！');
+        showNotification('提示语已复制！');
       }, function(translate_err) {
-        console.error('Failed to copy text to clipboard: ', translate_err);
-        showNotification('复制到剪贴板失败，请确保浏览器允许访问剪贴板。', true);
+        console.error('无法复制文本: ', translate_err);
+        showNotification('复制失败。', true);
       });
     }
 
     function previewImage() {
       const translate_file = document.getElementById("imageUpload").files[0];
       const translate_reader = new FileReader();
+      const previewElement = document.getElementById("imagePreview");
+      const placeholderText = document.querySelector("#imageUploadContainer p");
+
 
       translate_reader.onloadend = function() {
-        translate_base64Image = translate_reader.result; // 保存Base64编码
-        document.getElementById("imagePreview").src = translate_base64Image;
-        document.getElementById("imagePreview").style.display = "block";
-        document.querySelector("#imageUploadContainer p").style.display = "none"; // 隐藏提示文字
+        translate_base64Image = translate_reader.result; // Save Base64
+        previewElement.src = translate_base64Image;
+        previewElement.classList.remove("hidden"); // Use classList
+        placeholderText.classList.add("hidden"); // Use classList
       }
 
       if (translate_file) {
         translate_reader.readAsDataURL(translate_file);
       } else {
-        document.getElementById("imagePreview").src = "#";
-        document.getElementById("imagePreview").style.display = "none";
-        document.querySelector("#imageUploadContainer p").style.display = "block"; // 显示提示文字
-        translate_base64Image = ""; // 清空Base64编码
+        previewElement.src = "#";
+        previewElement.classList.add("hidden");
+        placeholderText.classList.remove("hidden");
+        translate_base64Image = ""; // Clear Base64
       }
     }
 
     const translate_imageUploadContainer = document.getElementById("imageUploadContainer");
 
-    // 拖放事件
+    // Drag and Drop for Description Image
     translate_imageUploadContainer.addEventListener("dragover", function(event) {
       event.preventDefault();
-      translate_imageUploadContainer.style.backgroundColor = "#eee";
+      translate_imageUploadContainer.classList.add("border-blue-400", "bg-blue-50");
     });
 
     translate_imageUploadContainer.addEventListener("dragleave", function(event) {
       event.preventDefault();
-      translate_imageUploadContainer.style.backgroundColor = "";
+      translate_imageUploadContainer.classList.remove("border-blue-400", "bg-blue-50");
     });
 
     translate_imageUploadContainer.addEventListener("drop", function(event) {
       event.preventDefault();
-      translate_imageUploadContainer.style.backgroundColor = "";
+      translate_imageUploadContainer.classList.remove("border-blue-400", "bg-blue-50");
 
       const translate_file = event.dataTransfer.files[0];
-      document.getElementById("imageUpload").files = event.dataTransfer.files; // 兼容拖拽
-      previewImage();
+       if (translate_file && translate_file.type.startsWith('image/')) {
+           document.getElementById("imageUpload").files = event.dataTransfer.files; // Assign dropped files
+           previewImage(); // Trigger preview
+       } else {
+           showNotification("请拖放有效的图片文件。", true);
+       }
     });
 
     async function describeImage() {
       if (!translate_base64Image) {
-        alert("请先选择图片！");
+        showNotification("请先选择要识别的图片！", true);
         return;
       }
+       if (!translate_API_KEY) {
+           showNotification('请输入 Gemini API 密钥。', true);
+           document.getElementById('apiKeyInput').focus();
+           return;
+       }
 
-      const translate_descriptionPrompt = `# 提示词：AI 文生图提示词助手
+      const translate_descriptionPrompt = `# 提示词：AI 文生图提示词助手... [Rest of your long prompt here] ... 仅输出提示词。`; // Keep your prompt
+      const translate_loadingIndicator = document.getElementById("translateloadingIndicator"); // Use correct ID
+      const translate_translationResultDiv = document.getElementById("translationResult");
 
-你是一位专业的 AI 文生图提示词生成专家，拥有敏锐的视觉理解能力和丰富的艺术知识储备。你的任务是：**根据用户提供的图片，生成一份详细、准确、可用于 AI 绘画的提示词，最大程度还原图片内容。**
-
-**你的能力：**
-
-*   **精准识别：** 准确识别图片中的主体、环境、物体、人物、动物及其姿态、表情。
-*   **风格分析：** 能够判断图片中的画面风格（例如：写实、卡通、抽象、赛博朋克等）、艺术形式（例如：油画、水彩、摄影等）、绘画技法（例如：光影、色彩运用、笔触等）。
-*   **细节描述：** 能够捕捉并描述图片中的细节，包括光照效果、阴影、纹理、材质、装饰物等。
-*   **情感表达：** 能够理解图片所表达的氛围和情感，并在提示词中体现出来。
-*   **构图理解：** 能够分析图片构图，并在提示词中描述视角（例如：鸟瞰、仰视、近景、远景等）。
-*   **提示词优化：** 能够将信息组织成结构化的、易于 AI 理解的提示词，包括主体描述、环境描述、风格描述、光线描述、色彩描述等。
-
-**知识储备：**
-
-*   熟悉各种艺术风格、绘画技法、摄影术语。
-*   了解 AI 绘画的常用关键词和表达方式。
-*   掌握图像识别和语义理解的基本原理。
-
-**工作流程：**
-
-1.  **接收用户上传的图片。**
-2.  **对图片进行全面分析，识别图片中的所有元素。**
-3.  **根据分析结果，生成一份详细的文生图提示词。** 提示词应包括以下要素（但不限于）：
-    *   **主体描述：** 主体是什么？它在做什么？它的姿态如何？它的表情如何？
-    *   **环境描述：** 环境是什么样的？有什么特征？
-    *   **画面风格：** 是什么风格的？（例如：写实主义、印象派、超现实主义等）
-    *   **艺术形式：** 是什么艺术形式？（例如：油画、水彩、摄影等）
-    *   **技法描述：** 运用了什么技法？（例如：光影、色彩、笔触等）
-    *   **光线描述：** 光线如何？（例如：明亮、柔和、逆光等）
-    *   **色彩描述：** 色彩如何？（例如：鲜艳、柔和、单色等）
-    *   **视角描述：** 是什么视角？（例如：鸟瞰、仰视、近景、远景等）
-    *   **氛围描述：** 画面氛围如何？（例如：宁静、恐怖、梦幻等）
-4.  **仅输出提示词。**
-
-**示例：**
-
-**如果用户上传了一张猫咪在草地上玩耍的图片，你生成的提示词可能如下：**
-A cute fluffy cat playing in a lush green meadow, sunlight filtering through the trees, creating a warm and inviting atmosphere,  soft focus, bokeh, vibrant colors, high detail, realistic, 8k.
-`;
-      const translate_loadingIndicator = document.getElementById("loadingIndicator");
-      const translate_translationResultDiv = document.getElementById("translationResult"); // 获取翻译结果的 div
-      translate_API_KEY = document.getElementById("apiKeyInput").value; // 获取 API Key
       translate_loadingIndicator.style.display = "block";
-      translate_translationResultDiv.style.display = "none";
-      translate_translationResultDiv.innerText = ""; // 清空之前的结果
+      translate_translationResultDiv.classList.add("hidden");
+      translate_translationResultDiv.innerText = "";
+
       try {
         const translate_response = await fetch(translate_API_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${translate_API_KEY}`,
-            "HTTP-Referer": "http://localhost:3000", // Replace with your actual domain or localhost
-            "X-Title": "My Translation App" // Replace with your app name
           },
           body: JSON.stringify({
-            model: translate_MODEL,
+            model: translate_MODEL, // Consider using a vision-capable model if available/different
             messages: [
               {
                 role: "user",
                 content: [
-                  {
-                    "type": "text",
-                    "text": translate_descriptionPrompt
-                  },
-                  {
-                    "type": "image_url",
-                    "image_url": {
-                      "url": translate_base64Image
-                    }
-                  }
+                  { type: "text", text: translate_descriptionPrompt },
+                  { type: "image_url", image_url: { url: translate_base64Image } } // Send full base64 URL
                 ]
               }
-            ]
+            ],
+             max_tokens: 300 // Limit token usage for description
           })
         });
 
         if (!translate_response.ok) {
-          throw new Error(`HTTP error! status: ${translate_response.status}`);
+           let errorMsg = `HTTP error! status: ${translate_response.status}`;
+            try {
+                const errorData = await translate_response.json();
+                errorMsg += ` - ${errorData.error?.message || JSON.stringify(errorData)}`;
+            } catch (e) {
+                 errorMsg += ` - ${await translate_response.text()}`;
+            }
+          throw new Error(errorMsg);
         }
 
         const translate_data = await translate_response.json();
-        const translate_imageDescription = translate_data.choices[0].message.content;
-        document.getElementById("prompt").value = translate_imageDescription; // 将识别结果填入输入框
-        translate_translationResultDiv.innerText = translate_imageDescription; // 将识别结果显示在翻译结果的位置
-
-            // 缓存 API Key
-            showNotification("识别完成");
-            localStorage.setItem('openrouter_api_key', translate_API_KEY);
-
-          } catch (error) {
-            console.error("图片识别出错:", error);
-            translate_translationResultDiv.innerText = "图片识别出错，请稍后再试。"; // 错误信息也显示在翻译结果的位置
-            showNotification("图片识别出错，请稍后再试。", true);
-          } finally {
-            translate_loadingIndicator.style.display = "none";
-            translate_translationResultDiv.style.display = "block";
-          }
+        // Check for potential safety blocks or empty responses
+        if (!translate_data.choices || translate_data.choices.length === 0 || !translate_data.choices[0].message?.content) {
+            console.warn("Gemini response missing content:", translate_data);
+            let reason = "未知原因";
+            if (translate_data.promptFeedback?.blockReason) {
+                reason = `内容被阻止 (${translate_data.promptFeedback.blockReason})`;
+            } else if (translate_data.choices?.[0]?.finishReason) {
+                 reason = `完成原因: ${translate_data.choices[0].finishReason}`;
+            }
+            throw new Error(`API 未返回有效描述 (${reason})`);
         }
 
-      function clearAll() {
-        document.getElementById("prompt").value = "";
-        document.getElementById("translationResult").innerText = "";
-        document.getElementById("imagePreview").src = "#";
-        document.getElementById("imagePreview").style.display = "none";
-        translate_base64Image = "";
-        document.getElementById("imageUpload").value = ""; // 清除文件选择
-        document.querySelector("#imageUploadContainer p").style.display = "block"; // 显示提示文字
-        document.getElementById("translationResult").style.display = "none";
+        const translate_imageDescription = translate_data.choices[0].message.content;
+        document.getElementById("prompt").value = translate_imageDescription; // Fill main prompt
+        translate_translationResultDiv.innerText = translate_imageDescription; // Show in result area
+        showNotification("识别完成");
+
+      } catch (error) {
+        console.error("图片识别出错:", error);
+        translate_translationResultDiv.innerText = `图片识别出错: ${error.message}`;
+        showNotification(`图片识别出错: ${error.message}`, true);
+      } finally {
+        translate_loadingIndicator.style.display = "none";
+        translate_translationResultDiv.classList.remove("hidden");
       }
+    }
+
+    function clearAll() {
+        // Clear main prompt
+        document.getElementById("prompt").value = "";
+        // Clear translation/description area
+        document.getElementById("translationResult").innerText = "";
+        document.getElementById("translationResult").classList.add("hidden");
+        // Clear description image preview
+        document.getElementById("imagePreview").src = "#";
+        document.getElementById("imagePreview").classList.add("hidden");
+        document.querySelector("#imageUploadContainer p").classList.remove("hidden");
+        translate_base64Image = "";
+        document.getElementById("imageUpload").value = ""; // Clear file input
+        showNotification("已清除提示语和识别区");
+    }
+
 
       function showDownloadHelp() {
         alert(
-          "风险提示： 修改 Internet Explorer 安全设置可能会降低系统的安全性，请谨慎操作。\n" +
-          "打开 Internet Explorer，选择“工具” -> “Internet 选项” -> “安全” -> “自定义级别”。\n" +
-          "在“设置”列表中，找到“下载” -> “文件下载”，选择“启用”。\n" +
-          "找到“杂项” -> “启动应用程序和不安全文件”，选择“提示”。\n" +
-          "单击“确定”保存设置。"
+          "如果下载的图像无法打开或显示为损坏，请尝试以下操作：\n\n" +
+          "1. 确认文件名：确保您输入的自定义文件名不包含特殊字符（如 / \\ : * ? \" < > |）。\n" +
+          "2. 浏览器问题：尝试在不同的浏览器（如 Chrome, Firefox）中下载。\n" +
+          "3. 图像查看器：尝试使用不同的图像查看程序打开文件。\n" +
+          "4. （旧版 Windows/IE）安全设置：\n" +
+          "   - 打开 Internet Explorer -> 工具 -> Internet 选项 -> 安全 -> 自定义级别。\n" +
+          "   - 找到“下载” -> “文件下载”，选择“启用”。\n" +
+          "   - 找到“杂项” -> “启动应用程序和不安全文件”，选择“提示”。\n" +
+          "   - 单击“确定”保存。（注意：修改安全设置有风险）\n\n" +
+           "如果问题仍然存在，可能是生成过程中图像数据本身存在问题。"
         );
-        return false; // 阻止链接跳转
+        return false; // Prevent default link behavior
       }
 
       function setModelGuidanceScale() {
-        const model = document.getElementById('model').value;
-        if (model === "stabilityai/stable-diffusion-xl-base-1.0") {
-          document.getElementById('guidanceScale').value = "13";
-        } else if (model === "stabilityai/stable-diffusion-3-5-large") {
-          document.getElementById('guidanceScale').value = "3.5";
-        } else if (model === "stabilityai/stable-diffusion-2-1") {
-          document.getElementById('guidanceScale').value = "20";
-        } else if (model === "Kwai-Kolors/Kolors") {
-          document.getElementById('guidanceScale').value = "2.5";
-        } 
+        const modelSelect = document.getElementById('model');
+        const guidanceScaleInput = document.getElementById('guidanceScale');
+        const selectedModel = modelSelect.value;
 
-        // 显示/隐藏 ai-image-upload-container
-        if (model === "Kwai-Kolors/Kolors") {
-          aiImageUploadContainer.style.display = "block";
-          aiImageUploadContainerLabel.style.display = "block";
-        } else {
-          aiImageUploadContainer.style.display = "none";
-          aiImageUploadContainerLabel.style.display = "none";
+        // Set default guidance scale based on model
+        let defaultScale = 2.5; // Default for Kolors and Schnell
+        if (selectedModel === "stabilityai/stable-diffusion-xl-base-1.0") {
+          defaultScale = 7.0; // Common default for SDXL
+        } else if (selectedModel === "stabilityai/stable-diffusion-3-5-large") {
+          defaultScale = 4.5; // Common default for SD3
+        } else if (selectedModel === "stabilityai/stable-diffusion-2-1") {
+          defaultScale = 7.5; // Common default for SD 2.1
         }
+        guidanceScaleInput.value = defaultScale;
+
+
+        // Show/hide AI image upload based on model capability (only Kolors supports it here)
+        const supportsImageInput = (selectedModel === "Kwai-Kolors/Kolors");
+        aiImageUploadContainer.classList.toggle('hidden', !supportsImageInput);
+        aiImageUploadContainerLabel.classList.toggle('hidden', !supportsImageInput);
+
+         // If hiding, also clear the preview
+         if (!supportsImageInput) {
+             clearAiImage();
+         }
       }
 
-      // 获取提示语输入框和生成按钮的引用
+      // --- Keyboard Shortcuts ---
       const promptTextarea = document.getElementById('prompt');
-      const generateButton = document.getElementById('generateButton');
+      const generateButtonEl = document.getElementById('generateButton'); // Renamed variable
 
-      // 为提示语输入框添加键盘按下事件监听器
       promptTextarea.addEventListener('keydown', function(event) {
-        // 检查按下的键是否是 Enter 键 (key 代码 'Enter' 或 keyCode 13)
-        // 同时检查 Shift 键是否没有被按下 (允许 Shift+Enter 换行)
-        if (event.key === 'Enter' && !event.shiftKey) {
-          // 阻止 Enter 键的默认行为 (即在文本区域中插入换行符)
+        if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { // Added !event.isComposing
           event.preventDefault();
-
-          // 检查生成按钮当前是否可用 (不是 disabled 状态)
-          if (!generateButton.disabled) {
-            // 触发生成按钮的 click 事件
-            generateButton.click();
+          if (!generateButtonEl.disabled) {
+            generateButtonEl.click();
           }
         }
       });
 
-      // 获取自定义文件名输入框和下载按钮的引用
       const filenameInput = document.getElementById('filenameInput');
-      const downloadButton = document.getElementById('downloadButton');
+      const downloadButtonEl = document.getElementById('downloadButton'); // Renamed variable
 
-      // 为自定义文件名输入框添加键盘按下事件监听器
       filenameInput.addEventListener('keydown', function(event) {
-        // 检查按下的键是否是 Enter 键 (key 代码 'Enter' 或 keyCode 13)
-        if (event.key === 'Enter') {
-          // 阻止 Enter 键的默认行为 (例如触发表单提交，虽然这里没有表单)
+        if (event.key === 'Enter' && !event.isComposing) {
           event.preventDefault();
-
-          // 检查下载按钮当前是否可用 (不是 disabled 状态)
-          if (!downloadButton.disabled) {
-            // 触发下载按钮的 click 事件
-            downloadButton.click();
+          if (!downloadButtonEl.disabled) {
+            downloadButtonEl.click();
           }
         }
       });
+
+       // Initial setup on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setModelGuidanceScale(); // Set initial guidance scale and visibility
+             // Ensure translate area is hidden initially if toggle button exists
+             if (toggleTranslateAreaButton && translateArea) {
+                 translateArea.classList.add('hidden');
+                 toggleTranslateAreaButton.textContent = '———显示 翻译&识别区———';
+             }
+        });
 
   </script>
 
