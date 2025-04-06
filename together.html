@@ -19,61 +19,73 @@
     --dark: #1e293b;
     --light: #f8fafc;
   }
-  
+
   body {
-    @apply bg-gray-50 text-gray-800 font-sans;
+    background-color: #f9fafb; /* bg-gray-50 */
+    color: #1f2937; /* text-gray-800 */
+    font-family: sans-serif; /* font-sans */
     height: 100vh;
     overflow: hidden;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-  
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .fade-in {
     animation: fadeIn 0.3s ease-in-out;
   }
-  
+
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
-  
+
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 4px;
     height: 8px;
   }
-  
+
   ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.05);
   }
-  
+
   ::-webkit-scrollbar-thumb {
-      background: var(--gray);
-      border-radius: 4px;
+    background: var(--gray);
+    border-radius: 4px;
   }
-  
+
   ::-webkit-scrollbar-thumb:hover {
-      background: var(--primary);
+    background: var(--primary);
   }
 
   .tooltip {
     position: relative;
   }
-  
+
   .tooltip:hover .tooltip-text {
     visibility: visible;
     opacity: 1;
   }
-  
+
   .tooltip-text {
-    @apply bg-gray-800 text-white text-xs rounded py-1 px-2;
+    background-color: #27272a; /* bg-gray-800 */
+    color: #fff; /* text-white */
+    font-size: 0.75rem; /* text-xs */
+    border-radius: 0.25rem; /* rounded */
+    padding: 0.25rem 0.5rem; /* py-1 px-2 */
     visibility: hidden;
     opacity: 0;
     position: absolute;
@@ -84,62 +96,115 @@
     white-space: nowrap;
     transition: all 0.3s;
   }
-  
+
   /* 新增的生成按钮样式 */
   #generate-button {
-      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%);
-      color: white;
-      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
-      transition: all 0.3s ease;
-      border: none;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+    transition: all 0.3s ease;
+    border: none;
   }
 
   #generate-button:hover {
-      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #1E40AF 100%);
-      box-shadow: 0 6px 8px rgba(37, 99, 235, 0.4);
-      transform: translateY(-2px);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+    box-shadow: 0 6px 8px rgba(37, 99, 235, 0.4);
+    transform: translateY(-2px);
   }
 
   #generate-button:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
   }
 
   #generate-button:disabled {
-      background: linear-gradient(135deg, #93C5FD 0%, #60A5FA 50%, #3B82F6 100%);
-      transform: none;
-      box-shadow: none;
+    background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #3b82f6 100%);
+    transform: none;
+    box-shadow: none;
   }
 
   .history-item {
     transition: all 0.2s;
   }
-  
+
   .history-item:hover {
-    @apply bg-orange-100;
-    transform: translateX(2px);
+    background-color: #fff7ed; /* bg-orange-100 */
   }
-  
-  .copy-notification {
-    @apply fixed top-1/2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg z-50;
+
+  /* 优化后的通知样式 */
+  .notification {
+    position: fixed; /* fixed */
+    z-index: 50; /* z-50 */
+    border-radius: 0.5rem; /* rounded-lg */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+    padding: 0.75rem 1.5rem; /* px-6 py-3 */
+    display: flex; /* flex */
+    align-items: center; /* items-center */
+    bottom: 4rem;
+    right: 1em;
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.3s ease;
     opacity: 0;
-    transition: opacity 0.3s;
+    max-width: 320px;
   }
-  
-  .copy-notification.show {
+
+  .notification.show {
+    transform: translateX(0);
     opacity: 1;
   }
-  
+
+  .notification.success {
+    background-color: #f0fdf4; /* bg-green-100 */
+    color: #166534; /* text-green-800 */
+    border-left: 4px solid #16a34a; /* border-l-4 border-green-500 */
+  }
+
+  .notification.error {
+    background-color: #fee2e2; /* bg-red-100 */
+    color: #721c24; /* text-red-800 */
+    border-left: 4px solid #dc2626; /* border-l-4 border-red-500 */
+  }
+
+  .notification.info {
+    background-color: #eff6ff; /* bg-blue-100 */
+    color: #1e40af; /* text-blue-800 */
+    border-left: 4px solid #3b82f6; /* border-l-4 border-blue-500 */
+  }
+
+  .notification .icon {
+    margin-right: 0.75rem; /* mr-3 */
+    font-size: 1.25rem; /* text-xl */
+  }
+
+  .notification .close-btn {
+    margin-left: 1rem; /* ml-4 */
+    color: #6b7280; /* text-gray-500 */
+    cursor: pointer; /* cursor-pointer */
+  }
+
+  .notification .close-btn:hover {
+    color: #4b5563; /* hover:text-gray-700 */
+  }
+
   .loader {
-    @apply inline-block w-5 h-5 border-2 border-gray-200 border-t-primary rounded-full;
+    display: inline-block; /* inline-block */
+    width: 1.25rem; /* w-5 */
+    height: 1.25rem; /* h-5 */
+    border: 2px solid #e5e7eb; /* border-2 border-gray-200 */
+    border-top-color: var(--primary); /* border-t-primary */
+    border-radius: 9999px; /* rounded-full */
     animation: spin 1s linear infinite;
   }
-  
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
-  
+
   /* Responsive adjustments */
   @media (max-width: 1024px) {
     body {
@@ -147,23 +212,31 @@
       height: auto;
       overflow: auto;
     }
-    
-    .left-column, .middle-column, .right-column {
+
+    .left-column,
+    .middle-column,
+    .right-column {
       width: 100% !important;
       height: auto !important;
     }
-    
+
     .left-column {
       border-right: none !important;
       border-bottom: 1px solid #e2e8f0;
     }
-    
+
     .middle-column {
       border-bottom: 1px solid #e2e8f0;
     }
 
     .right-column {
       max-height: 70vh;
+    }
+
+    .notification {
+      bottom: 0.5rem;
+      right: 0.5rem;
+      max-width: calc(100% - 1rem);
     }
   }
 </style>
@@ -346,7 +419,7 @@
         </div>
         
         <div class="mt-2">
-          <textarea id="translated-text" rows="1" readonly
+          <textarea id="translated-text" rows="2" readonly
                     class="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-md bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
                     placeholder="翻译结果将显示在这里"></textarea>
         </div>
@@ -400,8 +473,14 @@
     </div>
   </div>
   
-  <!-- Notification -->
-  <div id="notification" class="copy-notification"></div>
+  <!-- 优化后的通知组件 -->
+  <div id="notification" class="notification hidden">
+    <span class="icon"></span>
+    <span class="message"></span>
+    <span class="close-btn" onclick="hideNotification()">
+      <i class="fas fa-times"></i>
+    </span>
+  </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -444,7 +523,7 @@
       translatedText.addEventListener('click', function() {
         this.select();
         document.execCommand('copy');
-        showNotification('翻译结果已复制');
+        showNotification('翻译结果已复制', 'success');
       });
     });
 
@@ -472,11 +551,11 @@
       errorMessageDiv.textContent = '';
 
       if (!apiKey) {
-        showNotification('API Key 不能为空！', true);
+        showNotification('API Key 不能为空！', 'error');
         return;
       }
       if (!prompt) {
-        showNotification('提示词不能为空！', true);
+        showNotification('提示词不能为空！', 'error');
         return;
       }
 
@@ -518,7 +597,7 @@
         if (!response.ok) {
           const errorData = await response.json();
           console.error("API error:", errorData);
-          showNotification(`生成图片失败: ${errorData.error || '请查看控制台错误信息'}`, true);
+          showNotification(`生成图片失败: ${errorData.error || '请查看控制台错误信息'}`, 'error');
           generateButton.disabled = false;
           generateButton.innerHTML = '<i class="fas fa-magic mr-2"></i><span>生成图片</span>';
           loader.classList.add('hidden');
@@ -551,9 +630,9 @@
 
           // 更新历史记录显示
           updateHistory();
-          showNotification('图片生成成功!');
+          showNotification('图片生成成功!', 'success');
         } else {
-          showNotification('未能在响应中找到图片数据', true);
+          showNotification('未能在响应中找到图片数据', 'error');
           console.error("Unexpected API response format:", data);
           generateButton.disabled = false;
           generateButton.innerHTML = '<i class="fas fa-magic mr-2"></i><span>生成图片</span>';
@@ -562,7 +641,7 @@
 
       } catch (error) {
         console.error("Fetch error:", error);
-        showNotification('网络请求错误，请检查网络连接', true);
+        showNotification('网络请求错误，请检查网络连接', 'error');
         generateButton.disabled = false;
         generateButton.innerHTML = '<i class="fas fa-magic mr-2"></i><span>生成图片</span>';
         loader.classList.add('hidden');
@@ -579,19 +658,19 @@
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
-      showNotification("图片下载中...");
+      showNotification("图片下载中...", 'info');
     }
 
     function randomSeed() {
       const seedInput = document.getElementById('seed');
       const randomSeedValue = Math.floor(Math.random() * 100000000000000) + 1;
       seedInput.value = randomSeedValue;
-      showNotification('随机种子已生成');
+      showNotification('随机种子已生成', 'success');
     }
 
     function clearSeed() {
       document.getElementById('seed').value = '';
-      showNotification('已清除种子');
+      showNotification('已清除种子', 'info');
     }
 
     function updateStepsValue(value) {
@@ -706,10 +785,10 @@
       try {
         const text = await navigator.clipboard.readText();
         promptInput.value = text;
-        showNotification('已从剪贴板粘贴');
+        showNotification('已从剪贴板粘贴', 'success');
       } catch (err) {
         console.error('Failed to read clipboard contents: ', err);
-        showNotification('无法读取剪贴板内容', true);
+        showNotification('无法读取剪贴板内容', 'error');
       }
     }
 
@@ -717,7 +796,7 @@
       const promptInput = document.getElementById('prompt');
       promptInput.select();
       document.execCommand('copy');
-      showNotification('提示词已复制');
+      showNotification('提示词已复制', 'success');
     }
     
     async function translatePrompt() {
@@ -727,12 +806,12 @@
       const translatedTextarea = document.getElementById('translated-text');
 
       if (!apiKey) {
-        showNotification('翻译 API Key 不能为空！', true);
+        showNotification('翻译 API Key 不能为空！', 'error');
         return;
       }
 
       if (!prompt) {
-        showNotification('提示词不能为空！', true);
+        showNotification('提示词不能为空！', 'error');
         return;
       }
 
@@ -767,7 +846,7 @@
         if (!response.ok) {
           const errorData = await response.json();
           console.error("API error:", errorData);
-          showNotification(`翻译失败: ${errorData.error || '请查看控制台错误信息'}`, true);
+          showNotification(`翻译失败: ${errorData.error || '请查看控制台错误信息'}`, 'error');
           translateButton.innerHTML = originalText;
           translateButton.disabled = false;
           return;
@@ -780,15 +859,15 @@
 
           // 缓存 API Key
           localStorage.setItem('translationApiKey', apiKey);
-          showNotification('翻译成功');
+          showNotification('翻译成功', 'success');
         } else {
-          showNotification('未能成功翻译，请检查API响应格式。', true);
+          showNotification('未能成功翻译，请检查API响应格式。', 'error');
           console.error("Unexpected API response format:", data);
         }
 
       } catch (error) {
         console.error("Fetch error:", error);
-        showNotification('网络请求错误，请检查网络连接', true);
+        showNotification('网络请求错误，请检查网络连接', 'error');
       } finally {
         const translateButton = document.querySelector('button[onclick="translatePrompt()"]');
         translateButton.innerHTML = '<i class="fas fa-language mr-2"></i><span>翻译</span>';
@@ -799,7 +878,7 @@
     function fillPrompt() {
       const translatedText = document.getElementById('translated-text').value;
       document.getElementById('prompt').value = translatedText;
-      showNotification('翻译结果已填入');
+      showNotification('翻译结果已填入', 'success');
     }
 
     // 删除历史记录项
@@ -808,7 +887,7 @@
       history.splice(index, 1);
       localStorage.setItem('image_history', JSON.stringify(history));
       updateHistory();
-      showNotification('历史记录已删除');
+      showNotification('历史记录已删除', 'info');
     }
     
     // 清空历史记录
@@ -816,7 +895,7 @@
       if (confirm('确定要清空所有历史记录吗？此操作不可撤销。')) {
         localStorage.removeItem('image_history');
         updateHistory();
-        showNotification('历史记录已清空');
+        showNotification('历史记录已清空', 'info');
       }
     }
 
@@ -854,7 +933,7 @@
 
       const outputImage = document.getElementById('output-image');
       outputImage.src = item.imageUrl;
-      showNotification('历史记录已加载');
+      showNotification('历史记录已加载', 'success');
     }
 
     // 复制文本到剪贴板
@@ -862,18 +941,48 @@
       const element = document.getElementById(elementId);
       element.select();
       document.execCommand('copy');
-      showNotification('已复制到剪贴板');
+      showNotification('已复制到剪贴板', 'success');
     }
 
     // 显示通知
-    function showNotification(message, isError = false) {
+    function showNotification(message, type = 'info') {
       const notification = document.getElementById('notification');
-      notification.textContent = message;
-      notification.className = isError ? 'copy-notification show bg-red-500' : 'copy-notification show bg-green-500';
+      const icon = notification.querySelector('.icon');
+      const messageSpan = notification.querySelector('.message');
       
+      // 设置通知内容和样式
+      notification.className = `notification ${type}`;
+      messageSpan.textContent = message;
+      
+      // 设置图标
+      switch(type) {
+        case 'success':
+          icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+          break;
+        case 'error':
+          icon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+          break;
+        default:
+          icon.innerHTML = '<i class="fas fa-info-circle"></i>';
+      }
+      
+      // 显示通知
+      notification.classList.remove('hidden');
+      notification.classList.add('show');
+      
+      // 5秒后自动隐藏
       setTimeout(() => {
-        notification.classList.remove('show');
-      }, 2000);
+        hideNotification();
+      }, 5000);
+    }
+    
+    // 隐藏通知
+    function hideNotification() {
+      const notification = document.getElementById('notification');
+      notification.classList.remove('show');
+      setTimeout(() => {
+        notification.classList.add('hidden');
+      }, 300);
     }
   </script>
 </body>
