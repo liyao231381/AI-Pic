@@ -4,347 +4,689 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Image Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 全局样式 */
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 10px;
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #f9fafb;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--light);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c7d2fe;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        /* Loader */
+        .loader {
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Image upload area */
+        .image-upload-container {
+            border: 2px dashed #d1d5db;
+            transition: all 0.2s ease;
+        }
+        .image-upload-container:hover {
+            border-color: var(--primary);
+            background-color: rgba(79, 70, 229, 0.05);
+        }
+        .image-upload-container.dragover {
+            border-color: var(--primary);
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+
+        /* History item hover effect */
+        .history-item {
+            transition: all 0.2s ease;
+        }
+        .history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Responsive layout */
+        @media (min-width: 1280px) {
+            .responsive-grid {
+                display: grid; /* 确保使用 grid 布局 */
+                grid-template-columns: 1fr 2fr 1fr; /* 参数1/4, 结果1/2, 历史1/4 */
+                grid-template-rows: auto;
+                grid-template-areas:
+                    "params results history";
+                gap: 6; /* 保持间距 */
+            }
+            .params-area { grid-area: params; }
+            .results-area { grid-area: results; }
+            .history-area { grid-area: history; }
+        }
+
+        @media (max-width: 1279px) {
+            .responsive-grid {
+                display: grid; /* 确保使用 grid 布局 */
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                grid-template-areas:
+                    "params"
+                    "results"
+                    "history";
+                gap: 6; /* 保持间距 */
+            }
+            .params-area { grid-area: params; }
+            .results-area { grid-area: results; }
+            .history-area { grid-area: history; }
+        }
+
+        /* Smooth transitions */
+        button, input, textarea, .card {
+            transition: all 0.2s ease;
+        }
+
+        /* Card styling */
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            height: 100%; /* 使 card 占据其父容器的全部高度 */
+            display: flex;          /* 使用 flex 布局 */
+            flex-direction: column; /* 垂直方向布局 */
+        }
+
+        /* Button styling */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+        .btn-text {
+            background: transparent;
+            color: var(--primary);
             padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
-            line-height: 1.6;
+        }
+        .btn-text:hover {
+            text-decoration: underline;
+            background: transparent;
         }
 
-        h1 {
-            text-align: center;
-            color: #007bff;
-            margin: 0 auto;
-        }
-
-        p {
-            text-align: center;
-            margin: 0 auto;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input[type="text"],
-        textarea {
+        /* Input styling */
+        .input-field {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box; /* 确保内边距不影响宽度 */
-            resize: vertical;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 6px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-            min-width: fit-content;
-            font-weight: bold;
-            width: fit-content;
+        /* Notification */
+        .notification {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 50;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        button:hover {
-            background-color: #0056b3;
+        /* Action Button Styling */
+        .action-btn {
+            transition: all 0.2s ease;
         }
 
-        /* 桌面端布局 */
-        .container {
-            display: flex;
-            max-height: calc(100vh - 100px); /* 占据整个视窗高度 */
+        .action-btn:hover {
+            transform: translateY(-2px);
         }
 
-        .left-panel {
-            width: 25%;
-            padding: 20px;
-            background-color: #fff;
-            box-sizing: border-box;
-            overflow-y: auto;
-            position: sticky;
-            top: 0; /* 保持左侧面板固定 */
-            min-height: max-content;
-            border-radius: 5px;
+        .history-prompt {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* 显示的行数 */
+            -webkit-box-orient: vertical;
+            word-break: break-word; /* 避免长单词溢出 */
         }
-
-        .right-panel {
-            width: 75%;
-            box-sizing: border-box;
-            overflow-y: auto; /* 允许内容滚动 */
-            padding: 10px;
-            max-height: calc(100vh - 20px); /* 占据整个视窗高度 */
-        }
-
-        /* 移动端布局 */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-                max-height: fit-content;
-            }
-
-            .left-panel,
-            .right-panel {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid #ddd;
-                height: auto;
-                position: static; /* 移除固定定位 */
-            }
-
-            .left-panel {
-                padding-bottom: 30px;
-            }
-        }
-
-        /* 图片显示样式 */
-        #imageContainer {
-            padding: 15px;
-            background-color: #fff;
-            text-align: center; /* 居中错误信息 */
-            position: relative; /* 为下载按钮定位 */
-            border-radius: 5px;
-            scrollbar-width: none;
-        }
-
-        #generatedImage {
-            max-width: 100%;
-            display: block;
-            margin: 0 auto;
-        }
-
-        #textBeforeImage,
-        #textAfterImage {
-            margin: 5px auto;
-            text-align: left;
-            color: #555;
-        }
-        /* 提示信息样式 */
-        .error-message {
-            color: #721c24;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 15px;
-        }
-
-        /* 下载按钮样式 */
-        #downloadButton {
-            background-color: rgba(0, 123, 255, 0.7); /* 半透明蓝色 */
-            color: white;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            display: none; /* 初始状态隐藏 */
-        }
-
-        #downloadButton:hover {
-            background-color: rgba(0, 86, 179, 0.7); /* 深色半透明蓝色 */
-        }
-
-    .image-upload-container {
-      margin: 0 auto 10px;
-      border: 2px dashed #ccc;
-      padding: 8px;
-      border-radius: 8px;
-      max-width: 100%;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      min-height: 100px;
-    }
-
-    .image-upload-container input[type="file"] {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    #imagePreview {
-      max-width: 100%;
-    }
-
-    .clear-button {
-      background-color: #f44336; /* 红色 */
-      margin-left: 4px;
-    }
-
-    .clear-button:hover {
-      background-color: #da190b;
-    }
-    .loader {
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid #3498db;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        animation: spin 2s linear infinite;
-        margin: auto;
-        display: none; /* 初始状态隐藏 */
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    button .button-text {
-        display: inline-block;
-    }
-
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="left-panel">
-            <a href="./index.html" style="text-decoration: none; color: inherit;">
-                <h1>Gemini 对话生图编辑</h1>
-            </a>
-            <div style="display: flex; justify-content: center; align-items: center;">
-            <button onclick="window.history.back()" style="margin-right: 4px; font-size: 14px; color: #007bff; text-decoration: none;display: block; text-align: center; background-color: none; background: none; font-weight: 500; padding: 0;">返回</button>
-            |
-            <a href="./together.html" style="font-size: 14px; color: #007bff; text-decoration: none; margin-left: 4px; margin-right: 4px;">together.ai</a>
-            |
-            <a href="./pollinations.html" style=" font-size: 14px; color: #007bff; text-decoration: none; margin-left: 4px;">pollinations</a>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Notification area -->
+    <div id="notificationArea"></div>
+        <!-- Main content grid -->
+        <div class="responsive-grid gap-2 md:h-full">
+
+            <!-- Parameters area -->
+            <div class="params-area space-y-2 flex-1 items-center">
+                <div class="card p-6 md:h-full">
+                    <h1 class="text-2xl font-bold text-indigo-600 mb-2 p-4 text-center">Gemini 对话生图编辑</h1>
+                    <div class="flex items-center justify-center space-x-4 text-sm text-indigo-600 mb-4">
+                        <button onclick="window.history.back()" class="btn-text flex items-center">
+                            <i class="fas fa-arrow-left mr-1"></i> 返回
+                        </button>
+                        <span>|</span>
+                        <a href="./together.html" class="btn-text">together.ai</a>
+                        <span>|</span>
+                        <a href="./pollinations.html" class="btn-text">pollinations</a>
+                    </div>
+                    <div class="space-y-2">
+                        <div>
+                            <label for="apiKey" class="block font-bold text-gray-700 mb-1"><i class="fas fa-key mr-2 text-primary"></i>API Key</label>
+                            <input type="text" id="apiKey" name="apiKey" placeholder="输入谷歌API密钥"
+                                   class="input-field" onchange="saveApiKey()">
+                            <div id="apiKeyAlert" class="text-xs mt-1 text-gray-500">密钥仅保存在本地浏览器</div>
+                        </div>
+
+                        <div>
+                            <label for="promptText" class="block font-bold text-gray-700 mb-1"><i class="fas fa-comment-dots mr-2 text-primary"></i>提示词</label>
+                            <textarea id="promptText" name="promptText" rows="6"
+                                      placeholder="输入想要生成的图片描述，或者对图片进行的编辑"
+                                      class="input-field"></textarea>
+                                      
+                            <div class="flex space-x-2 mt-2">
+                                <button onclick="pasteText()" class="action-btn w-1/3 bg-blue-100 hover:bg-blue-500 text-blue-600 hover:text-white py-2 px-3 rounded-lg transition">
+                                    <i class="fas fa-paste mr-1"></i> 粘贴
+                                </button>
+                                <button onclick="copyText()" class="action-btn w-1/3 bg-gray-200 hover:bg-gray-500 text-gray-700 hover:text-white py-2 px-3 rounded-lg transition">
+                                    <i class="fas fa-copy mr-1"></i> 复制
+                                </button>
+                                <button onclick="clearPrompt()" class="action-btn w-1/3 bg-red-100 hover:bg-red-500 text-red-600 hover:text-white py-2 px-3 rounded-lg transition">
+                                    <i class="fas fa-trash-alt mr-1"></i> 清除
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1"><i class="fas fa-image mr-2"></i>上传图片</label>
+                            <div class="image-upload-container rounded-lg p-4 text-center cursor-pointer" id="imageUploadContainer">
+                                <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="previewImage()">
+                                <div id="uploadPrompt" class="flex flex-col items-center justify-center py-4">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                    <p class="text-sm text-gray-500">拖放或点击选择图片</p>
+                                </div>
+                                <img id="imagePreview" src="#" alt="图片预览" class="hidden max-w-full max-h-48 mx-auto rounded">
+                                <div id="imageActions" class="hidden mt-2 flex justify-center space-x-2">
+                                    <button onclick="clearImage()" class="btn btn-danger text-sm py-1 px-2">
+                                        <i class="fas fa-times mr-1"></i>清除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="generateImage()" id="generateButton" class="btn btn-primary w-full py-2">
+                            <span id="buttonText">生成图像</span>
+                            <div id="loader" class="loader hidden"></div>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <label for="apiKey">API Key:</label>
-            <input type="text" id="apiKey" name="apiKey" placeholder="输入谷歌API密钥" onchange="saveApiKey()">
-            <div id="apiKeyAlert" class="alert" style="display: none;"></div>
 
-            <label for="promptText">提示词:</label>
-            <textarea id="promptText" name="promptText" rows="6" placeholder="输入想要生成的图片，或者对图片进行的编辑"></textarea>
+            <!-- Results area -->
+            <div class="results-area md:max-h-screen">
+                <div class="card p-6 h-full">
+                    <div id="imageContainer" class="space-y-4">
+                        <div id="textBeforeImage" class="text-gray-700"></div>
 
-            <label for="imageUpload">上传图片:</label>
-            <div class="image-upload-container" id="imageUploadContainer">
-              <input type="file" id="imageUpload" accept="image/*" onchange="previewImage()">
-              <p>拖放或点击选择图片</p>
-              <img id="imagePreview" src="#" alt="图片预览" style="display: none;">
+                        <div class="relative bg-gray-100 rounded-lg flex items-center justify-center min-h-64">
+                            <img id="generatedImage" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe"
+                                 alt="Generated Image" class="max-w-full max-h-96 mx-auto rounded-lg">
+                            <div id="placeholder" class="absolute inset-0 flex items-center justify-center text-gray-400">
+                                <i class="fas fa-image text-5xl opacity-30"></i>
+                            </div>
+                        </div>
+
+                        <div id="textAfterImage" class="text-gray-700"></div>
+
+                        <div id="downloadSection" class="flex items-center mt-4 w-full max-w-md">
+                            <div>
+                                <input type="text" id="fileNameInput" placeholder="输入文件名（不带扩展名）" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                            </div>
+                            <button id="downloadButton" onclick="downloadImage()"
+                                    class="bg-gray-400 hover:bg-orange-400 text-white font-bold py-2 px-4 rounded-r-md shadow-sm transition-colors flex items-center">
+                                <i class="fas fa-download mr-2"></i>下载
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <button onclick="generateImage()" style="width: 100%;">
-                <span class="button-text">Go</span>
-                <div class="loader" id="loader"></div>
-            </button>
+            <!-- History area -->
+            <div class="history-area md:max-h-screen">
+                <div class="card p-6 h-full flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">
+                            <i class="fas fa-history mr-2"></i> 历史记录
+                        </h2>
+                        <button onclick="clearAllHistory()" class="btn-text text-sm text-red-500">
+                            <i class="fas fa-trash-alt mr-1"></i> 清空
+                        </button>
+                    </div>
 
-        </div>
+                    <div class="flex-1 overflow-y-auto">
+                        <ul id="historyList" class="space-y-3"></ul>
 
-        <div class="right-panel">
-            <div id="imageContainer">
-                <div id="textBeforeImage"></div>
-                <img id="generatedImage" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="Generated Image">
-                <div id="textAfterImage"></div>
-                <div id="errorMessage" class="error-message" style="display: none;"></div>
-                <button id="downloadButton" onclick="downloadImage()">下载图片</button>
+                        <div id="emptyHistory" class="flex flex-col items-center justify-center py-10 text-gray-400">
+                            <i class="fas fa-image text-5xl mb-3 opacity-30"></i>
+                            <p class="text-sm">暂无历史记录</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 从 localStorage 获取 API 密钥
+        // Global variables
         let API_KEY = localStorage.getItem("geminiApiKey") || "";
         document.getElementById("apiKey").value = API_KEY;
 
         let uploadedImageBase64 = null;
         let uploadedImageMimeType = null;
+        let db; // IndexedDB instance
 
-        // 监听文件上传事件
-        document.getElementById('imageUpload').addEventListener('change', function(event) {
-            const file = event.target.files[0];
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize database
+            await initDB();
+            await updateHistoryList();
 
+            // Set up drag and drop
+            setupDragAndDrop();
+
+            // Set initial state
+            updateUIState();
+        });
+
+        // Database functions
+        const DB_NAME = 'geminiImageHistoryDB';
+        const DB_VERSION = 1;
+        const OBJECT_STORE_NAME = 'imageHistoryStore';
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = window.indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error("Database error: " + event.target.errorCode);
+                    showNotification('数据库初始化失败', 'error');
+                    reject(event.target.errorCode);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log("Database opened successfully");
+                    resolve();
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    const objectStore = db.createObjectStore(OBJECT_STORE_NAME, {
+                        keyPath: 'id',
+                        autoIncrement: true
+                    });
+                    objectStore.createIndex('timestamp', 'timestamp', {
+                        unique: false
+                    });
+                    console.log("Object store created:", OBJECT_STORE_NAME);
+                };
+            });
+        }
+
+        // Update history list from IndexedDB
+        async function updateHistoryList() {
+            const historyList = document.getElementById('historyList');
+            const emptyHistory = document.getElementById('emptyHistory');
+            historyList.innerHTML = '';
+
+            const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+            const request = objectStore.index('timestamp').openCursor(null, 'prev');
+
+            let hasItems = false;
+
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    hasItems = true;
+                    const item = cursor.value;
+
+                    const listItem = document.createElement('li');
+                    listItem.className = 'history-item card p-3 hover:bg-gray-50';
+                    listItem.innerHTML = `
+                        <div class="flex items-start gap-3" onclick="loadHistoryItem(${item.id})">
+                            <img src="${item.imageUrl}" alt="${item.promptText}"
+                                class="w-16 h-16 rounded-md object-cover flex-shrink-0">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-800 history-prompt">${item.promptText || '无提示词'}</p>
+                                <p class="text-xs text-gray-500 mt-1">${formatDate(item.timestamp)}</p>
+                            </div>
+                            <button onclick="event.stopPropagation(); deleteHistoryItem(${item.id})"
+                                class="text-gray-400 hover:text-red-500 transition">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+
+                    historyList.appendChild(listItem);
+                    cursor.continue();
+                } else {
+                    emptyHistory.style.display = hasItems ? 'none' : 'flex';
+                }
+            };
+
+            transaction.onerror = (event) => {
+                console.error("Transaction error: " + event.target.errorCode);
+                showNotification('加载历史记录失败', 'error');
+            };
+        }
+
+        function formatDate(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function deleteHistoryItem(id) {
+            if (confirm('确定要删除这条记录吗？')) {
+                const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+                const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+                const request = objectStore.delete(id);
+
+                request.onsuccess = () => {
+                    updateHistoryList();
+                    showNotification('已删除历史记录', 'success');
+                };
+
+                transaction.onerror = (event) => {
+                    console.error("Transaction error: " + event.target.errorCode);
+                    showNotification('删除历史记录失败', 'error');
+                };
+            }
+        }
+
+        function clearAllHistory() {
+            if (confirm('确定要清空所有历史记录吗？此操作不可撤销。')) {
+                const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+                const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+                const request = objectStore.clear();
+
+                request.onsuccess = () => {
+                    updateHistoryList();
+                    showNotification('已清空历史记录', 'success');
+                };
+
+                transaction.onerror = (event) => {
+                    console.error("Transaction error: " + event.target.errorCode);
+                    showNotification('清空历史记录失败', 'error');
+                };
+            }
+        }
+
+        function loadHistoryItem(id) {
+            const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+            const request = objectStore.get(id);
+
+            request.onsuccess = (event) => {
+                const item = event.target.result;
+                if (item) {
+                    document.getElementById('promptText').value = item.promptText || '';
+
+                    // Show the generated image
+                    document.getElementById('generatedImage').src = item.imageUrl || '';
+                    document.getElementById('placeholder').style.display = 'none';
+                    document.getElementById('downloadSection').classList.remove('hidden');
+
+                    // Handle uploaded image if exists
+                    if (item.uploadedImageBase64) {
+                        uploadedImageBase64 = item.uploadedImageBase64;
+                        uploadedImageMimeType = item.uploadedImageMimeType;
+                        document.getElementById("imagePreview").src = `data:${uploadedImageMimeType};base64,${uploadedImageBase64}`;
+                        document.getElementById("imagePreview").classList.remove("hidden");
+                        document.getElementById("uploadPrompt").classList.add("hidden");
+                        document.getElementById("imageActions").classList.remove("hidden");
+                    } else {
+                        clearImage();
+                    }
+
+                    showNotification('已加载历史记录', 'success');
+                }
+            };
+
+            transaction.onerror = (event) => {
+                console.error("Transaction error: " + event.target.errorCode);
+                showNotification('加载历史记录失败', 'error');
+            };
+        }
+
+        function saveImageToDB(promptText, imageUrl, uploadedImageBase64, uploadedImageMimeType) {
+            const timestamp = Date.now();
+
+            const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+            const request = objectStore.add({
+                promptText: promptText,
+                imageUrl: imageUrl,
+                uploadedImageBase64: uploadedImageBase64,
+                uploadedImageMimeType: uploadedImageMimeType,
+                timestamp: timestamp
+            });
+
+            request.onsuccess = () => {
+                updateHistoryList();
+            };
+
+            request.onerror = (event) => {
+                console.error("Transaction error: " + event.target.errorCode);
+                showNotification('保存历史记录失败', 'error');
+            };
+        }
+
+        // Image generation functions
+        function saveApiKey() {
+            API_KEY = document.getElementById("apiKey").value;
+            localStorage.setItem("geminiApiKey", API_KEY);
+            showNotification('API密钥已保存', 'success');
+        }
+
+        function previewImage() {
+            const file = document.getElementById('imageUpload').files[0];
             if (file) {
                 const reader = new FileReader();
 
                 reader.onload = function(e) {
-                    uploadedImageBase64 = e.target.result.split(',')[1]; // 获取 base64 数据部分
+                    uploadedImageBase64 = e.target.result.split(',')[1];
                     uploadedImageMimeType = file.type;
-                    console.log("Uploaded image:", uploadedImageBase64.substring(0, 50) + "..."); // Log first 50 chars
-                    console.log("MIME type:", uploadedImageMimeType);
+
                     document.getElementById("imagePreview").src = e.target.result;
-                    document.getElementById("imagePreview").style.display = "block";
-                    document.querySelector("#imageUploadContainer p").style.display = "none";
+                    document.getElementById("imagePreview").classList.remove("hidden");
+                    document.getElementById("uploadPrompt").classList.add("hidden");
+                    document.getElementById("imageActions").classList.remove("hidden");
+
+                    // Update UI
+                    document.getElementById('imageUploadContainer').classList.remove('dragover');
                 }
 
-                reader.readAsDataURL(file); // 读取为 Data URL (base64)
-            } else {
-                uploadedImageBase64 = null;
-                uploadedImageMimeType = null;
-                document.getElementById("imagePreview").src = "#";
-                document.getElementById("imagePreview").style.display = "none";
-                document.querySelector("#imageUploadContainer p").style.display = "block";
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearImage() {
+            uploadedImageBase64 = null;
+            uploadedImageMimeType = null;
+            document.getElementById('imageUpload').value = '';
+            document.getElementById("imagePreview").src = "#";
+            document.getElementById("imagePreview").classList.add("hidden");
+            document.getElementById("uploadPrompt").classList.remove("hidden");
+            document.getElementById("imageActions").classList.add("hidden");
+        }
+
+        function setupDragAndDrop() {
+            const container = document.getElementById('imageUploadContainer');
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                container.classList.add('dragover');
+            });
+
+            container.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                container.classList.remove('dragover');
+            });
+
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                container.classList.remove('dragover');
+
+                if (e.dataTransfer.files.length) {
+                    document.getElementById('imageUpload').files = e.dataTransfer.files;
+                    previewImage();
+                }
+            });
+        }
+
+        const promptTextarea = document.getElementById('promptText');
+        const generateButtonEl = document.getElementById('generateButton'); // Renamed variable
+
+        promptTextarea.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { // Added !event.isComposing
+            event.preventDefault();
+            if (!generateButtonEl.disabled) {
+                generateButtonEl.click();
+            }
+            }
+        });
+        
+        // 获取文件名输入框的元素
+        const fileNameInput = document.getElementById("fileNameInput");
+
+        // 监听 keydown 事件
+        fileNameInput.addEventListener("keydown", function(event) {
+            // 检查按下的键是否是回车键
+            if (event.key === "Enter") {
+                // 阻止默认行为，例如提交表单
+                event.preventDefault();
+                // 调用下载图片的函数
+                downloadImage();
             }
         });
 
-
-        function saveApiKey() {
-            API_KEY = document.getElementById("apiKey").value;
-            localStorage.setItem("geminiApiKey", API_KEY);
-        }
-
         async function generateImage() {
-            // 在生成图像之前清除错误信息
-            clearErrorMessage();
-            document.getElementById("loader").style.display = "inline-block";
-            document.querySelector('button .button-text').style.display = 'none';
+
+            // Show loading state
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('buttonText').classList.add('hidden');
+            document.getElementById('generateButton').disabled = true;
 
             const promptText = document.getElementById("promptText").value;
-            let apiKey = document.getElementById("apiKey").value; // 从输入框获取 API 密钥
+            API_KEY = document.getElementById("apiKey").value;
 
-            if (!apiKey) {
-               displayErrorMessage("请先输入API Key。");
+            // Validate inputs
+            if (!API_KEY) {
+                showNotification("请先输入API Key");
+                resetButtonState();
                 return;
-            } else {
-                hideAlert('apiKeyAlert'); // 隐藏之前的错误提示
             }
 
-            localStorage.setItem("geminiApiKey", apiKey);
+            if (!promptText && !uploadedImageBase64) {
+                showNotification("请输入提示词或上传图片");
+                resetButtonState();
+                return;
+            }
 
-            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=' + apiKey;
+            // Save API key
+            localStorage.setItem("geminiApiKey", API_KEY);
+
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${API_KEY}`;
 
             let data;
-
             if (uploadedImageBase64 && uploadedImageMimeType) {
-                // 使用上传的图片进行请求
+                // Request with uploaded image
                 data = {
-                  "contents": [{
-                    "parts": [
-                        {"text": promptText}, // 使用用户提供的 Prompt
-                        {
-                          "inline_data": {
-                            "mime_type": uploadedImageMimeType,
-                            "data": uploadedImageBase64
-                          }
-                        }
-                    ]
-                  }],
-                  "generationConfig": {"responseModalities": ["Text", "Image"]}
+                    "contents": [{
+                        "parts": [
+                            {"text": promptText},
+                            {
+                                "inline_data": {
+                                    "mime_type": uploadedImageMimeType,
+                                    "data": uploadedImageBase64
+                                }
+                            }
+                        ]
+                    }],
+                    "generationConfig": {"responseModalities": ["Text", "Image"]}
                 };
             } else {
-                // 没有上传图片，只使用 promptText
+                // Request with prompt only
                 data = {
                     "contents": [{
                         "parts": [
                             {"text": promptText}
                         ]
                     }],
-                    "generationConfig":{"responseModalities":["Text","Image"]}
+                    "generationConfig": {"responseModalities": ["Text", "Image"]}
                 };
             }
 
@@ -358,159 +700,189 @@
                 });
 
                 if (!response.ok) {
-                    hideDownloadButton();
                     const errorData = await response.json();
-                    const errorMessage = errorData.error ? errorData.error.message : `HTTP error! status: ${response.status}`;
-                    displayErrorMessage(`Error generating image: ${errorMessage}`);
+                    const errorMessage = errorData.error?.message || `HTTP错误! 状态码: ${response.status}`;
                     throw new Error(errorMessage);
                 }
 
                 const result = await response.json();
-                console.log("API Response:", result); // 用于调试，查看完整 API 响应
+                console.log("API Response:", result);
 
-                if (result.candidates && result.candidates.length > 0) {
-                    const candidate = result.candidates[0];
-
-                    if (candidate.finishReason === "IMAGE_SAFETY") {
-                       displayErrorMessage("由于安全原因，生成的图片被屏蔽。请尝试不同的提示语。");
-                       hideDownloadButton();
-                        return; // 停止进一步处理
-                    }
+                // Check for safety filters
+                if (result.candidates?.[0]?.finishReason === "IMAGE_SAFETY") {
+                    throw new Error("由于安全原因，生成的图片被屏蔽。请尝试不同的提示语。");
                 }
 
-
-                // 获取文本和图像内容
+                // Process response
                 let textBefore = "";
                 let textAfter = "";
                 let base64Image = null;
                 let mimeType = null;
 
-                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts) {
+                if (result.candidates?.[0]?.content?.parts) {
                     const parts = result.candidates[0].content.parts;
 
                     for (const part of parts) {
                         if (part.text) {
-                            if (textBefore === "") { // 假设第一个文本在图像之前
+                            if (!textBefore) {
                                 textBefore = part.text;
                             } else {
-                                textAfter += part.text; // 其余文本在图像之后
+                                textAfter += part.text;
                             }
-                        } else if (part.inlineData && part.inlineData.data && part.inlineData.mimeType) {
+                        } else if (part.inlineData?.data && part.inlineData?.mimeType) {
                             base64Image = part.inlineData.data;
                             mimeType = part.inlineData.mimeType;
                         }
                     }
                 } else {
-                    displayErrorMessage("Unexpected API response format.");
-                    console.error("Unexpected API response format:", result);
-                    return;
+                    throw new Error("意外的API响应格式");
                 }
 
-                // 设置文本内容
-                document.getElementById("textBeforeImage").innerText = textBefore;
-                document.getElementById("textAfterImage").innerText = textAfter;
+                // Update UI
+                document.getElementById("textBeforeImage").textContent = textBefore;
+                document.getElementById("textAfterImage").textContent = textAfter;
 
-
-                // 设置图像
                 if (base64Image && mimeType) {
                     const imageUrl = `data:${mimeType};base64,${base64Image}`;
                     document.getElementById("generatedImage").src = imageUrl;
-                    showDownloadButton();
+                    document.getElementById("placeholder").style.display = 'none';
+                    document.getElementById("downloadSection").classList.remove("hidden");
+
+                    // Save to history
+                    saveImageToDB(promptText, imageUrl, uploadedImageBase64, uploadedImageMimeType);
+
+                    showNotification("图片生成成功!");
                 } else {
-                    displayErrorMessage("No image data found in the response.");
-                    console.error("No image data found in the response:", result);
+                    throw new Error("响应中没有找到图片数据");
                 }
-
-
 
             } catch (error) {
                 console.error("Error:", error);
-                displayErrorMessage(`Error generating image: ${error.message}`);
+                showNotification(`生成图片时出错: ${error.message}`);
+                document.getElementById("generatedImage").src = "";
+                document.getElementById("placeholder").style.display = 'flex';
+                document.getElementById("downloadSection").classList.add("hidden");
+            } finally {
+                resetButtonState();
             }
-
-            document.getElementById("loader").style.display = "none";
-            document.querySelector('button .button-text').style.display = 'inline-block';
-
         }
 
-        // 清除错误信息
-        function clearErrorMessage() {
-            const errorMessageElement = document.getElementById("errorMessage");
-            errorMessageElement.textContent = "";
-            errorMessageElement.style.display = "none";
-        }
-
-
-        // 显示错误信息
-        function displayErrorMessage(message) {
-            const errorMessageElement = document.getElementById("errorMessage");
-            errorMessageElement.textContent = message;
-            errorMessageElement.style.display = "block";
-
-            // 清空图片和文本内容
-            document.getElementById("generatedImage").src = "";
-            document.getElementById("textBeforeImage").innerText = "";
-            document.getElementById("textAfterImage").innerText = "";
-            hideDownloadButton();
-        }
-
-        // 显示下载按钮
-        function showDownloadButton() {
-            document.getElementById("downloadButton").style.display = "block";
-        }
-
-        // 隐藏下载按钮
-        function hideDownloadButton() {
-            document.getElementById("downloadButton").style.display = "none";
-        }
-
-        // 下载图片
         function downloadImage() {
             const imageUrl = document.getElementById("generatedImage").src;
+            const defaultImageUrl = "https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe"; // 你的默认图片 URL
+
+            // 检查 imageUrl 是否存在且不是默认的 URL
+            if (!imageUrl || imageUrl === defaultImageUrl) {
+                showNotification("请先生成图像后再下载");
+                return; // 停止函数执行
+            }
+
+            // 获取文件名输入框的值
+            let fileName = document.getElementById("fileNameInput").value.trim();
+
+            // 如果文件名输入框为空
+            if (!fileName) {
+                // 获取提示词输入框的值
+                let promptText = document.getElementById("promptText").value.trim();
+
+                // 如果提示词也为空，则使用默认文件名
+                if (!promptText) {
+                    fileName = `image-gemini-${Date.now()}`;
+                } else {
+                    // 使用提示词的前30个字符，并将空格替换为 "-"
+                    fileName = promptText.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 30);
+                }
+            }
+
+            // 确保文件名以 .png 结尾
+            if (!fileName.toLowerCase().endsWith('.png')) {
+                fileName += '.png';
+            }
+
             const link = document.createElement('a');
             link.href = imageUrl;
-            link.download = 'generated_image.png'; //  您可以自定义文件名
+            link.download = fileName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+
+            showNotification('图片下载已开始', 'success');
         }
 
-
-        // 显示提示信息
-        function showAlert(elementId, message, type = 'success') {
-            const alertElement = document.getElementById(elementId);
-            alertElement.textContent = message;
-            alertElement.className = `alert alert-${type}`;
-            alertElement.style.display = 'block';
+        // UI helper functions
+        function resetButtonState() {
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('buttonText').classList.remove('hidden');
+            document.getElementById('generateButton').disabled = false;
         }
 
-        // 隐藏提示信息
-        function hideAlert(elementId) {
-            const alertElement = document.getElementById(elementId);
-            alertElement.style.display = 'none';
+        function showNotification(message, type = 'info') {
+            const notificationArea = document.getElementById('notificationArea');
+            const notification = document.createElement('div');
+
+            notification.className = `notification bg-${type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue'}-500 text-white`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            notificationArea.appendChild(notification);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
 
-    const translate_imageUploadContainer = document.getElementById("imageUploadContainer");
+        function updateUIState() {
+            // Hide placeholder if there's an image
+            if (document.getElementById('generatedImage').src &&
+                !document.getElementById('generatedImage').src.includes('#')) {
+                document.getElementById('placeholder').style.display = 'none';
+            }
+        }
 
-    // 拖放事件
-    translate_imageUploadContainer.addEventListener("dragover", function(event) {
-      event.preventDefault();
-      translate_imageUploadContainer.style.backgroundColor = "#eee";
-    });
+        // Paste text
+        async function pasteText() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    document.getElementById('promptText').value = text;
+                    showNotification('已粘贴剪贴板内容', 'success');
+                } else {
+                    showNotification('剪贴板为空', 'info');
+                }
+            } catch (err) {
+                console.error('Failed to read clipboard:', err);
+                showNotification('无法访问剪贴板', 'error');
+            }
+        }
 
-    translate_imageUploadContainer.addEventListener("dragleave", function(event) {
-      event.preventDefault();
-      translate_imageUploadContainer.style.backgroundColor = "";
-    });
+        // Copy text
+        function copyText() {
+            const text = document.getElementById('promptText').value;
+            if (!text.trim()) {
+                showNotification('没有内容可复制', 'info');
+                return;
+            }
 
-    translate_imageUploadContainer.addEventListener("drop", function(event) {
-      event.preventDefault();
-      translate_imageUploadContainer.style.backgroundColor = "";
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('已复制提示词', 'success');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showNotification('复制失败', 'error');
+            });
+        }
 
-      const translate_file = event.dataTransfer.files[0];
-      document.getElementById("imageUpload").files = event.dataTransfer.files; // 兼容拖拽
-      previewImage();
-    });
+        // Clear prompt
+        function clearPrompt() {
+            document.getElementById('promptText').value = '';
+            showNotification('已清除提示词', 'success');
+        }
     </script>
 </body>
 </html>
+
