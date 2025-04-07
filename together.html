@@ -651,14 +651,33 @@
     function downloadImage() {
       const imageUrl = document.getElementById('output-image').src;
       const filenameInput = document.getElementById('filename');
-      const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : 'ai-image-' + new Date().toISOString().slice(0, 10);
-      const downloadLink = document.createElement('a');
-      downloadLink.href = imageUrl;
-      downloadLink.download = `${filename}.png`;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      showNotification("图片下载中...", 'info');
+
+      // 生成默认文件名，如果输入为空
+      let defaultFilename = 'generated-image';
+      // 假设prompt元素存在并能获取到
+      const promptText = document.getElementById('prompt')?.value?.trim();
+      if (promptText) {
+        defaultFilename = promptText.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 30);
+      } else {
+        defaultFilename = `image-tgz-${Date.now()}`;
+      }
+
+      const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : defaultFilename;
+      const fullFilename = `${filename}.png`; // 强制使用png后缀
+
+      // 只在 imageUrl 是 Base64 字符串时才下载
+      if (imageUrl && imageUrl.startsWith('data:image')) {
+        const downloadLink = document.createElement('a');
+        downloadLink.href = imageUrl;
+        downloadLink.download = fullFilename;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        showNotification("图片下载中...", 'info');
+      } else {
+        showNotification("无法下载：图像不是有效的Base64数据。", 'error');
+        console.warn("尝试下载非Base64图像:", imageUrl); // 记录日志方便调试
+      }
     }
 
     function randomSeed() {

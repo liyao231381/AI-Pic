@@ -338,16 +338,16 @@
             class="w-full gradient-bg text-white py-3 px-4 rounded-lg cursor-pointer text-base font-bold transition duration-300 hover:shadow-lg mt-auto flex items-center justify-center">
         <i class="fas fa-magic mr-2"></i> 生成图像
     </button>
-    <div>
+    <div id="aiImageUploadContainer">
         <label for="ai-image-upload-container" class="block mb-1 font-medium text-sm text-gray-700 flex items-center">
             <i class="fas fa-image mr-2 text-blue-500"></i> 参考图:
         </label>
         <div class="ai-image-upload-container border-2 border-dashed border-gray-300 rounded-xl p-4 w-full cursor-pointer relative overflow-hidden min-h-[100px] flex flex-col items-center justify-center text-center text-gray-500 hover:border-blue-400 transition file-upload"
-             id="aiImageUploadContainer">
+             >
             <input type="file" id="aiImageUpload" accept="image/*" onchange="previewAiImage()"
                    class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
             <i class="fas fa-image text-2xl mb-2 text-gray-400"></i>
-            <p class="text-sm">拖放或点击选择图片<br>Korlors图生图</p>
+            <p class="text-sm">拖放或点击选择图片<br>Kolors图生图</p>
             <img id="aiImagePreview" src="#" alt="图片预览"
                  class="hidden max-w-full max-h-32 block mx-auto mt-2 rounded-lg shadow-sm">
             <button type="button" id="aiImageClearButton" onclick="clearAiImage()"
@@ -359,30 +359,27 @@
 </div>
 <!-- Result Area -->
 <div class="result-area w-full md:w-1/2 p-4 bg-white flex flex-col items-center justify-start md:h-screen relative border-b md:border-b-0 shadow-inner">
-    <div id="result" class="w-full h-full flex flex-col items-center justify-center">
-        <div class="relative w-full h-full flex items-center justify-center">
-            <img id="generatedImage" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像"
-                 class="w-[95%] max-h-[85%] md:max-h-[90%] object-contain rounded-xl shadow-lg cursor-pointer mb-3 border border-gray-200 fade-in">
-            <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-opacity-70 transition z-10 hidden"
-                 id="fullscreenButton">
-                <i class="fas fa-expand"></i>
-            </div>
-        </div>
-        <div id="resultButtons" class="flex flex-wrap justify-center items-center w-full gap-2 px-2">
-            <div class="download-container flex items-center w-full max-w-md">
-                <div class="relative flex-grow">
-                    <input type="text" id="filenameInput" placeholder="自定义文件名"
-                           class="w-full p-2 pl-8 border border-gray-300 rounded-l-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition duration-300 placeholder-gray-400">
-                    <i class="fas fa-file-image absolute left-2.5 top-2.5 text-gray-400"></i>
-                </div>
-                <button onclick="downloadImage()" id="downloadButton"
-                        class="bg-gradient-to-r from-orange-500 to-pink-500 text-white py-2 px-4 rounded-r-lg cursor-pointer text-sm font-semibold transition duration-300 hover:shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap flex items-center glow"
-                        disabled>
-                    <i class="fas fa-download mr-2"></i> 下载
-                </button>
-            </div>
-        </div>
-    </div>
+  <div id="result" class="w-full h-full flex flex-col items-center justify-center">
+      <div class="relative w-full h-full flex items-center justify-center">
+          <img id="generatedImage" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像"
+               class="w-full max-h-[85vh] object-contain rounded-xl shadow-md cursor-zoom-in hover:shadow-lg transition-shadow">
+          <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-opacity-70 transition z-10 hidden"
+               id="fullscreenButton">
+              <i class="fas fa-expand"></i>
+          </div>
+      </div>
+      <div id="resultButtons" class="flex flex-wrap justify-center items-center w-full gap-2 px-2">
+          <div class="flex items-center mt-4 w-full max-w-md">
+              <input type="text" id="filenameInput" placeholder="自定义文件名"
+                     class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+              <button onclick="downloadImage()" id="downloadButton"
+                      class="bg-gray-400 hover:bg-orange-400 text-white font-bold py-2 px-4 rounded-r-md shadow-sm transition-colors flex items-center">
+                  <i class="fas fa-download mr-2"></i>
+                  <span>下载</span>
+              </button>
+          </div>
+      </div>
+  </div>
     <div id="loadingIndicator"
          class="hidden fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-fit h-fit bg-black bg-opacity-70 flex flex-col items-center justify-center z-50 text-white rounded-xl p-6 shadow-xl">
         <div class="spinner-bounce-dots mb-4">
@@ -395,7 +392,7 @@
     </div>
 </div>
 <!-- History Area -->
-<div class="history-area w-full md:w-1/4 p-4 bg-gray-50 md:border-l border-gray-200 overflow-y-auto md:h-screen shadow-inner">
+<div class="history-area w-full md:w-1/4 p-4 bg-gray-50 md:border-l border-gray-200 overflow-y-auto max-h-[70vh] md:h-screen shadow-inner">
     <div id="history">
       <h2 class="text-xl font-semibold mb-3 text-gray-800 flex items-center">
         <i class="fas fa-history mr-2 text-blue-500"></i> 历史记录
@@ -1012,35 +1009,36 @@
     }
 
     function downloadImage() {
-        const generatedImage = document.getElementById('generatedImage');
-        let downloadUrl = generatedImage.src;
-        const filenameInput = document.getElementById('filenameInput');
-        // Generate default filename based on prompt/time if input is empty
-        let defaultFilename = 'generated-image';
-        const promptText = document.getElementById('prompt').value.trim();
-        if (promptText) {
-            // Basic sanitization and shortening for filename
-            defaultFilename = promptText.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 50);
-        } else {
-            defaultFilename = `image-${Date.now()}`;
-        }
+    const generatedImage = document.getElementById('generatedImage');
+    let downloadUrl = generatedImage.src; // 获取 Base64 数据
+    const filenameInput = document.getElementById('filenameInput');
 
-        const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : defaultFilename;
-        const fileExtension = 'png'; // Assume PNG for Base64
-        const fullFilename = `${filename}.${fileExtension}`;
-
-        if (downloadUrl && downloadUrl.startsWith('data:image')) { // Check if it's a base64 URL
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = fullFilename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            showNotification("图像已开始下载");
-        } else {
-            showNotification('没有有效的图像可供下载。', true);
-        }
+    // 生成默认文件名，如果输入为空
+    let defaultFilename = `image-siliconflow-${Date.now()}`;
+    const promptText = document.getElementById('prompt').value.trim();
+    if (promptText) {
+        defaultFilename = promptText.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 30);
+    } else {
+        defaultFilename = `image-siliconflow-${Date.now()}`;
     }
+
+    const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : defaultFilename;
+    const fileExtension = 'png'; // 强制使用 PNG 扩展名，因为我们处理的是 Base64
+    const fullFilename = `${filename}.${fileExtension}`;
+
+    // 检查 downloadUrl 是否是有效的 Base64 数据
+    if (downloadUrl && downloadUrl.startsWith('data:image')) {
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fullFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showNotification("图像已开始下载");
+    } else {
+        showNotification('没有有效的图像可供下载。', true);
+    }
+}
 
     // Notification function
     function showNotification(message, isError = false) {
