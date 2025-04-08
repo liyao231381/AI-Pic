@@ -213,16 +213,23 @@
 
             <!-- Parameters area -->
             <div class="params-area space-y-2 flex-1 items-center">
-                <div class="card p-6 md:h-full">
-                    <h1 class="text-2xl font-bold text-indigo-600 mb-2 p-4 text-center">Gemini 对话生图编辑</h1>
-                    <div class="flex items-center justify-center space-x-4 text-sm text-indigo-600 mb-4">
-                        <button onclick="window.history.back()" class="btn-text flex items-center">
-                            <i class="fas fa-arrow-left"></i>
+                <div class="card px-6 py-4 md:h-screen">
+                    <div class="flex items-center justify-center mb-4">
+                    <i class="fas fa-robot text-2xl text-primary mr-2"></i>
+                    <h1 class="text-2xl font-bold text-primary text-center" onclick="window.location.href='./index.html'">Gemini 对话</h1>
+                    </div>
+                    <div class="flex items-center justify-center space-x-2 text-sm text-primary mb-4">
+                        <button onclick="window.history.back()" class="text-sm text-primary transition flex items-center" title="返回">
+                            <i class="fas fa-arrow-left mr-2"></i>
                         </button>
-                        <span>|</span>
-                        <a href="./together.html" class="btn-text">together.ai</a>
-                        <span>|</span>
-                        <a href="./pollinations.html" class="btn-text">pollinations</a>
+                        |
+                        <a href="./together.html" class="text-sm text-primary transition" title="together.ai">
+                            <i class="fas fa-users mr-2"></i>
+                        </a>
+                        |
+                        <a href="./pollinations.html" class="text-sm text-primary transition" title="Pollinations">
+                            <i class="fas fa-seedling"></i>
+                        </a>
                     </div>
                     <div class="space-y-2">
                         <div>
@@ -234,7 +241,7 @@
 
                         <div>
                             <label for="promptText" class="block font-bold text-gray-700 mb-1"><i class="fas fa-comment-dots mr-2 text-primary"></i>提示词</label>
-                            <textarea id="promptText" name="promptText" rows="6"
+                            <textarea id="promptText" name="promptText" rows="3"
                                       placeholder="输入想要生成的图片描述，或者对图片进行的编辑"
                                       class="input-field"></textarea>
                                       
@@ -283,7 +290,7 @@
                         <div id="textBeforeImage" class="text-gray-700"></div>
 
                         <div class="relative bg-gray-100 rounded-lg flex items-center justify-center min-h-64">
-                            <img id="generatedImage" src="https://imgapi.xl0408.top/index.php"
+                            <img id="generatedImage" loading="lazy" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe"
                                  alt="Generated Image" class="max-w-full max-h-96 mx-auto rounded-lg">
                             <div id="placeholder" class="absolute inset-0 flex items-center justify-center text-gray-400">
                                 <i class="fas fa-image text-5xl opacity-30"></i>
@@ -769,7 +776,7 @@
 
         function downloadImage() {
             const imageUrl = document.getElementById("generatedImage").src;
-            const defaultImageUrl = "https://imgapi.xl0408.top/index.php"; // 你的默认图片 URL
+            const defaultImageUrl = "https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe"; // 你的默认图片 URL
 
             // 检查 imageUrl 是否存在且不是默认的 URL
             if (!imageUrl || imageUrl === defaultImageUrl) {

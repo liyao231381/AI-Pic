@@ -246,20 +246,21 @@
   <!-- Left Column - Controls -->
   <div class="left-column w-1/4 h-full bg-white border-r border-gray-200 overflow-y-auto scrollbar-hide p-4 flex flex-col space-y-4">
     <div class="flex flex-col items-center space-y-2">
-      <h1 class="text-2xl font-bold text-primary flex items-center">
+      <h1 class="text-2xl font-bold text-primary flex items-center" onclick="window.location.href='./index.html'">
         <i class="fas fa-robot mr-2"></i>
         FLUX Schnell
       </h1>
-      <div class="flex space-x-2 text-sm text-primary">
-        <button onclick="window.history.back()" class="hover:underline flex items-center">
-          <i class="fas fa-arrow-left mr-1"></i> 
+      <div class="flex space-x-2 items-center justify-center">
+        <button onclick="window.history.back()" class="text-sm text-primary transition mr-2" title="返回">
+            <i class="fas fa-arrow-left"></i>
         </button>
-        <a href="./pollinations.html" class="hover:underline flex items-center">
-          <i class="fas fa-image mr-1"></i> 
+        |
+        <a href="./pollinations.html" class="text-sm text-primary transition" title="Pollinations">
+            <i class="fas fa-image mr-2"></i>
         </a>
-
-        <a href="./edit.html" class="hover:underline flex items-center">
-          <i class="fas fa-edit mr-1"></i>
+        |
+        <a href="./edit.html" class="text-sm text-primary transition" title="Gemini编辑">
+            <i class="fas fa-edit"></i>
         </a>
       </div>
     </div>
@@ -442,7 +443,7 @@
   <!-- Middle Column - Image Display -->
   <div class="middle-column w-2/4 h-full bg-gray-100 overflow-y-auto scrollbar-hide flex flex-col items-center p-4">
     <div id="image-container" class="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl shadow-md p-4">
-      <img id="output-image" src="https://imgapi.xl0408.top/index.php" alt="生成的AI图片"
+      <img id="output-image" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的AI图片"
            class="w-full max-h-[85vh] object-contain rounded-lg cursor-zoom-in hover:shadow-lg transition-shadow">
       <div class="flex items-center mt-4 w-full max-w-md">
         <input type="text" id="filename" placeholder="自定义文件名"
