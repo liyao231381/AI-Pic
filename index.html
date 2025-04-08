@@ -362,10 +362,10 @@
 </div>
 <!-- Result Area -->
 <div class="result-area w-full md:w-1/2 p-4 bg-white flex flex-col items-center justify-start md:h-screen relative border-b md:border-b-0 shadow-inner">
-  <div id="result" class="w-full h-full flex flex-col items-center justify-center">
-      <div class="relative w-full h-full flex items-center justify-center">
-          <img id="generatedImage" src="https://imgapi.xl0408.top/index.php" alt="生成的图像"
-               class="w-full max-h-[85vh] object-contain rounded-xl shadow-md cursor-zoom-in hover:shadow-lg transition-shadow">
+  <div id="result" class="w-full h-full flex flex-col items-center justify-center px-4">
+      <div class="relative w-fit h-full flex items-center justify-center">
+          <img id="generatedImage" loading="lazy" src="https://imgapi.xl0408.top/index.php" alt="生成的图像"
+               class="w-full max-h-[85vh] object-contain rounded-xl shadow-md cursor-zoom-in hover:shadow-lg transition-shadow hover:scale-105 transition-transform duration-200" />
           <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-opacity-70 transition z-10 hidden"
                id="fullscreenButton">
               <i class="fas fa-expand"></i>
@@ -561,7 +561,7 @@
     function createHistoryItemElement(item) {
         const historyItem = document.createElement('div');
         // Added 'group' class for hover effect on delete button
-        historyItem.className = 'history-item group bg-white border border-gray-200 rounded-md p-2 flex items-center space-x-2 transition duration-200 cursor-pointer relative hover:bg-gray-100';
+        historyItem.className = 'history-item group bg-white border border-gray-200 rounded-md p-2 flex items-center space-x-2 transition duration-200 cursor-pointer relative hover:bg-gray-100 hover:scale-105';
         historyItem.dataset.id = item.id; // Use dataset for ID
 
         const checkbox = document.createElement('input');
@@ -578,7 +578,7 @@
         let imageElement = document.createElement('img');
         imageElement.src = item.imageData;
         imageElement.alt = "历史图像";
-        imageElement.className = 'max-h-16 w-auto rounded-md object-contain'; // Adjusted classes
+        imageElement.className = 'max-h-16 w-auto rounded-md object-contain hover:scale-110 transition duration-200'; // Adjusted classes
         imageContainer.appendChild(imageElement);
         historyItem.appendChild(imageContainer);
 
@@ -740,10 +740,6 @@
         console.error('IndexedDB 未初始化，无法删除');
         showNotification('数据库错误，无法删除', true);
         return;
-      }
-       // Confirmation dialog
-      if (!confirm(`确定要删除此项历史记录吗？`)) {
-          return; // User cancelled
       }
 
       const tx = db.transaction(OBJECT_STORE_NAME, 'readwrite');

@@ -117,7 +117,7 @@
         }
         
         #imageResult:hover {
-            transform: scale(1.005);
+            transform: scale(1.02);
         }
         
         /* Custom scrollbar */
@@ -333,9 +333,9 @@
         
         <!-- Center Panel - Results -->
         <div id="resultContainer" class="middle-column w-2/4 h-full bg-gray-100 overflow-y-auto scrollbar-hide flex flex-col items-center p-4">
-            <div id="image-container" class="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl shadow-md p-4">
-                <div class="relative w-full h-full flex items-center justify-center">
-                    <img id="imageResult" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像"
+            <div id="image-container" class="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl shadow-md p-2">
+                <div class="relative w-fit h-full flex items-center justify-center">
+                    <img id="imageResult" loading="lazy" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像"
                          class="w-full max-h-[85vh] object-contain rounded-lg cursor-zoom-in hover:shadow-lg transition-shadow">
         
                     <div id="imageOverlay" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
@@ -466,12 +466,12 @@
                     const item = cursor.value;
                     
                     const listItem = document.createElement('li');
-                    listItem.className = 'history-item bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition cursor-pointer relative';
+                    listItem.className = 'history-item bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition cursor-pointer relative hover:translate-y-1 transition duration-200 ease-in-out';
                     
                     listItem.innerHTML = `
                         <div class="flex items-start">
                             <img src="${item.imageUrl}" alt="${item.params?.prompt || 'No Prompt'}" 
-                                class="w-16 h-16 rounded-md object-cover flex-shrink-0">
+                                class="w-16 h-16 rounded-md object-cover flex-shrink-0 hover:scale-105 transition duration-200 ease-in-out">
                             <div class="ml-3 flex-1 min-w-0">
                                 <p class="text-sm font-medium text-gray-800 truncate">${item.params?.prompt || '无描述'}</p>
                                 <p class="text-xs text-gray-500 mt-1">${formatDate(item.timestamp)}</p>
