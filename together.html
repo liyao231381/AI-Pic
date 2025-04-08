@@ -742,11 +742,6 @@
         timestamp: new Date().toISOString()
       });
       
-      // 限制历史记录数量为20条
-      if (history.length > 20) {
-        history = history.slice(0, 20);
-      }
-      
       localStorage.setItem('image_history', JSON.stringify(history));
     }
 
