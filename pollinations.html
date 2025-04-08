@@ -333,7 +333,7 @@
         <div id="resultContainer" class="middle-column w-2/4 h-full bg-gray-100 overflow-y-auto scrollbar-hide flex flex-col items-center p-4">
             <div id="image-container" class="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl shadow-md p-4">
                 <div class="relative w-full h-full flex items-center justify-center">
-                    <img id="imageResult" src="https://api.likepoems.com/img/pixiv" alt="生成的图像"
+                    <img id="imageResult" src="https://imgapi.xl0408.top/index.php" alt="生成的图像"
                          class="w-full max-h-[85vh] object-contain rounded-lg cursor-zoom-in hover:shadow-lg transition-shadow">
         
                     <div id="imageOverlay" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
@@ -748,7 +748,7 @@ function resetGenerateButton() {
 // Download image
 function downloadImage() {
     const imageBase64 = document.getElementById('imageResult').src;
-    if (!imageBase64 || imageBase64.includes('api.likepoems.com')) {
+    if (!imageBase64 || imageBase64.includes('imgapi.xl0408.top')) {
         showNotification('没有可下载的图像', true);
         return;
     }
