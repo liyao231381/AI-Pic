@@ -413,7 +413,7 @@
             <span class="tooltip-text">翻译为英文</span>
           </button>
           <button type="button" onclick="fillPrompt()" class="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-800 py-2 px-3 rounded flex items-center justify-center tooltip">
-            <i class="fas fa-arrow-down"></i>
+            <i class="fas fa-arrow-up"></i>
             <span class="tooltip-text">填入翻译结果</span>
           </button>
         </div>
@@ -483,49 +483,150 @@
   </div>
 
   <script>
+    // IndexedDB 数据库名称和版本
+    const DB_NAME = 'image_generator_db';
+    const DB_VERSION = 1;
+    const OBJECT_STORE_NAME = 'image_history';
+    let db; // 用于存储数据库实例
+    // 初始化 IndexedDB
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = (event) => {
+          console.error("IndexedDB error:", event.target.error);
+          reject(event.target.error);
+        };
+        request.onsuccess = (event) => {
+          db = event.target.result;
+          console.log("IndexedDB opened successfully");
+          resolve(db);
+        };
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          // 创建对象仓库
+          const objectStore = db.createObjectStore(OBJECT_STORE_NAME, {
+            keyPath: 'timestamp' // 使用时间戳作为键
+          });
+          console.log("Object store created");
+        };
+      });
+    }
+    // 添加历史记录到 IndexedDB
+    async function addHistoryItem(item) {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+        const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+        const request = objectStore.add(item);
+        request.onsuccess = () => {
+          console.log('Added item to IndexedDB');
+          resolve();
+        };
+        request.onerror = (event) => {
+          console.error("Error adding item:", event.target.error);
+          reject(event.target.error);
+        };
+      });
+    }
+    // 获取所有历史记录
+    async function getAllHistoryItems() {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
+        const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+        const request = objectStore.getAll();
+        request.onsuccess = (event) => {
+          const history = event.target.result;
+          resolve(history.reverse()); // 反转数组，使最新的记录在前面
+        };
+        request.onerror = (event) => {
+          console.error("Error getting all items:", event.target.error);
+          reject(event.target.error);
+        };
+      });
+    }
+    // 删除历史记录项
+    async function deleteHistoryItemFromDB(timestamp) {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+        const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+        const request = objectStore.delete(timestamp);
+        request.onsuccess = () => {
+          console.log('Deleted item from IndexedDB');
+          resolve();
+        };
+        request.onerror = (event) => {
+          console.error("Error deleting item:", event.target.error);
+          reject(event.target.error);
+        };
+      });
+    }
+    // 清空历史记录
+    async function clearHistoryFromDB() {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+        const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+        const request = objectStore.clear();
+        request.onsuccess = () => {
+          console.log('All history cleared from IndexedDB');
+          resolve();
+        };
+        request.onerror = (event) => {
+          console.error("Error clearing history:", event.target.error);
+          reject(event.target.error);
+        };
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-      // 页面加载时检查本地缓存的 API Key
-      const cachedApiKey = localStorage.getItem('apiKey_image_generator');
-      if (cachedApiKey) {
-        document.getElementById('api-key').value = cachedApiKey;
-      }
-      const cachedTranslationApiKey = localStorage.getItem('translationApiKey');
-      if (cachedTranslationApiKey) {
-        document.getElementById('translation-api-key').value = cachedTranslationApiKey;
-      }
-      
-      // 初始化历史记录
-      updateHistory();
-      
-      // 设置区域切换
-      const toggleTranslateAreaButton = document.getElementById('toggleTranslateArea');
-      const translateArea = document.querySelector('.setting-area');
-      const chevronIcon = toggleTranslateAreaButton.querySelector('.fa-chevron-down');
-      
-      toggleTranslateAreaButton.addEventListener('click', function() {
-        translateArea.classList.toggle('hidden');
-        chevronIcon.classList.toggle('fa-chevron-down');
-        chevronIcon.classList.toggle('fa-chevron-up');
+    // 页面加载时检查本地缓存的 API Key
+    const cachedApiKey = localStorage.getItem('apiKey_image_generator');
+    if (cachedApiKey) {
+      document.getElementById('api-key').value = cachedApiKey;
+    }
+    const cachedTranslationApiKey = localStorage.getItem('translationApiKey');
+    if (cachedTranslationApiKey) {
+      document.getElementById('translation-api-key').value = cachedTranslationApiKey;
+    }
+
+    // 初始化 IndexedDB
+    initDB()
+      .then(() => {
+        // 初始化历史记录
+        updateHistory();
+      })
+      .catch(error => {
+        console.error("Failed to initialize IndexedDB:", error);
+        showNotification('无法初始化数据库，历史记录可能无法加载', 'error');
       });
-      
-      // 图片点击放大/缩小
-      const outputImage = document.getElementById('output-image');
-      outputImage.addEventListener('click', function() {
-        if (document.fullscreenElement) {
-          document.exitFullscreen();
-        } else {
-          outputImage.requestFullscreen();
-        }
-      });
-      
-      // 翻译结果点击复制
-      const translatedText = document.getElementById('translated-text');
-      translatedText.addEventListener('click', function() {
-        this.select();
-        document.execCommand('copy');
-        showNotification('翻译结果已复制', 'success');
-      });
+    
+    // 设置区域切换
+    const toggleTranslateAreaButton = document.getElementById('toggleTranslateArea');
+    const translateArea = document.querySelector('.setting-area');
+    const chevronIcon = toggleTranslateAreaButton.querySelector('.fa-chevron-down');
+    
+    toggleTranslateAreaButton.addEventListener('click', function() {
+      translateArea.classList.toggle('hidden');
+      chevronIcon.classList.toggle('fa-chevron-down');
+      chevronIcon.classList.toggle('fa-chevron-up');
     });
+    
+    // 图片点击放大/缩小
+    const outputImage = document.getElementById('output-image');
+    outputImage.addEventListener('click', function() {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        outputImage.requestFullscreen();
+      }
+    });
+    
+    // 翻译结果点击复制
+    const translatedText = document.getElementById('translated-text');
+    translatedText.addEventListener('click', function() {
+      this.select();
+      document.execCommand('copy');
+      showNotification('翻译结果已复制', 'success');
+    });
+  });
 
     // --- Keyboard Shortcuts ---
     const promptTextarea = document.getElementById('prompt');
@@ -734,77 +835,87 @@
       }, 1000);
     }
 
-    // 缓存历史记录
-    function cacheHistory(data) {
-      let history = JSON.parse(localStorage.getItem('image_history') || '[]');
-      history.unshift({
-        ...data,
-        timestamp: new Date().toISOString()
-      });
-      
-      localStorage.setItem('image_history', JSON.stringify(history));
+// 缓存历史记录
+async function cacheHistory(data) {
+  const item = {
+    ...data,
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    await addHistoryItem(item);
+    console.log("History item cached successfully.");
+  } catch (error) {
+    console.error("Failed to cache history:", error);
+    showNotification('缓存历史记录失败', 'error');
+  }
+}
+
+// 更新历史记录显示
+async function updateHistory() {
+  const historyContainer = document.getElementById('history-container');
+  historyContainer.innerHTML = '';
+
+  try {
+    const history = await getAllHistoryItems();
+
+    if (history.length === 0) {
+      historyContainer.innerHTML = `
+        <div class="text-center py-8 text-gray-400">
+          <i class="fas fa-image fa-2x mb-2"></i>
+          <p>暂无历史记录</p>
+        </div>
+      `;
+      return;
     }
 
-    // 更新历史记录显示
-    function updateHistory() {
-      const historyContainer = document.getElementById('history-container');
-      historyContainer.innerHTML = '';
+    history.forEach((item) => {
+      const historyItem = document.createElement('div');
+      historyItem.className = 'history-item bg-white p-3 rounded-lg shadow-sm cursor-pointer flex items-start relative hover:shadow-md transition-all';
 
-      let history = JSON.parse(localStorage.getItem('image_history') || '[]');
+      const imagePreview = document.createElement('img');
+      imagePreview.src = item.imageUrl;
+      imagePreview.alt = '历史图片';
+      imagePreview.className = 'w-16 h-16 object-cover rounded-md mr-3';
+      historyItem.appendChild(imagePreview);
 
-      if (history.length === 0) {
-        historyContainer.innerHTML = `
-          <div class="text-center py-8 text-gray-400">
-            <i class="fas fa-image fa-2x mb-2"></i>
-            <p>暂无历史记录</p>
-          </div>
-        `;
-        return;
-      }
+      const textContainer = document.createElement('div');
+      textContainer.className = 'flex-1 overflow-hidden';
 
-      history.forEach((item, index) => {
-        const historyItem = document.createElement('div');
-        historyItem.className = 'history-item bg-white p-3 rounded-lg shadow-sm cursor-pointer flex items-start relative hover:shadow-md transition-all';
-        
-        const imagePreview = document.createElement('img');
-        imagePreview.src = item.imageUrl;
-        imagePreview.alt = '历史图片';
-        imagePreview.className = 'w-16 h-16 object-cover rounded-md mr-3';
-        historyItem.appendChild(imagePreview);
+      const promptText = document.createElement('p');
+      promptText.textContent = item.prompt;
+      promptText.className = 'text-sm text-gray-700 truncate';
+      textContainer.appendChild(promptText);
 
-        const textContainer = document.createElement('div');
-        textContainer.className = 'flex-1 overflow-hidden';
+      const detailsText = document.createElement('p');
+      detailsText.className = 'text-xs text-gray-500 mt-1';
+      detailsText.innerHTML = `
+        ${item.width}×${item.height} · 步数: ${item.steps} · ${new Date(item.timestamp).toLocaleString()}
+      `;
+      textContainer.appendChild(detailsText);
 
-        const promptText = document.createElement('p');
-        promptText.textContent = item.prompt;
-        promptText.className = 'text-sm text-gray-700 truncate';
-        textContainer.appendChild(promptText);
+      historyItem.appendChild(textContainer);
 
-        const detailsText = document.createElement('p');
-        detailsText.className = 'text-xs text-gray-500 mt-1';
-        detailsText.innerHTML = `
-          ${item.width}×${item.height} · 步数: ${item.steps} · ${new Date(item.timestamp).toLocaleString()}
-        `;
-        textContainer.appendChild(detailsText);
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'absolute top-0 right-1 text-gray-400 hover:text-red-500 transition-colors';
+      deleteButton.innerHTML = '<i class="fas fa-times"></i>';
+      deleteButton.onclick = function (event) {
+        event.stopPropagation();
+        deleteHistoryItem(item.timestamp); // Pass the timestamp
+      };
+      historyItem.appendChild(deleteButton);
 
-        historyItem.appendChild(textContainer);
+      historyItem.onclick = function () {
+        fillForm(item);
+      };
 
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'absolute top-0 right-1 text-gray-400 hover:text-red-500 transition-colors';
-        deleteButton.innerHTML = '<i class="fas fa-times"></i>';
-        deleteButton.onclick = function (event) {
-          event.stopPropagation();
-          deleteHistoryItem(index);
-        };
-        historyItem.appendChild(deleteButton);
-
-        historyItem.onclick = function () {
-          fillForm(item);
-        };
-
-        historyContainer.appendChild(historyItem);
-      });
-    }
+      historyContainer.appendChild(historyItem);
+    });
+  } catch (error) {
+    console.error("Failed to update history:", error);
+    showNotification('无法加载历史记录', 'error');
+  }
+}
 
     async function pastePrompt() {
       const promptInput = document.getElementById('prompt');
@@ -907,23 +1018,31 @@
       showNotification('翻译结果已填入', 'success');
     }
 
-    // 删除历史记录项
-    function deleteHistoryItem(index) {
-      let history = JSON.parse(localStorage.getItem('image_history') || '[]');
-      history.splice(index, 1);
-      localStorage.setItem('image_history', JSON.stringify(history));
-      updateHistory();
-      showNotification('历史记录已删除', 'info');
+// 删除历史记录项
+async function deleteHistoryItem(timestamp) {
+  try {
+    await deleteHistoryItemFromDB(timestamp);
+    await updateHistory(); // 重新加载历史记录
+    showNotification('历史记录已删除', 'info');
+  } catch (error) {
+    console.error("Failed to delete history item:", error);
+    showNotification('删除历史记录失败', 'error');
+  }
+}
+
+// 清空历史记录
+async function clearHistory() {
+  if (confirm('确定要清空所有历史记录吗？此操作不可撤销。')) {
+    try {
+      await clearHistoryFromDB();
+      await updateHistory(); // 重新加载历史记录
+      showNotification('历史记录已清空', 'info');
+    } catch (error) {
+      console.error("Failed to clear history:", error);
+      showNotification('清空历史记录失败', 'error');
     }
-    
-    // 清空历史记录
-    function clearHistory() {
-      if (confirm('确定要清空所有历史记录吗？此操作不可撤销。')) {
-        localStorage.removeItem('image_history');
-        updateHistory();
-        showNotification('历史记录已清空', 'info');
-      }
-    }
+  }
+}
 
     // 填充表单
     function fillForm(item) {
