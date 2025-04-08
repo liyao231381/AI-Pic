@@ -259,16 +259,16 @@
 
                         <div>
                             <label class="block font-bold text-gray-700 mb-1"><i class="fas fa-image mr-2"></i>上传图片</label>
-                            <div class="image-upload-container rounded-lg p-4 text-center cursor-pointer" id="imageUploadContainer">
+                            <div class="image-upload-container rounded-lg p-4 text-center cursor-pointer relative" id="imageUploadContainer" onclick="document.getElementById('imageUpload').click()">
                                 <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="previewImage()">
                                 <div id="uploadPrompt" class="flex flex-col items-center justify-center py-4">
                                     <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
                                     <p class="text-sm text-gray-500">拖放或点击选择图片</p>
                                 </div>
-                                <img id="imagePreview" src="#" alt="图片预览" class="hidden max-w-full max-h-48 mx-auto rounded">
-                                <div id="imageActions" class="hidden mt-2 flex justify-center space-x-2">
-                                    <button onclick="clearImage()" class="btn btn-danger text-sm py-1 px-2">
-                                        <i class="fas fa-times mr-1"></i>清除
+                                <div>
+                                    <img id="imagePreview" src="#" alt="图片预览" class="hidden max-w-full max-h-48 mx-auto rounded">
+                                    <button onclick="clearImage()" class="hidden absolute top-2 right-2 bg-red-100 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center transition" id="imageActions">
+                                        <i class="fas fa-times"></i>
                                     </button>
                                 </div>
                             </div>
@@ -288,9 +288,9 @@
                     <div id="imageContainer" class="space-y-4 justify-center items-center flex flex-col h-full">
                         <div id="textBeforeImage" class="text-gray-700"></div>
 
-                        <div class="relative bg-white rounded-lg flex items-center justify-center min-h-64 max-h-[80vh] w-full">
+                        <div class="relative bg-white rounded-lg flex items-center justify-center min-h-64 max-h-[80vh] w-fit">
                             <img id="generatedImage" loading="lazy" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe"
-                                 alt="Generated Image" class="max-h-full max-w-full object-contain mx-auto">
+                                 alt="Generated Image" class="max-h-full max-w-full object-contain mx-auto rounded-lg hover:scale-105 transition-all duration-300">
                             <div id="placeholder" class="absolute inset-0 flex items-center justify-center text-gray-400">
                                 <i class="fas fa-image text-5xl opacity-30"></i>
                             </div>
@@ -417,7 +417,7 @@
                     listItem.innerHTML = `
                         <div class="flex items-start gap-3" onclick="loadHistoryItem(${item.id})">
                             <img src="${item.imageUrl}" alt="${item.promptText}"
-                                class="w-16 h-16 rounded-md object-cover flex-shrink-0">
+                                class="w-16 h-16 rounded-md object-cover flex-shrink-0 hover:scale-110 transition-all duration-200">
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-gray-800 history-prompt">${item.promptText || '无提示词'}</p>
                                 <p class="text-xs text-gray-500 mt-1">${formatDate(item.timestamp)}</p>
@@ -796,7 +796,10 @@
                     fileName = `image-gemini-${Date.now()}`;
                 } else {
                     // 使用提示词的前30个字符，并将空格替换为 "-"
-                    fileName = promptText.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 30);
+                    fileName = promptText.substring(0, 30)
+                        .replace(/[^\w\u4e00-\u9fa5]/g, '-') // 替换特殊字符为-
+                        .replace(/-+/g, '-') // 合并连续的-
+                        .replace(/^-|-$/g, ''); // 去除首尾的-
                 }
             }
 
