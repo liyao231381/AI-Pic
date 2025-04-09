@@ -269,7 +269,7 @@
                         <p class="mt-1 text-sm text-gray-500">Enter a prompt and click "Generate Image" to create your first artwork</p>
                     </div>
 
-                    <img id="generated-image" class="hidden w-full h-full object-contain rounded-lg" src="" alt="Generated Image">
+                    <img id="generated-image" class="hidden w-full h-full object-contain rounded-lg" alt="Generated Image" onerror="handleImageError()">
                 </div>
 
                 <!-- Generation Info -->
@@ -450,8 +450,6 @@
 
             } catch (error) {
                 console.error("Error:", error);
-                loadingMessage.classList.add('hidden');
-                errorMessage.classList.remove('hidden');
             } finally {
                 clearInterval(progressInterval);
                 generateBtn.disabled = false;
@@ -461,63 +459,129 @@
 
         async function processStream(sessionHash) {
             return new Promise((resolve, reject) => {
-                const eventSource = new EventSource(`https://stabilityai-stable-diffusion-3-medium.hf.space/queue/data?session_hash=${sessionHash}`);
+                let eventSource = null; // 声明 eventSource 变量
+                let retryTimeout;
+                let reconnectAttempts = 0; // 重连计数器
+                const maxReconnectAttempts = 3; // 最大重连次数
 
-                eventSource.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
+                const startEventSource = () => {
+                    eventSource = new EventSource(`https://stabilityai-stable-diffusion-3-medium.hf.space/queue/data?session_hash=${sessionHash}`);
 
-                    if (data.msg === "process_completed") {
-                        const imageUrl = data.output.data[0].url;
+                    const resetRetryTimeout = () => {
+                        clearTimeout(retryTimeout);
+                        retryTimeout = setTimeout(() => {
+                            console.log("EventSource timeout, closing and retrying...");
+                            eventSource.close();
+                            startEventSource(); // 重新建立 EventSource
+                        }, 30000); // 调整超时时间
+                    };
 
-                        tryFetchImageWithRetry(imageUrl, 10, 1000)
-                            .then(fetchedImageUrl => {
+                    eventSource.addEventListener('open', () => {
+                        console.log('EventSource connected');
+                        reconnectAttempts = 0; // 成功连接后重置计数器
+                        resetRetryTimeout();
+                    });
+
+                    eventSource.addEventListener('message', async (event) => {
+                        resetRetryTimeout();
+
+                        const data = JSON.parse(event.data);
+
+                        if (data.msg === "process_completed") {
+                            const imageUrl = data.output.data[0].url;
+
+                            try {
+                                const fetchedImageUrl = await tryFetchImageWithRetry(imageUrl, 10, 1000);
+
                                 generatedImage.src = fetchedImageUrl;
                                 generatedImage.classList.remove('hidden');
                                 loadingMessage.classList.add('hidden');
                                 downloadBtn.classList.remove('hidden');
                                 copyPromptBtn.classList.remove('hidden');
                                 updateProgress(100);
+                                clearTimeout(retryTimeout);
                                 eventSource.close();
                                 resolve(fetchedImageUrl);
-                            })
-                            .catch(err => {
+                            } catch (err) {
                                 console.error("Failed to load image after multiple retries:", err);
                                 loadingMessage.classList.add('hidden');
                                 errorMessage.classList.remove('hidden');
+                                clearTimeout(retryTimeout);
                                 eventSource.close();
                                 reject(err);
-                            });
-                    } else if (data.msg === "estimation" || data.msg === "process_starts" || data.msg === "progress") {
-                        // Update progress based on actual API progress if available
-                        if (data.progress_data && data.progress_data.progress !== undefined) {
-                            updateProgress(data.progress_data.progress * 100);
+                            }
+                        } else if (data.msg === "estimation" || data.msg === "process_starts" || data.msg === "progress") {
+                            if (data.progress_data && data.progress_data.progress !== undefined) {
+                                updateProgress(data.progress_data.progress * 100);
+                            }
                         }
-                    }
+                    });
+
+                    eventSource.addEventListener('error', (error) => {
+                        console.error("EventSource error:", error);
+                        clearTimeout(retryTimeout);
+                        eventSource.close();
+
+                        if (reconnectAttempts < maxReconnectAttempts) {
+                            reconnectAttempts++;
+                            console.log(`Attempting to reconnect EventSource (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
+                            setTimeout(startEventSource, 3000); // 3秒后尝试重连
+                        } else {
+                            console.warn("Max reconnect attempts reached. Stopping reconnection.");
+                            loadingMessage.classList.add('hidden');
+                            errorMessage.classList.remove('hidden');
+                            reject(new Error("Max reconnect attempts reached.")); // Reject promise
+                        }
+                    });
+
+                    eventSource.addEventListener('close', () => {
+                        console.log('EventSource closed');
+                        clearTimeout(retryTimeout);
+                        
+                        if (reconnectAttempts < maxReconnectAttempts) {
+                            reconnectAttempts++;
+                            console.log(`Attempting to reconnect EventSource (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
+                            setTimeout(startEventSource, 3000); // 3秒后尝试重连
+                        } else {
+                            console.warn("Max reconnect attempts reached. Stopping reconnection.");
+                            loadingMessage.classList.add('hidden');
+                            errorMessage.classList.remove('hidden');
+                            reject(new Error("Max reconnect attempts reached.")); // Reject promise
+                        }
+                    });
                 };
 
-                eventSource.onerror = (error) => {
-                    console.error("EventSource error:", error);
-                    loadingMessage.classList.add('hidden');
-                    errorMessage.classList.remove('hidden');
-                    eventSource.close();
-                    reject(error);
-                };
+                startEventSource();
             });
         }
 
-        async function tryFetchImageWithRetry(imageUrl, maxRetries, delay) {
+        async function tryFetchImageWithRetry(imageUrl, maxRetries, initialDelay) {
             let attempts = 0;
+            let delay = initialDelay;
+            let cachedImage = localStorage.getItem(imageUrl);
+
+            if (cachedImage) {
+                generatedImage.src = cachedImage;
+                generatedImage.classList.remove('hidden');
+                loadingMessage.classList.add('hidden');
+                downloadBtn.classList.remove('hidden');
+                copyPromptBtn.classList.remove('hidden');
+                updateProgress(100);
+                return cachedImage; // 返回缓存的 URL
+            }
 
             while (attempts < maxRetries) {
                 try {
-                    const response = await fetch(imageUrl, { method: 'HEAD' });
+                    const response = await fetch(imageUrl);
 
                     if (response.ok) {
-                        // Image loaded successfully!  Remove the error message if it's showing.
+                        const blob = await response.blob();
+                        const objectURL = URL.createObjectURL(blob);
+                        localStorage.setItem(imageUrl, objectURL);
                         if (!errorMessage.classList.contains('hidden')) {
                             errorMessage.classList.add('hidden');
                         }
-                        return imageUrl;
+                        return objectURL; // 返回本地URL
                     } else {
                         console.log(`Image fetch failed (attempt ${attempts + 1}/${maxRetries}), status: ${response.status}, retrying in ${delay}ms...`);
                     }
@@ -527,6 +591,7 @@
 
                 attempts++;
                 await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // 指数退避
             }
 
             throw new Error("Failed to fetch image after multiple retries.");
@@ -534,6 +599,13 @@
 
         function generateSessionHash() {
             return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+
+        function handleImageError() {
+            console.error('Failed to load image:', generatedImage.src);
+            generatedImage.src = 'path/to/placeholder.png'; // 仅在加载失败时设置
+            // 或者显示错误提示信息
+            errorMessage.classList.remove('hidden');
         }
 
         // Initialize
