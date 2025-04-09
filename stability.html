@@ -91,7 +91,6 @@
                     </label>
                     <div class="relative">
                         <textarea id="prompt" rows="3" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all" placeholder="Describe the image you want to generate..."></textarea>
-                        <div class="absolute bottom-2 right-2 text-xs text-gray-500" id="prompt-counter">0/500</div>
                     </div>
                 </div>
 
@@ -290,7 +289,6 @@
     <script>
         // DOM Elements
         const promptTextarea = document.getElementById('prompt');
-        const promptCounter = document.getElementById('prompt-counter');
         const guidanceRange = document.getElementById('guidance-range');
         const guidanceInput = document.getElementById('guidance');
         const stepsRange = document.getElementById('steps-range');
@@ -307,7 +305,6 @@
         const progressBar = document.getElementById('progress-bar');
 
         // Event Listeners
-        promptTextarea.addEventListener('input', updatePromptCounter);
         guidanceRange.addEventListener('input', syncGuidanceInputs);
         guidanceInput.addEventListener('input', syncGuidanceInputs);
         stepsRange.addEventListener('input', syncStepsInputs);
@@ -315,16 +312,6 @@
         downloadBtn.addEventListener('click', downloadImage);
         copyPromptBtn.addEventListener('click', copyPrompt);
 
-        // Functions
-        function updatePromptCounter() {
-            const length = promptTextarea.value.length;
-            promptCounter.textContent = `${length}/500`;
-            if (length > 500) {
-                promptCounter.classList.add('text-red-400');
-            } else {
-                promptCounter.classList.remove('text-red-400');
-            }
-        }
 
         function syncGuidanceInputs(e) {
             if (e.target.id === 'guidance-range') {
@@ -371,231 +358,320 @@
         }
 
         async function generateImage() {
-            const prompt = promptTextarea.value.trim();
-            if (!prompt) {
-                alert('Please enter a prompt');
-                return;
-            }
+    const prompt = promptTextarea.value.trim();
+    if (!prompt) {
+        alert('Please enter a prompt');
+        return;
+    }
 
-            // UI State Updates
-            generateBtn.disabled = true;
-            generateBtn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> <span>Generating...</span>';
-            placeholder.classList.add('hidden');
-            generatedImage.classList.add('hidden');
-            loadingMessage.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
-            generationInfo.classList.add('hidden');
-            downloadBtn.classList.add('hidden');
-            copyPromptBtn.classList.add('hidden');
+    // UI State Updates
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> <span>Generating...</span>';
+    placeholder.classList.add('hidden');
+    generatedImage.classList.add('hidden');
+    loadingMessage.classList.remove('hidden');
+    errorMessage.classList.add('hidden');
+    generationInfo.classList.add('hidden');
+    downloadBtn.classList.add('hidden');
+    copyPromptBtn.classList.add('hidden');
 
-            // Simulate progress (in a real app, you'd get this from the API)
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += Math.random() * 5;
-                if (progress > 95) progress = 95;
-                updateProgress(progress);
-            }, 500);
+    // Simulate progress (in a real app, you'd get this from the API)
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 5;
+        if (progress > 95) progress = 95;
+        updateProgress(progress);
+    }, 500);
 
-            try {
-                const negativePrompt = document.getElementById("negative-prompt").value;
-                const seed = document.getElementById("seed").value === "" ? null : parseInt(document.getElementById("seed").value);
-                const resolution = document.getElementById("resolution").value;
-                const [width, height] = resolution.split("x").map(Number);
-                const tiling = document.getElementById("tiling").value === "true";
-                const guidance = parseInt(guidanceInput.value);
-                const steps = parseInt(stepsInput.value);
+    try {
+        const negativePrompt = document.getElementById("negative-prompt").value;
+        const seed = document.getElementById("seed").value === "" ? null : parseInt(document.getElementById("seed").value);
+        const resolution = document.getElementById("resolution").value;
+        const [width, height] = resolution.split("x").map(Number);
+        const tiling = document.getElementById("tiling").value === "true";
+        const guidance = parseInt(guidanceInput.value);
+        const steps = parseInt(stepsInput.value);
 
-                // Generate a new session hash for each request
-                const sessionHash = generateSessionHash();
+        // Generate a new session hash for each request
+        const sessionHash = generateSessionHash();
 
-                const firstResponse = await fetch('https://stabilityai-stable-diffusion-3-medium.hf.space/queue/join', {
-                    method: 'POST',
-                    headers: {
-                        'authority': 'stabilityai-stable-diffusion-3-medium.hf.space',
-                        'accept': 'application/json',
-                        'content-type': 'application/json',
-                        'origin': 'https://stabledifffusion.com',
-                        'priority': 'u=1, i',
-                        'referer': 'https://stabledifffusion.com/',
-                        'sec-fetch-dest': 'empty',
-                        'sec-fetch-mode': 'cors',
-                        'sec-fetch-site': 'cross-site',
-                        'user-agent': navigator.userAgent
-                    },
-                    body: JSON.stringify({
-                        "data": [prompt, negativePrompt, seed, tiling, width, height, guidance, steps],
-                        "event_data": null,
-                        "fn_index": 1,
-                        "trigger_id": 5,
-                        "session_hash": sessionHash
-                    })
-                });
+        const firstResponse = await fetch('https://stabilityai-stable-diffusion-3-medium.hf.space/queue/join', {
+            method: 'POST',
+            headers: {
+                'authority': 'stabilityai-stable-diffusion-3-medium.hf.space',
+                'accept': 'application/json',
+                'content-type': 'application/json',
+                'origin': 'https://stabledifffusion.com',
+                'priority': 'u=1, i',
+                'referer': 'https://stabledifffusion.com/',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'cross-site',
+                'user-agent': navigator.userAgent
+            },
+            body: JSON.stringify({
+                "data": [prompt, negativePrompt, seed, tiling, width, height, guidance, steps],
+                "event_data": null,
+                "fn_index": 1,
+                "trigger_id": 5,
+                "session_hash": sessionHash
+            })
+        });
 
-                if (!firstResponse.ok) {
-                    throw new Error(`HTTP error! status: ${firstResponse.status}`);
+        if (!firstResponse.ok) {
+            throw new Error(`HTTP error! status: ${firstResponse.status}`);
+        }
+
+        const firstResponseData = await firstResponse.json();
+        const eventId = firstResponseData.event_id;
+
+        // Process the SSE stream
+        await processStream(sessionHash);
+
+        // Update generation info
+        document.getElementById('info-seed').textContent = seed || 'random';
+        document.getElementById('info-resolution').textContent = `${width}x${height}`;
+        document.getElementById('info-guidance').textContent = guidance;
+        document.getElementById('info-steps').textContent = steps;
+        generationInfo.classList.remove('hidden');
+    } catch (error) {
+        console.error("Error:", error);
+    } finally {
+        clearInterval(progressInterval);
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Image</span>';
+
+        // Hide error message
+        errorMessage.classList.add('hidden');
+    }
+}
+
+async function processStream(sessionHash) {
+    return new Promise((resolve, reject) => {
+        let eventSource = null;
+        let retryTimeout;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 3;
+        const maxTotalTime = 30000; // 30 seconds
+        const startTime = Date.now();
+        let imageUrlFound = false;
+        let resolved = false;
+        let initialConnectionAttempted = false;
+
+        const startEventSource = () => {
+            eventSource = new EventSource(`https://stabilityai-stable-diffusion-3-medium.hf.space/queue/data?session_hash=${sessionHash}`);
+            initialConnectionAttempted = true;
+
+            const resetRetryTimeout = () => {
+                clearTimeout(retryTimeout);
+                retryTimeout = setTimeout(() => {
+                    console.log("EventSource timeout, closing and retrying...");
+                    if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
+                        eventSource.close();
+                    }
+                    startEventSource();
+                }, 30000); // 调整超时时间
+            };
+
+            eventSource.addEventListener('open', () => {
+                console.log('EventSource connected');
+                reconnectAttempts = 0;
+                resetRetryTimeout();
+                errorMessage.classList.add('hidden');
+            });
+
+            eventSource.addEventListener('message', async (event) => {
+                resetRetryTimeout();
+
+                const data = JSON.parse(event.data);
+
+                if (data && data.msg === "close_stream") {
+                    console.log("Received close_stream message. Stopping generation.");
+                    loadingMessage.classList.add('hidden');
+                    errorMessage.classList.remove('hidden');
+                    if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
+                        eventSource.close();
+                    }
+
+                    if (!resolved) {
+                        reject(new Error("Stream closed by server."));
+                        resolved = true;
+                    }
+                    return;
                 }
 
-                const firstResponseData = await firstResponse.json();
-                const eventId = firstResponseData.event_id;
+                if (data && data.output && data.output.data && data.output.data[0] && data.output.data[0].url) {
+                    const imageUrl = data.output.data[0].url;
+                    imageUrlFound = true;
+                    loadingMessage.classList.remove('hidden'); // 确保加载动画显示
+                    try {
+                        const fetchedImageUrl = await tryFetchImageWithRetry(imageUrl, 10, 1000);
 
-                // Process the SSE stream
-                await processStream(sessionHash);
-
-                // Update generation info
-                document.getElementById('info-seed').textContent = seed || 'random';
-                document.getElementById('info-resolution').textContent = `${width}x${height}`;
-                document.getElementById('info-guidance').textContent = guidance;
-                document.getElementById('info-steps').textContent = steps;
-                generationInfo.classList.remove('hidden');
-
-            } catch (error) {
-                console.error("Error:", error);
-            } finally {
-                clearInterval(progressInterval);
-                generateBtn.disabled = false;
-                generateBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Image</span>';
-            }
-        }
-
-        async function processStream(sessionHash) {
-            return new Promise((resolve, reject) => {
-                let eventSource = null; // 声明 eventSource 变量
-                let retryTimeout;
-                let reconnectAttempts = 0; // 重连计数器
-                const maxReconnectAttempts = 3; // 最大重连次数
-
-                const startEventSource = () => {
-                    eventSource = new EventSource(`https://stabilityai-stable-diffusion-3-medium.hf.space/queue/data?session_hash=${sessionHash}`);
-
-                    const resetRetryTimeout = () => {
-                        clearTimeout(retryTimeout);
-                        retryTimeout = setTimeout(() => {
-                            console.log("EventSource timeout, closing and retrying...");
-                            eventSource.close();
-                            startEventSource(); // 重新建立 EventSource
-                        }, 30000); // 调整超时时间
-                    };
-
-                    eventSource.addEventListener('open', () => {
-                        console.log('EventSource connected');
-                        reconnectAttempts = 0; // 成功连接后重置计数器
-                        resetRetryTimeout();
-                    });
-
-                    eventSource.addEventListener('message', async (event) => {
-                        resetRetryTimeout();
-
-                        const data = JSON.parse(event.data);
-
-                        if (data.msg === "process_completed") {
-                            const imageUrl = data.output.data[0].url;
-
-                            try {
-                                const fetchedImageUrl = await tryFetchImageWithRetry(imageUrl, 10, 1000);
-
-                                generatedImage.src = fetchedImageUrl;
-                                generatedImage.classList.remove('hidden');
-                                loadingMessage.classList.add('hidden');
-                                downloadBtn.classList.remove('hidden');
-                                copyPromptBtn.classList.remove('hidden');
-                                updateProgress(100);
-                                clearTimeout(retryTimeout);
+                        generatedImage.src = fetchedImageUrl;
+                        generatedImage.onload = () => {
+                            generatedImage.classList.remove('hidden');
+                            loadingMessage.classList.add('hidden');
+                            downloadBtn.classList.remove('hidden');
+                            copyPromptBtn.classList.remove('hidden');
+                            updateProgress(100);
+                            clearTimeout(retryTimeout);
+                            errorMessage.classList.add('hidden'); // 确保成功时错误信息隐藏
+                            if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
                                 eventSource.close();
+                            }
+
+                            if (!resolved) {
                                 resolve(fetchedImageUrl);
-                            } catch (err) {
-                                console.error("Failed to load image after multiple retries:", err);
-                                loadingMessage.classList.add('hidden');
-                                errorMessage.classList.remove('hidden');
-                                clearTimeout(retryTimeout);
+                                resolved = true;
+                            }
+                        };
+
+                        generatedImage.onerror = (err) => {
+                            console.error("Failed to load image after onload:", err);
+                            loadingMessage.classList.add('hidden');
+                            errorMessage.classList.remove('hidden');
+                            clearTimeout(retryTimeout);
+                            if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
                                 eventSource.close();
+                            }
+
+                            if (!resolved) {
                                 reject(err);
+                                resolved = true;
                             }
-                        } else if (data.msg === "estimation" || data.msg === "process_starts" || data.msg === "progress") {
-                            if (data.progress_data && data.progress_data.progress !== undefined) {
-                                updateProgress(data.progress_data.progress * 100);
-                            }
-                        }
-                    });
-
-                    eventSource.addEventListener('error', (error) => {
-                        console.error("EventSource error:", error);
+                        };
+                    } catch (err) {
+                        console.error("Failed to load image after multiple retries:", err);
+                        loadingMessage.classList.add('hidden');
+                        errorMessage.classList.remove('hidden');
                         clearTimeout(retryTimeout);
-                        eventSource.close();
-
-                        if (reconnectAttempts < maxReconnectAttempts) {
-                            reconnectAttempts++;
-                            console.log(`Attempting to reconnect EventSource (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
-                            setTimeout(startEventSource, 3000); // 3秒后尝试重连
-                        } else {
-                            console.warn("Max reconnect attempts reached. Stopping reconnection.");
-                            loadingMessage.classList.add('hidden');
-                            errorMessage.classList.remove('hidden');
-                            reject(new Error("Max reconnect attempts reached.")); // Reject promise
+                        if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
+                            eventSource.close();
                         }
-                    });
 
-                    eventSource.addEventListener('close', () => {
-                        console.log('EventSource closed');
-                        clearTimeout(retryTimeout);
-                        
-                        if (reconnectAttempts < maxReconnectAttempts) {
-                            reconnectAttempts++;
-                            console.log(`Attempting to reconnect EventSource (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
-                            setTimeout(startEventSource, 3000); // 3秒后尝试重连
-                        } else {
-                            console.warn("Max reconnect attempts reached. Stopping reconnection.");
-                            loadingMessage.classList.add('hidden');
-                            errorMessage.classList.remove('hidden');
-                            reject(new Error("Max reconnect attempts reached.")); // Reject promise
+                        if (!resolved) {
+                            reject(err);
+                            resolved = true;
                         }
-                    });
-                };
-
-                startEventSource();
+                    }
+                } else if (data.msg === "estimation" || data.msg === "process_starts" || data.msg === "progress") {
+                    if (data.progress_data && data.progress_data.progress !== undefined) {
+                        updateProgress(data.progress_data.progress * 100);
+                    }
+                }
             });
-        }
 
-        async function tryFetchImageWithRetry(imageUrl, maxRetries, initialDelay) {
-            let attempts = 0;
-            let delay = initialDelay;
-            let cachedImage = localStorage.getItem(imageUrl);
+            const handleErrorOrClose = (event) => {
+                clearTimeout(retryTimeout);
+                if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
+                    eventSource.close();
+                    eventSource = null;
+                }
 
-            if (cachedImage) {
-                generatedImage.src = cachedImage;
-                generatedImage.classList.remove('hidden');
-                loadingMessage.classList.add('hidden');
+                const elapsedTime = Date.now() - startTime;
+                if (elapsedTime >= maxTotalTime || imageUrlFound) {
+                    console.warn("Max total time exceeded or URL found. Stopping generation.");
+                    loadingMessage.classList.add('hidden');
+                    if (!imageUrlFound) {
+                        errorMessage.classList.remove('hidden');
+                    }
+                    if (!resolved) {
+                        reject(new Error("Max total time exceeded or URL found. Generation stopped."));
+                        resolved = true;
+                    }
+                    return;
+                }
+
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    console.log(`Attempting to reconnect EventSource (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
+                    setTimeout(startEventSource, 3000);
+                } else {
+                    console.warn("Max reconnect attempts reached. Stopping reconnection.");
+                    loadingMessage.classList.add('hidden');
+                    errorMessage.classList.remove('hidden');
+                    if (!resolved) {
+                        reject(new Error("Max reconnect attempts reached."));
+                        resolved = true;
+                    }
+                }
+            };
+
+            eventSource.addEventListener('error', handleErrorOrClose);
+            eventSource.addEventListener('close', handleErrorOrClose);
+
+            setTimeout(() => {
+                const elapsedTime = Date.now() - startTime;
+                if (elapsedTime >= maxTotalTime || imageUrlFound) {
+                    console.warn("Max total time exceeded. Stopping generation.");
+                    if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
+                        eventSource.close();
+                    }
+                    loadingMessage.classList.add('hidden');
+                    if (!imageUrlFound && initialConnectionAttempted) {
+                        errorMessage.classList.remove('hidden');
+                    }
+                    if (!resolved) {
+                        reject(new Error("Max total time exceeded. Generation stopped."));
+                        resolved = true;
+                    }
+                }
+            }, maxTotalTime);
+        };
+
+        startEventSource();
+    });
+}
+
+async function tryFetchImageWithRetry(imageUrl, maxRetries, initialDelay) {
+    let attempts = 0;
+    let delay = initialDelay;
+    let cachedImage = localStorage.getItem(imageUrl);
+
+    if (cachedImage) {
+        generatedImage.src = cachedImage;
+        generatedImage.classList.remove('hidden');
+        loadingMessage.classList.add('hidden');
+        downloadBtn.classList.remove('hidden');
+        copyPromptBtn.classList.remove('hidden');
+        updateProgress(100);
+        return cachedImage; // 返回缓存的 URL
+    }
+
+    while (attempts < maxRetries) {
+        try {
+            const response = await fetch(imageUrl);
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const objectURL = URL.createObjectURL(blob);
+                localStorage.setItem(imageUrl, objectURL);
+
+                // 确保在成功加载图片后隐藏 error message
+                if (!errorMessage.classList.contains('hidden')) {
+                    errorMessage.classList.add('hidden');
+                }
+
+                generatedImage.src = objectURL; // 设置图片源
+                generatedImage.classList.remove('hidden'); // 显示图片
+                loadingMessage.classList.add('hidden'); // 隐藏加载信息
                 downloadBtn.classList.remove('hidden');
                 copyPromptBtn.classList.remove('hidden');
                 updateProgress(100);
-                return cachedImage; // 返回缓存的 URL
+
+                return objectURL; // 返回本地URL
+            } else {
+                console.log(`Image fetch failed (attempt ${attempts + 1}/${maxRetries}), status: ${response.status}, retrying in ${delay}ms...`);
             }
-
-            while (attempts < maxRetries) {
-                try {
-                    const response = await fetch(imageUrl);
-
-                    if (response.ok) {
-                        const blob = await response.blob();
-                        const objectURL = URL.createObjectURL(blob);
-                        localStorage.setItem(imageUrl, objectURL);
-                        if (!errorMessage.classList.contains('hidden')) {
-                            errorMessage.classList.add('hidden');
-                        }
-                        return objectURL; // 返回本地URL
-                    } else {
-                        console.log(`Image fetch failed (attempt ${attempts + 1}/${maxRetries}), status: ${response.status}, retrying in ${delay}ms...`);
-                    }
-                } catch (error) {
-                    console.error(`Image fetch failed (attempt ${attempts + 1}/${maxRetries}):`, error, `retrying in ${delay}ms...`);
-                }
-
-                attempts++;
-                await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2; // 指数退避
-            }
-
-            throw new Error("Failed to fetch image after multiple retries.");
+        } catch (error) {
+            console.error(`Image fetch failed (attempt ${attempts + 1}/${maxRetries}):`, error, `retrying in ${delay}ms...`);
         }
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    throw new Error("Failed to fetch image after multiple retries.");
+}
 
         function generateSessionHash() {
             return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -608,8 +684,6 @@
             errorMessage.classList.remove('hidden');
         }
 
-        // Initialize
-        updatePromptCounter();
     </script>
 </body>
 </html>
