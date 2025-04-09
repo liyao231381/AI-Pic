@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stable Diffusion 3 Medium Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg text-gray-100 min-h-screen">
+    <div class="lg:flex lg:h-screen lg:overflow-hidden">
+        <!-- Left Panel - Controls (Mobile: full width, Desktop: 1/4 width) -->
+        <div class="lg:w-1/4 lg:overflow-y-auto lg:border-r lg:border-gray-700 p-4 lg:p-6">
+            <header class="mb-6">
+                <div class="flex items-center justify-center space-x-3 mb-2">
+                    <div class="bg-primary-500 p-2 rounded-lg">
+                        <i class="fas fa-robot text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">Stable Diffusion 3</h1>
+                        <p class="text-gray-400 text-sm">AI Image Generation</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-center space-x-2 text-sm text-primary mb-4">
+                    <button onclick="window.history.back()" class="text-sm text-primary transition flex items-center" title="返回">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                    </button>
+                    |
+                    <a href="./pollinations.html" class="text-sm text-primary transition" title="Pollinations">
+                        <i class="fas fa-seedling mr-2"></i>
+                    </a>
+                    |
+                    <a href="./together.html" class="text-sm text-primary transition" title="together.ai">
+                        <i class="fas fa-exchange-alt mr-2"></i>
+                    </a>
+                    |
+                    <a href="./edit.html" class="text-sm text-primary transition" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </header>
+
+            <div class="space-y-6">
+                <!-- Prompt Section -->
+                <div>
+                    <label for="prompt" class="block text-sm font-medium mb-1 flex items-center">
+                        <i class="fas fa-comment-dots mr-2 text-primary-400"></i>
+                        提示词
+                    </label>
+                    <div class="relative">
+                        <textarea id="prompt" rows="3" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all" placeholder="Describe the image you want to generate..."></textarea>
+                        <div class="absolute bottom-2 right-2 text-xs text-gray-500" id="prompt-counter">0/500</div>
+                    </div>
+                </div>
+
+                <!-- Negative Prompt -->
+                <div>
+                    <label for="negative-prompt" class="block text-sm font-medium mb-1 flex items-center">
+                        <i class="fas fa-ban mr-2 text-red-400"></i>
+                        负面提示词
+                    </label>
+                    <textarea id="negative-prompt" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">bad quality, low quality, deformed, distorted, bad proportions, ugly</textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Seed -->
+                    <div>
+                        <label for="seed" class="block text-sm font-medium mb-1 flex items-center">
+                            <i class="fas fa-seedling mr-2 text-yellow-400"></i>
+                            种子
+                        </label>
+                        <div class="relative">
+                            <input type="number" id="seed" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all" placeholder="Random">
+                            <button onclick="document.getElementById('seed').value = ''" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Resolution -->
+                    <div>
+                        <label for="resolution" class="block text-sm font-medium mb-1 flex items-center">
+                            <i class="fas fa-expand mr-2 text-blue-400"></i>
+                            分辨率
+                        </label>
+                        <select id="resolution" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                            <option value="720x1280">Default 720x1280 (9:16)</option>
+                            <option disabled>──── Square ────</option>
+                            <option value="512x512">512x512 (1:1)</option>
+                            <option value="1024x1024">1024x1024 (1:1)</option>
+                            <option value="1280x1280">1280x1280 (1:1)</option>
+                            <option value="1440x1440">1440x1440 (1:1)</option>
+                            <option value="1600x1600">1600x1600 (1:1)</option>
+                            <option value="1792x1792">1792x1792 (1:1)</option>
+                            <option value="2048x2048">2048x2048 (1:1)</option>
+                            <option disabled>──── Portrait ────</option>
+                            <option value="480x640">480x640 (3:4)</option>
+                            <option value="600x800">600x800 (3:4)</option>
+                            <option value="768x1024">768x1024 (3:4)</option>
+                            <option value="800x1200">800x1200 (3:4)</option>
+                            <option value="960x1280">960x1280 (3:4)</option>
+                            <option value="1080x1440">1080x1440 (3:4)</option>
+                            <option value="1200x1600">1200x1600 (3:4)</option>
+                            <option value="540x960">540x960 (9:16 qHD)</option>
+                            <option value="720x1280">720x1280 (9:16 HD)</option>
+                            <option value="810x1440">810x1440 (9:16 HD+)</option>
+                            <option value="900x1600">900x1600 (9:16 HD+)</option>
+                            <option value="1080x1920">1080x1920 (9:16 FHD)</option>
+                            <option disabled>──── Landscape ────</option>
+                            <option value="640x480">640x480 (4:3 VGA)</option>
+                            <option value="800x600">800x600 (4:3 SVGA)</option>
+                            <option value="1024x768">1024x768 (4:3 XGA)</option>
+                            <option value="1280x960">1280x960 (4:3 QXGA)</option>
+                            <option value="1440x1080">1440x1080 (4:3 QXGA+)</option>
+                            <option value="1600x1200">1600x1200 (4:3 UXGA)</option>
+                            <option value="960x540">960x540 (16:9 qHD)</option>
+                            <option value="1280x720">1280x720 (16:9 HD)</option>
+                            <option value="1440x810">1440x810 (16:9 HD+)</option>
+                            <option value="1600x900">1600x900 (16:9 HD+)</option>
+                            <option value="1920x1080">1920x1080 (16:9 FHD)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Tiling -->
+                    <div>
+                        <label for="tiling" class="block text-sm font-medium mb-1 flex items-center">
+                            <i class="fas fa-border-all mr-2 text-purple-400"></i>
+                            Tiling
+                        </label>
+                        <select id="tiling" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                            <option value="false">Disabled</option>
+                            <option value="true" selected>Enabled</option>
+                        </select>
+                    </div>
+
+                    <!-- Guidance Scale -->
+                    <div>
+                        <label for="guidance" class="block text-sm font-medium mb-1 flex items-center">
+                            <i class="fas fa-sliders-h mr-2 text-green-400"></i>
+                            引导比例
+                        </label>
+                        <div class="flex items-center space-x-2">
+                            <input type="range" id="guidance-range" min="1" max="20" value="5" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            <input type="number" id="guidance" min="1" max="20" value="5" class="w-16 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-center">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Steps -->
+                <div>
+                    <label for="steps" class="block text-sm font-medium mb-1 flex items-center">
+                        <i class="fas fa-footsteps mr-2 text-cyan-400"></i>
+                        步数
+                    </label>
+                    <div class="flex items-center space-x-2">
+                        <input type="range" id="steps-range" min="1" max="50" value="28" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        <input type="number" id="steps" min="1" max="50" value="28" class="w-16 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-center">
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <button id="generate-btn" onclick="generateImage()" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center space-x-2">
+                    <i class="fas fa-magic"></i>
+                    <span>Generate Image</span>
+                </button>
+
+                <!-- Advanced Options Toggle -->
+                <div class="pt-2">
+                    <button id="advanced-toggle" class="text-xs text-gray-400 hover:text-gray-200 flex items-center space-x-1">
+                        <i class="fas fa-cog"></i>
+                        <span>Advanced Options</span>
+                        <i class="fas fa-chevron-down text-xs ml-1 transition-transform duration-200"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Results (Mobile: below controls, Desktop: 3/4 width) -->
+        <div class="lg:w-3/4 lg:overflow-y-auto p-4 lg:p-6">
+            <div class="bg-gray-800/50 rounded-xl border border-gray-700 p-4 lg:p-6 h-full min-h-[400px] lg:min-h-[calc(100vh-48px)] flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-medium flex items-center">
+                        <i class="fas fa-image mr-2 text-primary-400"></i>
+                        Generated Image
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button id="download-btn" class="hidden bg-gray-700 hover:bg-gray-600 text-white text-sm py-1 px-3 rounded-lg transition-all flex items-center space-x-1">
+                            <i class="fas fa-download"></i>
+                            <span>Download</span>
+                        </button>
+                        <button id="copy-prompt-btn" class="hidden bg-gray-700 hover:bg-gray-600 text-white text-sm py-1 px-3 rounded-lg transition-all flex items-center space-x-1">
+                            <i class="fas fa-copy"></i>
+                            <span>Copy Prompt</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Image Container -->
+                <div id="image-container" class="flex-1 flex items-center justify-center rounded-lg bg-gray-900/50 border-2 border-dashed border-gray-700 relative overflow-hidden">
+                    <div id="loading-message" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-10">
+                        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+                        <p class="text-lg font-medium">Generating your image...</p>
+                        <p class="text-sm text-gray-400 mt-1">This may take a few moments</p>
+                        <div class="w-full max-w-xs bg-gray-700 rounded-full h-1.5 mt-4">
+                            <div id="progress-bar" class="bg-primary-500 h-1.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div id="error-message" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-10 p-4 text-center">
+                        <div class="bg-red-500/20 p-3 rounded-full mb-3">
+                            <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                        </div>
+                        <p class="text-lg font-medium text-red-400">Error Generating Image</p>
+                        <p class="text-sm text-gray-300 mt-1">Please check your prompt and try again</p>
+                        <button onclick="document.getElementById('error-message').classList.add('hidden')" class="mt-4 text-sm bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-all">
+                            <i class="fas fa-redo mr-1"></i> Try Again
+                        </button>
+                    </div>
+
+                    <div id="placeholder" class="text-center p-6">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-800 mb-4">
+                            <i class="fas fa-image text-gray-500 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-300">No image generated yet</h3>
+                        <p class="mt-1 text-sm text-gray-500">Enter a prompt and click "Generate Image" to create your first artwork</p>
+                    </div>
+
+                    <img id="generated-image" class="hidden w-full h-full object-contain rounded-lg" src="" alt="Generated Image">
+                </div>
+
+                <!-- Generation Info -->
+                <div id="generation-info" class="hidden mt-4 text-xs text-gray-400 space-y-1">
+                    <div class="flex justify-between">
+                        <span>Seed: <span id="info-seed" class="font-mono">-</span></span>
+                        <span>Resolution: <span id="info-resolution" class="font-mono">-</span></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Guidance: <span id="info-guidance" class="font-mono">-</span></span>
+                        <span>Steps: <span id="info-steps" class="font-mono">-</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const promptTextarea = document.getElementById('prompt');
+        const promptCounter = document.getElementById('prompt-counter');
+        const guidanceRange = document.getElementById('guidance-range');
+        const guidanceInput = document.getElementById('guidance');
+        const stepsRange = document.getElementById('steps-range');
+        const stepsInput = document.getElementById('steps');
+        const generateBtn = document.getElementById('generate-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const copyPromptBtn = document.getElementById('copy-prompt-btn');
+        const imageContainer = document.getElementById('image-container');
+        const generatedImage = document.getElementById('generated-image');
+        const placeholder = document.getElementById('placeholder');
+        const loadingMessage = document.getElementById('loading-message');
+        const errorMessage = document.getElementById('error-message');
+        const generationInfo = document.getElementById('generation-info');
+        const progressBar = document.getElementById('progress-bar');
+
+        // Event Listeners
+        promptTextarea.addEventListener('input', updatePromptCounter);
+        guidanceRange.addEventListener('input', syncGuidanceInputs);
+        guidanceInput.addEventListener('input', syncGuidanceInputs);
+        stepsRange.addEventListener('input', syncStepsInputs);
+        stepsInput.addEventListener('input', syncStepsInputs);
+        downloadBtn.addEventListener('click', downloadImage);
+        copyPromptBtn.addEventListener('click', copyPrompt);
+
+        // Functions
+        function updatePromptCounter() {
+            const length = promptTextarea.value.length;
+            promptCounter.textContent = `${length}/500`;
+            if (length > 500) {
+                promptCounter.classList.add('text-red-400');
+            } else {
+                promptCounter.classList.remove('text-red-400');
+            }
+        }
+
+        function syncGuidanceInputs(e) {
+            if (e.target.id === 'guidance-range') {
+                guidanceInput.value = e.target.value;
+            } else {
+                guidanceRange.value = e.target.value;
+            }
+        }
+
+        function syncStepsInputs(e) {
+            if (e.target.id === 'steps-range') {
+                stepsInput.value = e.target.value;
+            } else {
+                stepsRange.value = e.target.value;
+            }
+        }
+
+        function downloadImage() {
+            if (!generatedImage.src) return;
+            
+            const link = document.createElement('a');
+            link.href = generatedImage.src;
+            const promptText = promptTextarea.value.substring(0, 20).replace(/\s+/g, '_');
+            link.download = `sd3_${promptText || 'image'}_${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function copyPrompt() {
+            if (!promptTextarea.value) return;
+            
+            navigator.clipboard.writeText(promptTextarea.value).then(() => {
+                const originalText = copyPromptBtn.innerHTML;
+                copyPromptBtn.innerHTML = '<i class="fas fa-check"></i> <span>Copied!</span>';
+                setTimeout(() => {
+                    copyPromptBtn.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+
+        function updateProgress(progress) {
+            progressBar.style.width = `${progress}%`;
+        }
+
+        async function generateImage() {
+            const prompt = promptTextarea.value.trim();
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
+
+            // UI State Updates
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> <span>Generating...</span>';
+            placeholder.classList.add('hidden');
+            generatedImage.classList.add('hidden');
+            loadingMessage.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+            generationInfo.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+            copyPromptBtn.classList.add('hidden');
+
+            // Simulate progress (in a real app, you'd get this from the API)
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 5;
+                if (progress > 95) progress = 95;
+                updateProgress(progress);
+            }, 500);
+
+            try {
+                const negativePrompt = document.getElementById("negative-prompt").value;
+                const seed = document.getElementById("seed").value === "" ? null : parseInt(document.getElementById("seed").value);
+                const resolution = document.getElementById("resolution").value;
+                const [width, height] = resolution.split("x").map(Number);
+                const tiling = document.getElementById("tiling").value === "true";
+                const guidance = parseInt(guidanceInput.value);
+                const steps = parseInt(stepsInput.value);
+
+                // Generate a new session hash for each request
+                const sessionHash = generateSessionHash();
+
+                const firstResponse = await fetch('https://stabilityai-stable-diffusion-3-medium.hf.space/queue/join', {
+                    method: 'POST',
+                    headers: {
+                        'authority': 'stabilityai-stable-diffusion-3-medium.hf.space',
+                        'accept': 'application/json',
+                        'content-type': 'application/json',
+                        'origin': 'https://stabledifffusion.com',
+                        'priority': 'u=1, i',
+                        'referer': 'https://stabledifffusion.com/',
+                        'sec-fetch-dest': 'empty',
+                        'sec-fetch-mode': 'cors',
+                        'sec-fetch-site': 'cross-site',
+                        'user-agent': navigator.userAgent
+                    },
+                    body: JSON.stringify({
+                        "data": [prompt, negativePrompt, seed, tiling, width, height, guidance, steps],
+                        "event_data": null,
+                        "fn_index": 1,
+                        "trigger_id": 5,
+                        "session_hash": sessionHash
+                    })
+                });
+
+                if (!firstResponse.ok) {
+                    throw new Error(`HTTP error! status: ${firstResponse.status}`);
+                }
+
+                const firstResponseData = await firstResponse.json();
+                const eventId = firstResponseData.event_id;
+
+                // Process the SSE stream
+                await processStream(sessionHash);
+
+                // Update generation info
+                document.getElementById('info-seed').textContent = seed || 'random';
+                document.getElementById('info-resolution').textContent = `${width}x${height}`;
+                document.getElementById('info-guidance').textContent = guidance;
+                document.getElementById('info-steps').textContent = steps;
+                generationInfo.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Error:", error);
+                loadingMessage.classList.add('hidden');
+                errorMessage.classList.remove('hidden');
+            } finally {
+                clearInterval(progressInterval);
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Image</span>';
+            }
+        }
+
+        async function processStream(sessionHash) {
+            return new Promise((resolve, reject) => {
+                const eventSource = new EventSource(`https://stabilityai-stable-diffusion-3-medium.hf.space/queue/data?session_hash=${sessionHash}`);
+
+                eventSource.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+
+                    if (data.msg === "process_completed") {
+                        const imageUrl = data.output.data[0].url;
+
+                        tryFetchImageWithRetry(imageUrl, 10, 1000)
+                            .then(fetchedImageUrl => {
+                                generatedImage.src = fetchedImageUrl;
+                                generatedImage.classList.remove('hidden');
+                                loadingMessage.classList.add('hidden');
+                                downloadBtn.classList.remove('hidden');
+                                copyPromptBtn.classList.remove('hidden');
+                                updateProgress(100);
+                                eventSource.close();
+                                resolve(fetchedImageUrl);
+                            })
+                            .catch(err => {
+                                console.error("Failed to load image after multiple retries:", err);
+                                loadingMessage.classList.add('hidden');
+                                errorMessage.classList.remove('hidden');
+                                eventSource.close();
+                                reject(err);
+                            });
+                    } else if (data.msg === "estimation" || data.msg === "process_starts" || data.msg === "progress") {
+                        // Update progress based on actual API progress if available
+                        if (data.progress_data && data.progress_data.progress !== undefined) {
+                            updateProgress(data.progress_data.progress * 100);
+                        }
+                    }
+                };
+
+                eventSource.onerror = (error) => {
+                    console.error("EventSource error:", error);
+                    loadingMessage.classList.add('hidden');
+                    errorMessage.classList.remove('hidden');
+                    eventSource.close();
+                    reject(error);
+                };
+            });
+        }
+
+        async function tryFetchImageWithRetry(imageUrl, maxRetries, delay) {
+            let attempts = 0;
+
+            while (attempts < maxRetries) {
+                try {
+                    const response = await fetch(imageUrl, { method: 'HEAD' });
+
+                    if (response.ok) {
+                        // Image loaded successfully!  Remove the error message if it's showing.
+                        if (!errorMessage.classList.contains('hidden')) {
+                            errorMessage.classList.add('hidden');
+                        }
+                        return imageUrl;
+                    } else {
+                        console.log(`Image fetch failed (attempt ${attempts + 1}/${maxRetries}), status: ${response.status}, retrying in ${delay}ms...`);
+                    }
+                } catch (error) {
+                    console.error(`Image fetch failed (attempt ${attempts + 1}/${maxRetries}):`, error, `retrying in ${delay}ms...`);
+                }
+
+                attempts++;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+
+            throw new Error("Failed to fetch image after multiple retries.");
+        }
+
+        function generateSessionHash() {
+            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+
+        // Initialize
+        updatePromptCounter();
+    </script>
+</body>
+</html>
