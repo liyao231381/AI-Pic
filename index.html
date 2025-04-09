@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 图像生成器 - Tailwind</title>
+    <title>AI 图像生成器 | SiliconFlow</title>
     <!-- Include Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,line-clamp"></script>
     <!-- Font Awesome for icons -->
@@ -787,8 +787,6 @@
       document.getElementById('generatedImage').src = item.imageData; // Use Base64
       // Enable the download button
       document.getElementById('downloadButton').disabled = false;
-      // Reset filename input
-      document.getElementById('filenameInput').value = '';
       showNotification("已从历史记录填入");
 
       // Ensure the correct guidance scale is set based on the populated model
