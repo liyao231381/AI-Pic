@@ -631,7 +631,6 @@
             errorMessage.classList.add('hidden');
             generationInfo.classList.add('hidden');
             downloadBtn.classList.add('hidden');
-            copyPromptBtn.classList.add('hidden');
 
             // Simulate progress (in a real app, you'd get this from the API)
             let progress = 0;
@@ -769,7 +768,6 @@
                             generatedImage.classList.remove('hidden');
                             loadingMessage.classList.add('hidden');
                             downloadBtn.classList.remove('hidden');
-                            copyPromptBtn.classList.remove('hidden');
                             updateProgress(100);
                             clearTimeout(retryTimeout);
                             errorMessage.classList.add('hidden'); // 确保成功时错误信息隐藏
@@ -930,7 +928,6 @@ async function tryFetchImageWithRetry(imageUrl, maxRetries, initialDelay) {
                 generatedImage.classList.remove('hidden'); // 显示图片
                 loadingMessage.classList.add('hidden'); // 隐藏加载信息
                 downloadBtn.classList.remove('hidden');
-                copyPromptBtn.classList.remove('hidden');
                 updateProgress(100);
 
                 return objectURL; // 返回本地URL
