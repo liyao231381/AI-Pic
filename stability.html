@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,30 +33,45 @@
         .gradient-bg {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         }
+
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
         }
+
         .scrollbar-hide {
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+
         .animate-pulse {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
+
         @keyframes pulse {
-            0%, 100% {
+            0%,
+            100% {
                 opacity: 1;
             }
+
             50% {
                 opacity: 0.5;
             }
         }
+        .truncate-2-lines {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* number of lines to show */
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
     </style>
 </head>
+
 <body class="gradient-bg text-gray-100 min-h-screen">
-    <div class="lg:flex lg:h-screen lg:overflow-hidden">
+    <div class="md:flex md:h-screen md:overflow-hidden">
         <!-- Left Panel - Controls (Mobile: full width, Desktop: 1/4 width) -->
-        <div class="lg:w-1/4 lg:overflow-y-auto lg:border-r lg:border-gray-700 p-4 lg:p-6">
+        <div class="md:w-1/4 md:overflow-y-auto md:border-r md:border-gray-700 p-4">
             <header class="mb-6">
                 <div class="flex items-center justify-center space-x-3 mb-2">
                     <div class="bg-primary-500 p-2 rounded-lg">
@@ -67,7 +83,8 @@
                     </div>
                 </div>
                 <div class="flex items-center justify-center space-x-2 text-sm text-primary mb-4">
-                    <button onclick="window.history.back()" class="text-sm text-primary transition flex items-center" title="返回">
+                    <button onclick="window.history.back()" class="text-sm text-primary transition flex items-center"
+                        title="返回">
                         <i class="fas fa-arrow-left mr-2"></i>
                     </button>
                     <a href="./pollinations.html" class="text-sm text-primary transition" title="Pollinations">
@@ -84,14 +101,27 @@
 
             <div class="space-y-6">
                 <!-- Prompt Section -->
-                <div>
-                    <label for="prompt" class="block text-sm font-medium mb-1 flex items-center">
-                        <i class="fas fa-comment-dots mr-2 text-primary-400"></i>
-                        提示词
-                    </label>
-                    <div class="relative">
-                        <textarea id="prompt" rows="3" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all" placeholder="Describe the image you want to generate..."></textarea>
+                <div class="flex flex-col items-center">
+                    <div class="w-full">
+                        <label for="prompt" class="block text-sm font-medium mb-1 flex items-center">
+                            <i class="fas fa-comment-dots mr-2 text-primary-400"></i>
+                            提示词
+                        </label>
+                        <textarea id="prompt" rows="3"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                            placeholder="Describe the image you want to generate..."></textarea>
                     </div>
+                    <div class="flex space-x-2 mt-2">
+                        <button onclick="pasteText()" class="bg-blue-900 hover:bg-blue-600 text-white text-sm py-1 px-3 rounded-md transition-all flex items-center space-x-1">
+                            <i class="fas fa-paste"></i><span class="hidden xl:inline ml-2">粘贴</span>
+                        </button>
+                        <button onclick="copyText()" class="bg-gray-700 hover:bg-gray-600 text-white text-sm py-1 px-3 rounded-md transition-all flex items-center space-x-1" id="copy-prompt-btn">
+                            <i class="fas fa-copy"></i><span class="hidden xl:inline ml-2">复制</span>
+                        </button>
+                        <button onclick="clearAll()" class="bg-red-900 hover:bg-red-600 text-white text-sm py-1 px-3 rounded-md transition-all flex items-center space-x-1">
+                            <i class="fas fa-trash-alt"></i><span class="hidden xl:inline ml-2">清除</span>
+                        </button>
+                    </div>   
                 </div>
 
                 <!-- Negative Prompt -->
@@ -100,7 +130,8 @@
                         <i class="fas fa-ban mr-2 text-red-400"></i>
                         负面提示词
                     </label>
-                    <textarea id="negative-prompt" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">bad quality, low quality, deformed, distorted, bad proportions, ugly</textarea>
+                    <textarea id="negative-prompt" rows="2"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">bad quality, low quality, deformed, distorted, bad proportions, ugly</textarea>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -111,8 +142,11 @@
                             种子
                         </label>
                         <div class="relative">
-                            <input type="number" id="seed" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all" placeholder="Random">
-                            <button onclick="document.getElementById('seed').value = ''" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                            <input type="number" id="seed"
+                                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                                placeholder="Random">
+                            <button onclick="document.getElementById('seed').value = ''"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -124,7 +158,8 @@
                             <i class="fas fa-expand mr-2 text-blue-400"></i>
                             分辨率
                         </label>
-                        <select id="resolution" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                        <select id="resolution"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
                             <option value="720x1280">Default 720x1280 (9:16)</option>
                             <option disabled>──── Square ────</option>
                             <option value="512x512">512x512 (1:1)</option>
@@ -170,7 +205,8 @@
                             <i class="fas fa-border-all mr-2 text-purple-400"></i>
                             Tiling
                         </label>
-                        <select id="tiling" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                        <select id="tiling"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
                             <option value="false">Disabled</option>
                             <option value="true" selected>Enabled</option>
                         </select>
@@ -183,8 +219,10 @@
                             引导比例
                         </label>
                         <div class="flex items-center space-x-2">
-                            <input type="range" id="guidance-range" min="1" max="20" value="5" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                            <input type="number" id="guidance" min="1" max="20" value="5" class="w-16 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-center">
+                            <input type="range" id="guidance-range" min="1" max="20" value="5"
+                                class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            <input type="number" id="guidance" min="1" max="20" value="5"
+                                class="w-16 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-center">
                         </div>
                     </div>
                 </div>
@@ -196,20 +234,24 @@
                         步数
                     </label>
                     <div class="flex items-center space-x-2">
-                        <input type="range" id="steps-range" min="1" max="50" value="28" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                        <input type="number" id="steps" min="1" max="50" value="28" class="w-16 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-center">
+                        <input type="range" id="steps-range" min="1" max="50" value="28"
+                            class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        <input type="number" id="steps" min="1" max="50" value="28"
+                            class="w-16 bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-sm text-center">
                     </div>
                 </div>
 
                 <!-- Generate Button -->
-                <button id="generate-btn" onclick="generateImage()" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center space-x-2">
+                <button id="generate-btn" onclick="generateImage()"
+                    class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center space-x-2">
                     <i class="fas fa-magic"></i>
-                    <span>Generate Image</span>
+                    <span>生成图片</span>
                 </button>
 
                 <!-- Advanced Options Toggle -->
                 <div class="pt-2">
-                    <button id="advanced-toggle" class="text-xs text-gray-400 hover:text-gray-200 flex items-center space-x-1">
+                    <button id="advanced-toggle"
+                        class="text-xs text-gray-400 hover:text-gray-200 flex items-center space-x-1">
                         <i class="fas fa-cog"></i>
                         <span>Advanced Options</span>
                         <i class="fas fa-chevron-down text-xs ml-1 transition-transform duration-200"></i>
@@ -218,30 +260,18 @@
             </div>
         </div>
 
-        <!-- Right Panel - Results (Mobile: below controls, Desktop: 3/4 width) -->
-        <div class="lg:w-3/4 lg:overflow-y-auto p-4 lg:p-6">
-            <div class="bg-gray-800/50 rounded-xl border border-gray-700 p-4 lg:p-6 h-full min-h-[400px] lg:min-h-[calc(100vh-48px)] flex flex-col">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-medium flex items-center">
-                        <i class="fas fa-image mr-2 text-primary-400"></i>
-                        Generated Image
-                    </h2>
-                    <div class="flex space-x-2">
-                        <button id="download-btn" class="hidden bg-gray-700 hover:bg-gray-600 text-white text-sm py-1 px-3 rounded-lg transition-all flex items-center space-x-1">
-                            <i class="fas fa-download"></i>
-                            <span>Download</span>
-                        </button>
-                        <button id="copy-prompt-btn" class="hidden bg-gray-700 hover:bg-gray-600 text-white text-sm py-1 px-3 rounded-lg transition-all flex items-center space-x-1">
-                            <i class="fas fa-copy"></i>
-                            <span>Copy Prompt</span>
-                        </button>
-                    </div>
-                </div>
+        <!-- Right Panel - Results (Mobile: below controls, Desktop: 1/2 width) -->
+        <div class="md:w-1/2 md:overflow-y-auto p-4">
+            <div
+                class="bg-gray-800/50 rounded-xl border border-gray-700 p-4 h-full min-h-[400px] md:min-h-[calc(100vh-48px)] flex flex-col">
 
                 <!-- Image Container -->
-                <div id="image-container" class="flex-1 flex items-center justify-center rounded-lg bg-gray-900/50 border-2 border-dashed border-gray-700 relative overflow-hidden">
-                    <div id="loading-message" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-10">
-                        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+                <div id="image-container"
+                    class="flex-1 flex items-center justify-center rounded-lg bg-gray-900/50 border-2 border-dashed border-gray-700 relative overflow-hidden">
+                    <div id="loading-message"
+                        class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-10">
+                        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4">
+                        </div>
                         <p class="text-lg font-medium">Generating your image...</p>
                         <p class="text-sm text-gray-400 mt-1">This may take a few moments</p>
                         <div class="w-full max-w-xs bg-gray-700 rounded-full h-1.5 mt-4">
@@ -249,13 +279,15 @@
                         </div>
                     </div>
 
-                    <div id="error-message" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-10 p-4 text-center">
+                    <div id="error-message"
+                        class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-10 p-4 text-center">
                         <div class="bg-red-500/20 p-3 rounded-full mb-3">
                             <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
                         </div>
                         <p class="text-lg font-medium text-red-400">Error Generating Image</p>
                         <p class="text-sm text-gray-300 mt-1">Please check your prompt and try again</p>
-                        <button onclick="document.getElementById('error-message').classList.add('hidden')" class="mt-4 text-sm bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-all">
+                        <button onclick="document.getElementById('error-message').classList.add('hidden')"
+                            class="mt-4 text-sm bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-all">
                             <i class="fas fa-redo mr-1"></i> Try Again
                         </button>
                     </div>
@@ -265,10 +297,12 @@
                             <i class="fas fa-image text-gray-500 text-xl"></i>
                         </div>
                         <h3 class="text-lg font-medium text-gray-300">No image generated yet</h3>
-                        <p class="mt-1 text-sm text-gray-500">Enter a prompt and click "Generate Image" to create your first artwork</p>
+                        <p class="mt-1 text-sm text-gray-500">Enter a prompt and click "Generate Image" to create
+                            your first artwork</p>
                     </div>
 
-                    <img id="generated-image" class="hidden w-full h-full object-contain rounded-lg" alt="Generated Image" onerror="handleImageError()">
+                    <img id="generated-image" class="hidden w-full h-full object-contain rounded-lg"
+                        alt="Generated Image" onerror="handleImageError()">
                 </div>
 
                 <!-- Generation Info -->
@@ -282,6 +316,26 @@
                         <span>Steps: <span id="info-steps" class="font-mono">-</span></span>
                     </div>
                 </div>
+                <div class="flex justify-center items-center mt-4">
+                    <div class="flex">
+                        <input type="text" id="filenameInput" placeholder="自定义文件名"
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-black">
+                        <button onclick="downloadImage()"
+                                id="download-btn"
+                                class="bg-gray-400 hover:bg-orange-400 text-white font-bold py-2 px-4 rounded-r-md shadow-sm transition-colors flex items-center">
+                            <i class="fas fa-download mr-2"></i>
+                            <span>下载</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Panel (Desktop: 1/4 width, always visible on desktop) -->
+        <div class="md:w-1/4 md:overflow-y-auto md:border-l md:border-gray-700 p-4">
+            <h2 class="text-lg font-medium mb-4">历史记录</h2>
+            <div id="history-container" class="space-y-4">
+                <!-- History items will be rendered here -->
             </div>
         </div>
     </div>
@@ -289,6 +343,10 @@
     <script>
         // DOM Elements
         const promptTextarea = document.getElementById('prompt');
+        const negativePromptTextarea = document.getElementById('negative-prompt');
+        const seedInput = document.getElementById('seed');
+        const resolutionSelect = document.getElementById('resolution');
+        const tilingSelect = document.getElementById('tiling');
         const guidanceRange = document.getElementById('guidance-range');
         const guidanceInput = document.getElementById('guidance');
         const stepsRange = document.getElementById('steps-range');
@@ -303,15 +361,204 @@
         const errorMessage = document.getElementById('error-message');
         const generationInfo = document.getElementById('generation-info');
         const progressBar = document.getElementById('progress-bar');
+        const historyContainer = document.getElementById('history-container');
 
         // Event Listeners
         guidanceRange.addEventListener('input', syncGuidanceInputs);
         guidanceInput.addEventListener('input', syncGuidanceInputs);
         stepsRange.addEventListener('input', syncStepsInputs);
         stepsInput.addEventListener('input', syncStepsInputs);
-        downloadBtn.addEventListener('click', downloadImage);
         copyPromptBtn.addEventListener('click', copyPrompt);
 
+        //IndexDB
+        let db;
+
+        // Initialize IndexedDB
+        const openDB = () => {
+            return new Promise((resolve, reject) => {
+                if (!('indexedDB' in window)) {
+                    console.error('This browser doesn\'t support IndexedDB');
+                    reject('IndexedDB not supported');
+                    alert("您的浏览器不支持 IndexDB，历史记录功能无法使用。");
+                    return;
+                }
+
+                const request = indexedDB.open('SDImageHistoryDB', 1);
+
+                request.onerror = (event) => {
+                    console.error("Database open error:", event);
+                    console.error("Error details:", event.target.error); // 详细错误信息
+                    reject(event);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    const objectStore = db.createObjectStore('history', {
+                        keyPath: 'id',
+                        autoIncrement: true
+                    });
+                    objectStore.createIndex('timestamp', 'timestamp', {
+                        unique: false
+                    });
+                    console.log("Database setup completed");
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log("Database opened successfully");
+                    resolve(db);
+                };
+            });
+        };
+
+        const addToHistory = (params, imageBase64) => {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['history'], 'readwrite');
+                const objectStore = transaction.objectStore('history');
+
+                const historyItem = {
+                    params: params,
+                    imageBase64: imageBase64, // 保存 base64 字符串
+                    timestamp: new Date().getTime()
+                };
+
+                const request = objectStore.add(historyItem);
+
+                request.onsuccess = () => {
+                    console.log('Added to history', historyItem);
+                    resolve();
+                };
+
+                request.onerror = (event) => {
+                    console.error("Error adding to history:", event);
+                    reject(event);
+                };
+            });
+        };
+
+        const loadHistory = () => {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['history'], 'readonly');
+                const objectStore = transaction.objectStore('history');
+                const request = objectStore.getAll();
+
+                request.onsuccess = (event) => {
+                    const history = event.target.result;
+                    resolve(history);
+                };
+
+                request.onerror = (event) => {
+                    console.error("Error loading history:", event);
+                    reject(event);
+                };
+            });
+        };
+
+        const deleteHistoryItem = (id) => {
+            const transaction = db.transaction(['history'], 'readwrite');
+            const objectStore = transaction.objectStore('history');
+            const request = objectStore.delete(id);
+
+            request.onsuccess = () => {
+                console.log('Deleted from history', id);
+                // Refresh the history display
+                loadHistory().then(history => displayHistory(history));
+            };
+
+            request.onerror = (event) => {
+                console.error("Error deleting from history:", event);
+            };
+        };
+
+        const displayHistory = (history) => {
+            historyContainer.innerHTML = ''; // Clear existing history
+
+            history.sort((a, b) => b.timestamp - a.timestamp);
+
+            history.forEach(item => {
+                const historyItemDiv = document.createElement('div');
+                historyItemDiv.className =
+                    'bg-gray-800 rounded-lg p-4 flex items-center space-x-4 hover:bg-gray-700 transition-colors cursor-pointer relative'; // Add 'relative'
+                historyItemDiv.onclick = () => loadFromHistory(item);
+
+                const imagePreview = document.createElement('img');
+                imagePreview.src = item.imageBase64;
+                imagePreview.alt = 'History Image';
+                imagePreview.className = 'w-20 h-20 object-cover rounded-lg';
+
+                const textContainer = document.createElement('div');
+                textContainer.className = 'flex-1 min-w-0';
+
+                const promptText = document.createElement('p');
+                promptText.textContent = item.params.prompt;
+                promptText.className = 'text-sm font-medium text-gray-300 truncate-2-lines';
+
+                const timeText = document.createElement('p');
+                const date = new Date(item.timestamp);
+                const now = new Date();
+                const diff = now.getTime() - date.getTime();
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+
+                let timeDisplay;
+                if (days > 0) {
+                    timeDisplay = date.toLocaleDateString();
+                } else if (hours > 0) {
+                    timeDisplay = `${hours} 小时 ${minutes % 60} 分钟前`;
+                } else {
+                    timeDisplay = `${minutes} 分钟前`;
+                }
+                timeText.textContent = timeDisplay;
+                timeText.className = 'text-xs text-gray-500';
+
+                textContainer.appendChild(promptText);
+                textContainer.appendChild(timeText);
+
+                historyItemDiv.appendChild(imagePreview);
+                historyItemDiv.appendChild(textContainer);
+
+                // Delete Button
+                const deleteButton = document.createElement('button');
+                deleteButton.className =
+                    'absolute top-2 right-2 text-gray-500 hover:text-red-500 transition-colors';
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i>'; // Use trash icon for delete
+                deleteButton.onclick = (event) => {
+                    event.stopPropagation(); // Prevent history item click
+                    deleteHistoryItem(item.id);
+                };
+                historyItemDiv.appendChild(deleteButton);
+
+                historyContainer.appendChild(historyItemDiv);
+            });
+        };
+
+        const loadFromHistory = (item) => {
+            // Load parameters
+            promptTextarea.value = item.params.prompt;
+            negativePromptTextarea.value = item.params.negativePrompt;
+            seedInput.value = item.params.seed || '';
+            resolutionSelect.value = item.params.resolution;
+            tilingSelect.value = item.params.tiling;
+            guidanceRange.value = item.params.guidance;
+            guidanceInput.value = item.params.guidance;
+            stepsRange.value = item.params.steps;
+            stepsInput.value = item.params.steps;
+
+            // Display image
+            generatedImage.src = item.imageBase64; // 使用保存的 base64 字符串
+            generatedImage.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            downloadBtn.classList.remove('hidden');
+            generationInfo.classList.remove('hidden');
+
+            // Update generation info
+            const [width, height] = item.params.resolution.split("x").map(Number);
+            document.getElementById('info-seed').textContent = item.params.seed || 'random';
+            document.getElementById('info-resolution').textContent = `${width}x${height}`;
+            document.getElementById('info-guidance').textContent = item.params.guidance;
+            document.getElementById('info-steps').textContent = item.params.steps;
+        };
 
         function syncGuidanceInputs(e) {
             if (e.target.id === 'guidance-range') {
@@ -331,11 +578,22 @@
 
         function downloadImage() {
             if (!generatedImage.src) return;
-            
+
+            // 生成默认文件名
+            let defaultFilename = `image-sd3-${Date.now()}`;
+            const promptText = promptTextarea.value.trim();
+            if (promptText) {
+                defaultFilename = promptText.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 30);
+            } else {
+                defaultFilename = `image-sd3-${Date.now()}`;
+            }
+
+            // 使用用户输入的文件名，如果存在，否则使用默认文件名
+            const filename = document.getElementById('filenameInput').value.trim() !== '' ? document.getElementById('filenameInput').value.trim() : defaultFilename;
+
             const link = document.createElement('a');
             link.href = generatedImage.src;
-            const promptText = promptTextarea.value.substring(0, 20).replace(/\s+/g, '_');
-            link.download = `sd3_${promptText || 'image'}_${Date.now()}.png`;
+            link.download = `${filename}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -343,10 +601,10 @@
 
         function copyPrompt() {
             if (!promptTextarea.value) return;
-            
+
             navigator.clipboard.writeText(promptTextarea.value).then(() => {
                 const originalText = copyPromptBtn.innerHTML;
-                copyPromptBtn.innerHTML = '<i class="fas fa-check"></i> <span>Copied!</span>';
+                copyPromptBtn.innerHTML = '<i class="fas fa-check"></i> <span>已复制</span>';
                 setTimeout(() => {
                     copyPromptBtn.innerHTML = originalText;
                 }, 2000);
@@ -358,117 +616,115 @@
         }
 
         async function generateImage() {
-    const prompt = promptTextarea.value.trim();
-    if (!prompt) {
-        alert('Please enter a prompt');
-        return;
-    }
+            const prompt = promptTextarea.value.trim();
+            if (!prompt) {
+                alert('Please enter a prompt');
+                return;
+            }
 
-    // UI State Updates
-    generateBtn.disabled = true;
-    generateBtn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> <span>Generating...</span>';
-    placeholder.classList.add('hidden');
-    generatedImage.classList.add('hidden');
-    loadingMessage.classList.remove('hidden');
-    errorMessage.classList.add('hidden');
-    generationInfo.classList.add('hidden');
-    downloadBtn.classList.add('hidden');
-    copyPromptBtn.classList.add('hidden');
+            // UI State Updates
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> <span>Generating...</span>';
+            placeholder.classList.add('hidden');
+            generatedImage.classList.add('hidden');
+            loadingMessage.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+            generationInfo.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+            copyPromptBtn.classList.add('hidden');
 
-    // Simulate progress (in a real app, you'd get this from the API)
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += Math.random() * 5;
-        if (progress > 95) progress = 95;
-        updateProgress(progress);
-    }, 500);
+            // Simulate progress (in a real app, you'd get this from the API)
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 5;
+                if (progress > 95) progress = 95;
+                updateProgress(progress);
+            }, 500);
 
-    try {
-        const negativePrompt = document.getElementById("negative-prompt").value;
-        const seed = document.getElementById("seed").value === "" ? null : parseInt(document.getElementById("seed").value);
-        const resolution = document.getElementById("resolution").value;
-        const [width, height] = resolution.split("x").map(Number);
-        const tiling = document.getElementById("tiling").value === "true";
-        const guidance = parseInt(guidanceInput.value);
-        const steps = parseInt(stepsInput.value);
+            try {
+                const negativePrompt = document.getElementById("negative-prompt").value;
+                const seed = document.getElementById("seed").value === "" ? null : parseInt(document.getElementById("seed").value);
+                const resolution = document.getElementById("resolution").value;
+                const [width, height] = resolution.split("x").map(Number);
+                const tiling = document.getElementById("tiling").value === "true";
+                const guidance = parseInt(guidanceInput.value);
+                const steps = parseInt(stepsInput.value);
 
-        // Generate a new session hash for each request
-        const sessionHash = generateSessionHash();
+                // Generate a new session hash for each request
+                const sessionHash = generateSessionHash();
 
-        const firstResponse = await fetch('https://stabilityai-stable-diffusion-3-medium.hf.space/queue/join', {
-            method: 'POST',
-            headers: {
-                'authority': 'stabilityai-stable-diffusion-3-medium.hf.space',
-                'accept': 'application/json',
-                'content-type': 'application/json',
-                'origin': 'https://stabledifffusion.com',
-                'priority': 'u=1, i',
-                'referer': 'https://stabledifffusion.com/',
-                'sec-fetch-dest': 'empty',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-site': 'cross-site',
-                'user-agent': navigator.userAgent
-            },
-            body: JSON.stringify({
-                "data": [prompt, negativePrompt, seed, tiling, width, height, guidance, steps],
-                "event_data": null,
-                "fn_index": 1,
-                "trigger_id": 5,
-                "session_hash": sessionHash
-            })
-        });
+                const firstResponse = await fetch('https://stabilityai-stable-diffusion-3-medium.hf.space/queue/join', {
+                    method: 'POST',
+                    headers: {
+                        'authority': 'stabilityai-stable-diffusion-3-medium.hf.space',
+                        'accept': 'application/json',
+                        'content-type': 'application/json',
+                        'origin': 'https://stabledifffusion.com',
+                        'priority': 'u=1, i',
+                        'referer': 'https://stabledifffusion.com/',
+                        'sec-fetch-dest': 'empty',
+                        'sec-fetch-mode': 'cors',
+                        'sec-fetch-site': 'cross-site',
+                        'user-agent': navigator.userAgent
+                    },
+                    body: JSON.stringify({
+                        "data": [prompt, negativePrompt, seed, tiling, width, height, guidance, steps],
+                        "event_data": null,
+                        "fn_index": 1,
+                        "trigger_id": 5,
+                        "session_hash": sessionHash
+                    })
+                });
 
-        if (!firstResponse.ok) {
-            throw new Error(`HTTP error! status: ${firstResponse.status}`);
+                if (!firstResponse.ok) {
+                    throw new Error(`HTTP error! status: ${firstResponse.status}`);
+                }
+
+                const firstResponseData = await firstResponse.json();
+                const eventId = firstResponseData.event_id;
+
+                // Process the SSE stream
+                await processStream(sessionHash);
+
+                // Update generation info
+                document.getElementById('info-seed').textContent = seed || 'random';
+                document.getElementById('info-resolution').textContent = `${width}x${height}`;
+                document.getElementById('info-guidance').textContent = guidance;
+                document.getElementById('info-steps').textContent = steps;
+                generationInfo.classList.remove('hidden');
+            } catch (error) {
+                console.error("Error:", error);
+            } finally {
+                clearInterval(progressInterval);
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="fas fa-magic"></i> <span>生成图片</span>';
+
+                // Hide error message
+                errorMessage.classList.add('hidden');
+            }
         }
 
-        const firstResponseData = await firstResponse.json();
-        const eventId = firstResponseData.event_id;
+        async function processStream(sessionHash) {
+            return new Promise((resolve, reject) => {
+                let eventSource = null;
+                let retryTimeout;
+                let reconnectAttempts = 0;
+                const maxReconnectAttempts = 3;
+                const maxTotalTime = 30000; // 30 seconds
+                const startTime = Date.now();
+                let imageUrlFound = false;
+                let resolved = false;
+                let initialConnectionAttempted = false;
 
-        // Process the SSE stream
-        await processStream(sessionHash);
+                const startEventSource = () => {
+                    eventSource = new EventSource(`https://stabilityai-stable-diffusion-3-medium.hf.space/queue/data?session_hash=${sessionHash}`);
+                    initialConnectionAttempted = true;
 
-        // Update generation info
-        document.getElementById('info-seed').textContent = seed || 'random';
-        document.getElementById('info-resolution').textContent = `${width}x${height}`;
-        document.getElementById('info-guidance').textContent = guidance;
-        document.getElementById('info-steps').textContent = steps;
-        generationInfo.classList.remove('hidden');
-    } catch (error) {
-        console.error("Error:", error);
-    } finally {
-        clearInterval(progressInterval);
-        generateBtn.disabled = false;
-        generateBtn.innerHTML = '<i class="fas fa-magic"></i> <span>Generate Image</span>';
-
-        // Hide error message
-        errorMessage.classList.add('hidden');
-    }
-}
-
-async function processStream(sessionHash) {
-    return new Promise((resolve, reject) => {
-        let eventSource = null;
-        let retryTimeout;
-        let reconnectAttempts = 0;
-        const maxReconnectAttempts = 3;
-        const maxTotalTime = 30000; // 30 seconds
-        const startTime = Date.now();
-        let imageUrlFound = false;
-        let resolved = false;
-        let initialConnectionAttempted = false;
-
-        const startEventSource = () => {
-            eventSource = new EventSource(`https://stabilityai-stable-diffusion-3-medium.hf.space/queue/data?session_hash=${sessionHash}`);
-            initialConnectionAttempted = true;
-
-            const resetRetryTimeout = () => {
-                clearTimeout(retryTimeout);
-                retryTimeout = setTimeout(() => {
-                    console.log("EventSource timeout, closing and retrying...");
-                    if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
-                        eventSource.close();
-                    }
+                    const resetRetryTimeout = () => {
+                        clearTimeout(retryTimeout);
+                        retryTimeout = setTimeout(() => {
+                            console.log("EventSource timeout, closing and retrying...");
+                            if (eventSource && eventSource.readyState !== EventSource.close());
                     startEventSource();
                 }, 30000); // 调整超时时间
             };
@@ -508,7 +764,8 @@ async function processStream(sessionHash) {
                         const fetchedImageUrl = await tryFetchImageWithRetry(imageUrl, 10, 1000);
 
                         generatedImage.src = fetchedImageUrl;
-                        generatedImage.onload = () => {
+                        generatedImage.onload = async () => {
+                            // --- Existing code START ---
                             generatedImage.classList.remove('hidden');
                             loadingMessage.classList.add('hidden');
                             downloadBtn.classList.remove('hidden');
@@ -520,20 +777,49 @@ async function processStream(sessionHash) {
                                 eventSource.close();
                             }
 
+                            // Convert image to base64 and store in history
+                            const imageBase64 = await convertImageToBase64(fetchedImageUrl);
+                            const params = {
+                                prompt: promptTextarea.value,
+                                negativePrompt: negativePromptTextarea.value,
+                                seed: seedInput.value,
+                                resolution: resolutionSelect.value,
+                                tiling: tilingSelect.value,
+                                guidance: guidanceInput.value,
+                                steps: stepsInput.value
+                            };
+                            await addToHistory(params, imageBase64);
+                            const history = await loadHistory();
+                            displayHistory(history);
+
+
                             if (!resolved) {
                                 resolve(fetchedImageUrl);
                                 resolved = true;
                             }
+                            // --- Existing code END ---
+
+                            // ---- ADD THIS LINE ----
+                            // Reset the onload handler to prevent it from firing again when loading from history
+                            generatedImage.onload = null;
+                            // ---- END OF ADDED LINE ----
                         };
 
                         generatedImage.onerror = (err) => {
-                            console.error("Failed to load image after onload:", err);
+                            console.error("Failed to load generated image:", err); // More accurate description
                             loadingMessage.classList.add('hidden');
                             errorMessage.classList.remove('hidden');
                             clearTimeout(retryTimeout);
                             if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
                                 eventSource.close();
                             }
+
+                            // ---- ADD THESE LINES ----
+                            // Also clear onload handler on error
+                            generatedImage.onload = null;
+                            // Reset onerror to the default handler after this specific load fails
+                            generatedImage.onerror = handleImageError;
+                            // ---- END OF ADDED LINES ----
 
                             if (!resolved) {
                                 reject(err);
@@ -626,17 +912,6 @@ async function processStream(sessionHash) {
 async function tryFetchImageWithRetry(imageUrl, maxRetries, initialDelay) {
     let attempts = 0;
     let delay = initialDelay;
-    let cachedImage = localStorage.getItem(imageUrl);
-
-    if (cachedImage) {
-        generatedImage.src = cachedImage;
-        generatedImage.classList.remove('hidden');
-        loadingMessage.classList.add('hidden');
-        downloadBtn.classList.remove('hidden');
-        copyPromptBtn.classList.remove('hidden');
-        updateProgress(100);
-        return cachedImage; // 返回缓存的 URL
-    }
 
     while (attempts < maxRetries) {
         try {
@@ -645,7 +920,6 @@ async function tryFetchImageWithRetry(imageUrl, maxRetries, initialDelay) {
             if (response.ok) {
                 const blob = await response.blob();
                 const objectURL = URL.createObjectURL(blob);
-                localStorage.setItem(imageUrl, objectURL);
 
                 // 确保在成功加载图片后隐藏 error message
                 if (!errorMessage.classList.contains('hidden')) {
@@ -683,7 +957,55 @@ async function tryFetchImageWithRetry(imageUrl, maxRetries, initialDelay) {
             // 或者显示错误提示信息
             errorMessage.classList.remove('hidden');
         }
+        // Utility function to convert image URL to base64
+        const convertImageToBase64 = (url) => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.setAttribute('crossOrigin', 'anonymous'); // Enable CORS
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const dataURL = canvas.toDataURL('image/png');
+                    resolve(dataURL);
+                };
+                img.onerror = (error) => {
+                    console.error('Error converting image to base64:', error);
+                    reject(error);
+                };
+                img.src = url;
+            });
+        };
+
+        // Initialize IndexedDB and load history on page load
+        (async () => {
+            try {
+                await openDB();
+                const history = await loadHistory();
+                displayHistory(history);
+            } catch (error) {
+                console.error("Initialization error:", error);
+            }
+        })();
+
+        function pasteText() {
+            navigator.clipboard.readText()
+                .then(text => {
+                    document.getElementById('prompt').value = text;
+                })
+                .catch(err => {
+                    console.error('Failed to read clipboard contents: ', err);
+                    alert('无法读取剪贴板内容，请确保浏览器允许访问剪贴板。');
+                });
+        }
+
+        function clearAll() {
+            document.getElementById('prompt').value = '';
+        }
 
     </script>
 </body>
+
 </html>
