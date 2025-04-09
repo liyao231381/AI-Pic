@@ -455,21 +455,19 @@
         }
 
         function deleteHistoryItem(id) {
-            if (confirm('确定要删除这条记录吗？')) {
-                const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
-                const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
-                const request = objectStore.delete(id);
+            const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+            const request = objectStore.delete(id);
 
-                request.onsuccess = () => {
-                    updateHistoryList();
-                    showNotification('已删除历史记录', 'success');
-                };
+            request.onsuccess = () => {
+                updateHistoryList();
+                showNotification('已删除历史记录', 'success');
+            };
 
-                transaction.onerror = (event) => {
-                    console.error("Transaction error: " + event.target.errorCode);
-                    showNotification('删除历史记录失败', 'error');
-                };
-            }
+            transaction.onerror = (event) => {
+                console.error("Transaction error: " + event.target.errorCode);
+                showNotification('删除历史记录失败', 'error');
+            };
         }
 
         function clearAllHistory() {
