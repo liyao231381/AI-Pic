@@ -364,7 +364,7 @@
 <div class="result-area w-full md:w-1/2 p-4 bg-white flex flex-col items-center justify-start md:h-screen relative border-b md:border-b-0 shadow-inner">
   <div id="result" class="w-full h-full flex flex-col items-center justify-center px-4">
       <div class="relative w-fit h-full flex items-center justify-center">
-          <img id="generatedImage" loading="lazy" src="https://imgapi.xl0408.top/index.php" alt="生成的图像"
+          <img id="generatedImage" loading="lazy" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像"
                class="w-full max-h-[85vh] object-contain rounded-xl shadow-md cursor-zoom-in hover:shadow-lg transition-shadow hover:scale-105 transition-transform duration-200" />
           <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-opacity-70 transition z-10 hidden"
                id="fullscreenButton">
@@ -889,16 +889,6 @@
           document.getElementById('apiKey').focus();
           return;
       }
-       if (!prompt && model !== 'Kwai-Kolors/Kolors') { // Prompt required unless it's image-to-image
-          showNotification('请输入提示语。', true);
-          document.getElementById('prompt').focus();
-          return;
-      }
-       if (model === 'Kwai-Kolors/Kolors' && !aiBase64Image && !prompt) {
-           showNotification('对于 Kolors 模型，请输入提示语或提供参考图。', true);
-           return;
-       }
-
 
       // Disable the generate button and show loading
       generateButton.disabled = true;
@@ -977,13 +967,13 @@
           showNotification("图像生成成功!");
         } else {
             console.error("API response missing image URL:", result);
-            generatedImageElement.src = 'https://img.liyao.sbs/file/1738502727198.png'; // Error image
+            generatedImageElement.src = 'https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe'; // Error image
             downloadButton.disabled = true;
             showNotification("图像生成失败：API 未返回有效图像。", true);
         }
       } catch (error) {
         console.error('生成图像时出错:', error);
-        generatedImageElement.src = 'https://img.liyao.sbs/file/1738502727198.png'; // Error image
+        generatedImageElement.src = 'https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe'; // Error image
         downloadButton.disabled = true;
         showNotification(`图像生成失败: ${error.message}`, true);
       } finally {

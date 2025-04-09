@@ -192,11 +192,23 @@
     color: #4b5563; /* hover:text-gray-700 */
   }
 
+  #loader {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    width: fit-content;
+    height: fit-content;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    padding: 2rem
+  }
+
   .loader {
-    display: inline-block; /* inline-block */
-    width: 1.25rem; /* w-5 */
-    height: 1.25rem; /* h-5 */
-    border: 2px solid #e5e7eb; /* border-2 border-gray-200 */
+    width: 4rem; /* w-5 */
+    height: 4rem; /* h-5 */
+    border: 5px solid #e5e7eb; /* border-2 border-gray-200 */
     border-top-color: var(--primary); /* border-t-primary */
     border-radius: 9999px; /* rounded-full */
     animation: spin 1s linear infinite;
@@ -250,6 +262,9 @@
 
 <body class="flex">
   <!-- Left Column - Controls -->
+  <div id="loader" class="ml-3 hidden">
+    <div class="loader"></div>
+  </div>
   <div class="left-column w-1/4 h-full bg-white border-r border-gray-200 overflow-y-auto scrollbar-hide p-4 flex flex-col space-y-4">
     <div class="flex flex-col items-center">
       <h1 class="text-2xl font-bold text-primary flex items-center mb-2" onclick="window.location.href='./index.html'">
@@ -438,9 +453,6 @@
           <i class="fas fa-magic mr-2"></i>
           <span>生成图片</span>
         </button>
-        <div id="loader" class="ml-3 hidden">
-          <div class="loader"></div>
-        </div>
       </div>
       <div id="error-message" class="text-red-500 text-sm mt-1"></div>
     </div>
