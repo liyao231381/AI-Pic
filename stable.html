@@ -1,24 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 图像生成器 | Pollinations</title>
+    <title>Stable Diffusion 图像生成</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
+
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
             --secondary: #f59e0b;
             --dark: #1e293b;
             --light: #f8fafc;
             --gray: #94a3b8;
             --danger: #ef4444;
         }
-        
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f1f5f9;
@@ -28,18 +29,18 @@
             height: 100vh;
             overflow: hidden;
         }
-        
+
         .glass-effect {
             background: rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.18);
         }
-        
+
         .tooltip {
             position: relative;
         }
-        
+
         .tooltip:hover::after {
             content: attr(data-tooltip);
             position: absolute;
@@ -55,38 +56,52 @@
             z-index: 10;
             margin-bottom: 5px;
         }
-        
+
         .history-item:hover .history-actions {
             opacity: 1;
         }
-        
+
         .history-actions {
             transition: opacity 0.2s ease;
             opacity: 0.6;
         }
-        
+
         .loading-spinner {
             animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
-        
+
         .notification {
             animation: slideIn 0.3s ease, fadeOut 0.5s ease 2.5s forwards;
         }
-        
+
         @keyframes slideIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
-        
+
         @keyframes fadeOut {
-            to { opacity: 0; }
+            to {
+                opacity: 0;
+            }
         }
-        
+
         .checkbox-btn.active {
             background-color: var(--primary);
             color: white;
@@ -96,7 +111,7 @@
         .checkbox-btn.active:hover {
             transform: scale(1.02);
         }
-        
+
         .model-btn.active {
             background-color: var(--primary);
             color: white;
@@ -107,39 +122,40 @@
         .model-btn.active:hover {
             transform: scale(1.02);
         }
-        
+
         .action-btn:hover {
             transform: translateY(-2px);
         }
-        
+
         #imageResult {
             transition: transform 0.3s ease;
         }
-        
+
         #imageResult:hover {
             transform: scale(1.02);
         }
-        
+
         /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 4px;
             height: 8px;
         }
-        
+
         ::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.05);
         }
-        
+
         ::-webkit-scrollbar-thumb {
             background: var(--gray);
             border-radius: 4px;
         }
-        
+
         ::-webkit-scrollbar-thumb:hover {
             background: var(--primary);
         }
-        
-        #width, #height {
+
+        #width,
+        #height {
             width: 50%;
         }
 
@@ -184,26 +200,27 @@
                 flex-direction: column;
                 height: auto;
             }
-            
+
             .panel {
                 width: 100% !important;
                 height: auto !important;
             }
-            
+
             #resultContainer {
                 width: 100%;
             }
-            
+
             #historyContainer {
                 max-height: 70vh;
             }
         }
     </style>
 </head>
+
 <body class="flex flex-col">
     <!-- Notification container -->
     <div id="notificationContainer" class="fixed bottom-4 right-4 z-50"></div>
-    
+
     <div class="main-container flex flex-1 overflow-hidden">
         <!-- Left Panel - Controls -->
         <div class="panel glass-effect w-1/4 h-full overflow-y-auto p-4 border-r border-gray-200">
@@ -211,7 +228,9 @@
                 <div class="flex-col items-center justify-between mb-4">
                     <div class="flex items-center justify-center mb-2">
                         <i class="fas fa-robot text-2xl text-primary mr-3"></i>
-                        <h1 class="text-2xl font-bold text-primary" onclick="window.location.href='./index.html'">Pollinations</h1>
+                        <h1 class="text-2xl font-bold text-primary" onclick="window.location.href='./index.html'">
+                            Stable Diffusion
+                        </h1>
                     </div>
                     <div class="flex space-x-2 items-center justify-center">
                         <button onclick="window.history.back()" class="text-sm text-primary hover:text-primary-dark transition mr-2" title="返回">
@@ -226,46 +245,38 @@
                             <i class="fas fa-paint-brush mr-2"></i>
                         </a>
                         |
-                        <a href="./stability.html" class="text-sm text-primary hover:text-primary-dark transition" title="Stability的FLUX" target="_blank">
-                            <i class="fas fa-cogs mr-2"></i>
+                        <a href="./pollinations.html" class="text-sm text-primary hover:text-primary-dark transition" title="Pollinations" target="_blank">
+                            <i class="fas fa-seedling mr-2"></i>
                         </a>
                         |
-                        <a href="./stable.html" class="text-sm text-primary hover:text-primary-dark transition" title="Stable的FLUX" target="_blank">
-                            <i class="fas fa-tree"></i>
+                        <a href="./stability.html" class="text-sm text-primary hover:text-primary-dark transition" title="Stability的图像生成" target="_blank">
+                            <i class="fas fa-cogs mr-2"></i>
                         </a>
                     </div>
                 </div>
-                
-                <!-- Model Selection -->
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-cogs mr-2 text-blue-500"></i>模型选择</label>
-                    <div class="flex space-x-2">
-                        <button id="modelFluxBtn" data-model="flux" class="model-btn flex-1 py-2 px-4 rounded-lg border border-gray-200 hover:border-primary transition active">
-                            <i class="fas fa-bolt mr-2"></i> Flux
-                        </button>
-                        <button id="modelTurboBtn" data-model="turbo" class="model-btn flex-1 py-2 px-4 rounded-lg border border-gray-200 hover:border-primary transition">
-                            <i class="fas fa-tachometer-alt mr-2"></i> Turbo
-                        </button>
-                    </div>
-                    <input type="hidden" id="selectedModel" name="model" value="flux">
-                </div>
-                
+
                 <!-- Seed Input -->
                 <div class="mb-4">
-                    <label for="seed" class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-seedling mr-2 text-green-500"></i>种子值</label>
+                    <label for="seed" class="block text-sm font-bold text-gray-700 mb-2"><i
+                            class="fas fa-seedling mr-2 text-green-500"></i>种子值</label>
                     <div class="flex">
-                        <input type="text" id="seed" name="seed" class="flex-1 rounded-l-lg border-r-0 border-gray-300 focus:border-primary focus:ring-primary px-1 py-2" placeholder="随机种子值">
-                        <button onclick="clearSeed()" class="bg-gray-300 hover:bg-orange-500 text-white px-3 rounded-r-lg transition">
+                        <input type="text" id="seed" name="seed"
+                            class="flex-1 rounded-l-lg border-r-0 border-gray-300 focus:border-primary focus:ring-primary px-1 py-2"
+                            placeholder="随机种子值">
+                        <button onclick="clearSeed()"
+                            class="bg-gray-300 hover:bg-orange-500 text-white px-3 rounded-r-lg transition">
                             <i class="fas fa-eraser"></i>
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Resolution Settings -->
                 <div class="mb-4">
-                    <label for="resolutionPreset" class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-expand mr-2 text-blue-500"></i>分辨率预设</label>
-                    <select id="resolutionPreset" name="resolutionPreset" class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring-primary px-1 py-2">
-                        <option value="720x1280">默认 720x1280 (9:16)</option>
+                    <label for="resolutionPreset" class="block text-sm font-bold text-gray-700 mb-2"><i
+                            class="fas fa-expand mr-2 text-blue-500"></i>分辨率预设</label>
+                    <select id="resolutionPreset" name="resolutionPreset"
+                        class="w-full rounded-lg border-gray-300 focus:border-primary focus:ring-primary px-1 py-2">
+                        <option value="512x512">默认 512x512 (1:1)</option>
                         <optgroup label="方图">
                             <option value="512x512">512x512 (1:1)</option>
                             <option value="1024x1024">1024x1024 (1:1)</option>
@@ -282,55 +293,46 @@
                             <option value="1920x1080">1920x1080 (16:9 FHD)</option>
                         </optgroup>
                     </select>
-                    
+
                     <div class="flex mt-2 space-x-2">
-                        <input type="text" id="width" name="width" placeholder="宽度" class="flex-1 rounded-lg border-gray-300 focus:border-primary focus:ring-primary px-1 py-2">
-                        <input type="text" id="height" name="height" placeholder="高度" class="flex-1 rounded-lg border-gray-300 focus:border-primary focus:ring-primary px-1 py-2">
-                        <button onclick="clearWidthHeight()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 rounded-lg transition">
+                        <input type="text" id="width" name="width" placeholder="宽度"
+                            class="flex-1 rounded-lg border-gray-300 focus:border-primary focus:ring-primary px-1 py-2">
+                        <input type="text" id="height" name="height" placeholder="高度"
+                            class="flex-1 rounded-lg border-gray-300 focus:border-primary focus:ring-primary px-1 py-2">
+                        <button onclick="clearWidthHeight()"
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 rounded-lg transition">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
-                
-                <!-- Options Toggles -->
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-sliders-h mr-2 text-gray-400"></i>生成选项</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button id="nologo" data-tooltip="取消则显示pollinations.ai的水印" class="checkbox-btn active py-2 px-3 rounded-lg border border-gray-200 hover:border-primary transition text-sm">
-                            <i class="fas fa-water mr-1"></i> 无水印
+
+                <!-- Prompt Input -->
+                <div class="mb-4 flex flex-col">
+                    <label for="prompt" class="block text-sm font-bold text-gray-700 mb-2"><i
+                            class="fas fa-comment-dots mr-2 text-blue-500"></i>提示词</label>
+                    <textarea id="prompt" name="prompt" rows="3"
+                        class="resize-y w-full rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                        placeholder="输入您的创意描述..."></textarea>
+
+                    <div class="flex space-x-2 mt-2">
+                        <button onclick="pasteText()"
+                            class="action-btn w-1/3 bg-blue-100 hover:bg-blue-500 text-blue-600 hover:text-white py-2 px-3 rounded-lg transition">
+                            <i class="fas fa-paste"></i><span class="hidden xl:inline ml-1cap">粘贴</span>
                         </button>
-                        <button id="private" data-tooltip="取消则公开到pollinations.ai" class="checkbox-btn active py-2 px-3 rounded-lg border border-gray-200 hover:border-primary transition text-sm">
-                            <i class="fas fa-lock mr-1"></i> 私有
+                        <button onclick="copyText()"
+                            class="action-btn w-1/3 bg-gray-200 hover:bg-gray-500 text-gray-700 hover:text-white py-2 px-3 rounded-lg transition">
+                            <i class="fas fa-copy"></i><span class="hidden xl:inline ml-1cap">复制</span>
                         </button>
-                        <button id="enhance" data-tooltip="取消则不开启图像增强" class="checkbox-btn active py-2 px-3 rounded-lg border border-gray-200 hover:border-primary transition text-sm">
-                            <i class="fas fa-magic mr-1"></i> 增强
-                        </button>
-                        <button id="safe" data-tooltip="开启则禁用NSFW内容" class="checkbox-btn py-2 px-3 rounded-lg border border-gray-200 hover:border-primary transition text-sm">
-                            <i class="fas fa-shield-alt mr-1"></i> 安全
+                        <button onclick="clearAll()"
+                            class="action-btn w-1/3 bg-red-100 hover:bg-red-500 text-red-600 hover:text-white py-2 px-3 rounded-lg transition">
+                            <i class="fas fa-trash-alt"></i><span class="hidden xl:inline ml-1cap">清除</span>
                         </button>
                     </div>
                 </div>
-                
-                <!-- Prompt Input -->
-                <div class="mb-4 flex flex-col">
-                    <label for="prompt" class="block text-sm font-bold text-gray-700 mb-2"><i class="fas fa-comment-dots mr-2 text-blue-500"></i>提示词</label>
-                    <textarea id="prompt" name="prompt" rows="3" class="resize-y w-full rounded-lg border-gray-300 focus:border-primary focus:ring-primary" placeholder="输入您的创意描述..."></textarea>
-                    
-                    <div class="flex space-x-2 mt-2">
-                        <button onclick="pasteText()" class="action-btn w-1/3 bg-blue-100 hover:bg-blue-500 text-blue-600 hover:text-white py-2 px-3 rounded-lg transition">
-                            <i class="fas fa-paste"></i><span class="hidden xl:inline ml-1cap">粘贴</span>
-                        </button>
-                        <button onclick="copyText()" class="action-btn w-1/3 bg-gray-200 hover:bg-gray-500 text-gray-700 hover:text-white py-2 px-3 rounded-lg transition">
-                            <i class="fas fa-copy"></i><span class="hidden xl:inline ml-1cap">复制</span>
-                        </button>
-                        <button onclick="clearAll()" class="action-btn w-1/3 bg-red-100 hover:bg-red-500 text-red-600 hover:text-white py-2 px-3 rounded-lg transition">
-                            <i class="fas fa-trash-alt"></i><span class="hidden xl:inline ml-1cap">清除</span>
-                        </button>
-                    </div>                    
-                </div>
-                
+
                 <!-- Generate Button - 修改后的按钮 -->
-                <button id="generate-button" onclick="event.preventDefault();generateImage()" class="w-full text-white py-2 px-4 rounded-lg font-bold transition-all mt-1 flex items-center justify-center">
+                <button id="generate-button" onclick="event.preventDefault();generateImage()"
+                    class="w-full text-white py-2 px-4 rounded-lg font-bold transition-all mt-1 flex items-center justify-center">
                     <span id="generate-text">生成图像</span>
                     <span id="generate-spinner" class="ml-2 hidden">
                         <i class="fas fa-spinner loading-spinner"></i>
@@ -338,14 +340,17 @@
                 </button>
             </div>
         </div>
-        
+
         <!-- Center Panel - Results -->
-        <div id="resultContainer" class="middle-column w-2/4 h-full bg-gray-100 overflow-y-auto scrollbar-hide flex flex-col items-center p-4">
-            <div id="image-container" class="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl shadow-md p-2">
+        <div id="resultContainer"
+            class="middle-column w-2/4 h-full bg-gray-100 overflow-y-auto scrollbar-hide flex flex-col items-center p-4">
+            <div id="image-container"
+                class="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl shadow-md p-2">
                 <div class="relative w-fit h-full flex items-center justify-center">
-                    <img id="imageResult" loading="lazy" src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像"
-                         class="w-full max-h-[85vh] object-contain rounded-lg cursor-zoom-in hover:shadow-lg transition-shadow">
-        
+                    <img id="imageResult" loading="lazy"
+                        src="https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe" alt="生成的图像"
+                        class="w-full max-h-[85vh] object-contain rounded-lg cursor-zoom-in hover:shadow-lg transition-shadow">
+
                     <div id="imageOverlay" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
                         <div class="text-white text-center">
                             <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
@@ -353,20 +358,20 @@
                         </div>
                     </div>
                 </div>
-        
+
                 <div class="flex items-center mt-4 w-full max-w-md">
                     <input type="text" id="filenameInput" placeholder="自定义文件名"
-                           class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary">
                     <button onclick="downloadImage()"
-                            class="bg-gray-400 hover:bg-orange-400 text-white font-bold py-2 px-4 rounded-r-md shadow-sm transition-colors flex items-center">
+                        class="bg-gray-400 hover:bg-orange-400 text-white font-bold py-2 px-4 rounded-r-md shadow-sm transition-colors flex items-center">
                         <i class="fas fa-download mr-2"></i>
                         <span>下载</span>
                     </button>
                 </div>
             </div>
         </div>
-        
-        
+
+
         <!-- Right Panel - History -->
         <div id="historyContainer" class="panel glass-effect w-1/4 h-full overflow-y-auto p-4 border-l border-gray-200">
             <div class="flex items-center justify-between mb-4">
@@ -377,9 +382,9 @@
                     <i class="fas fa-trash-alt mr-1"></i> 清空
                 </button>
             </div>
-            
+
             <ul id="historyList" class="space-y-2"></ul>
-            
+
             <div id="emptyHistory" class="text-center py-10 text-gray-500">
                 <i class="fas fa-image fa-3x mb-3 opacity-30"></i>
                 <p>暂无历史记录</p>
@@ -391,26 +396,26 @@
         const DB_NAME = 'imageHistoryDB';
         const DB_VERSION = 2;
         const OBJECT_STORE_NAME = 'imageHistoryStore';
-        
+
         let db;
-        
+
         // Initialize IndexedDB
         function initDB() {
             return new Promise((resolve, reject) => {
                 const request = window.indexedDB.open(DB_NAME, DB_VERSION);
-                
+
                 request.onerror = (event) => {
                     console.error("Database error: " + event.target.errorCode);
                     showNotification('数据库初始化失败', true);
                     reject(event.target.errorCode);
                 };
-                
+
                 request.onsuccess = (event) => {
                     db = event.target.result;
                     console.log("Database opened successfully");
                     resolve();
                 };
-                
+
                 request.onupgradeneeded = (event) => {
                     console.log("onupgradeneeded event triggered. Old version:", event.oldVersion, "New version:", event.newVersion); // 添加日志
                     const db = event.target.result;
@@ -454,28 +459,28 @@
                 };
             });
         }
-        
+
         // Update history list from IndexedDB
         async function updateHistoryList() {
             const historyList = document.getElementById('historyList');
             const emptyHistory = document.getElementById('emptyHistory');
             historyList.innerHTML = '';
-            
+
             const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
             const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
             const request = objectStore.index('timestamp').openCursor(null, 'prev');
-            
+
             let hasItems = false;
-            
+
             request.onsuccess = (event) => {
                 const cursor = event.target.result;
                 if (cursor) {
                     hasItems = true;
                     const item = cursor.value;
-                    
+
                     const listItem = document.createElement('li');
                     listItem.className = 'history-item bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition cursor-pointer relative hover:translate-y-1 transition duration-200 ease-in-out';
-                    
+
                     listItem.innerHTML = `
                         <div class="flex items-start">
                             <img src="${item.imageUrl}" alt="${item.params?.prompt || 'No Prompt'}" 
@@ -492,7 +497,7 @@
                             </button>
                         </div>
                     `;
-                    
+
                     listItem.onclick = () => loadHistoryItem(item.id);
                     historyList.appendChild(listItem);
                     cursor.continue();
@@ -500,164 +505,143 @@
                     emptyHistory.style.display = hasItems ? 'none' : 'block';
                 }
             };
-            
+
             transaction.onerror = (event) => {
                 console.error("Transaction error: " + event.target.errorCode);
                 showNotification('加载历史记录失败', true);
             };
         }
-        
+
         // Format date for display
         function formatDate(timestamp) {
             if (!timestamp) return '';
             const date = new Date(timestamp);
             return date.toLocaleString();
         }
-        
+
         // Delete history item
         function deleteHistoryItem(id) {
             const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
             const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
             const request = objectStore.delete(id);
-            
+
             request.onsuccess = () => {
                 updateHistoryList();
                 showNotification('已删除历史记录');
             };
-            
+
             transaction.onerror = (event) => {
                 console.error("Transaction error: " + event.target.errorCode);
                 showNotification('删除失败', true);
             };
         }
-        
+
         // Clear all history
         function clearAllHistory() {
             if (confirm('确定要清空所有历史记录吗？此操作不可撤销。')) {
                 const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
                 const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
                 const request = objectStore.clear();
-                
+
                 request.onsuccess = () => {
                     updateHistoryList();
                     showNotification('已清空历史记录');
                 };
-                
+
                 transaction.onerror = (event) => {
                     console.error("Transaction error: " + event.target.errorCode);
                     showNotification('清空失败', true);
                 };
             }
         }
-        
+
         // Load history item
         function loadHistoryItem(id) {
             const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
             const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
             const request = objectStore.get(id);
-            
+
             request.onsuccess = (event) => {
                 const item = event.target.result;
                 if (item) {
                     document.getElementById('prompt').value = item.params?.prompt || '';
-                    
-                    // Set model
-                    document.querySelectorAll('.model-btn').forEach(btn => btn.classList.remove('active'));
-                    const model = item.params?.model || 'flux';
-                    document.getElementById(`model${model.charAt(0).toUpperCase() + model.slice(1)}Btn`).classList.add('active');
-                    document.getElementById('selectedModel').value = model;
-                    
+
                     // Set other params
                     document.getElementById('seed').value = item.params?.seed || '';
                     document.getElementById('width').value = item.params?.width || '';
                     document.getElementById('height').value = item.params?.height || '';
-                    document.getElementById('resolutionPreset').value = item.params?.resolutionPreset || '720x1280';
-                    
-                    // Set toggle buttons
-                    ['nologo', 'private', 'enhance', 'safe'].forEach(id => {
-                        const btn = document.getElementById(id);
-                        if (btn) {
-                            btn.classList.toggle('active', item.params?.[id] || item.params?.[`${id}Flag`]);
-                        }
-                    });
-                    
+                    document.getElementById('resolutionPreset').value = item.params?.resolutionPreset || '512x512';
+
                     // Display image
                     document.getElementById('imageResult').src = item.imageUrl;
-                    
+
                     showNotification('已加载历史记录');
                 }
             };
-            
+
             transaction.onerror = (event) => {
                 console.error("Transaction error: " + event.target.errorCode);
                 showNotification('加载失败', true);
             };
         }
-        
+
         // Save image to IndexedDB
         function saveImageToDB(imageData) {
             // Add timestamp
             imageData.timestamp = Date.now();
-            
+
             const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
             const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
             const request = objectStore.add(imageData);
-            
+
             request.onsuccess = () => {
                 updateHistoryList();
             };
-            
+
             request.onerror = (event) => {
                 console.error("Transaction error: " + event.target.errorCode);
                 showNotification('保存历史记录失败', true);
             };
         }
-        
+
         // Show notification
         function showNotification(message, isError = false) {
             const container = document.getElementById('notificationContainer');
             const notification = document.createElement('div');
-            notification.className = `notification glass-effect px-4 py-3 rounded-lg shadow-lg mb-2 flex items-center ${
-                isError ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'
-            }`;
+            notification.className = `notification glass-effect px-4 py-3 rounded-lg shadow-lg mb-2 flex items-center ${isError ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'
+                }`;
             notification.innerHTML = `
                 <i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'} mr-2"></i>
                 <span>${message}</span>
             `;
-            
+
             container.appendChild(notification);
-            
+
             // Auto remove after animation
             setTimeout(() => {
                 notification.remove();
             }, 3000);
         }
-        
+
         // Generate image
         async function generateImage() {
             const generateButton = document.getElementById('generate-button');
             const generateText = document.getElementById('generate-text');
             const generateSpinner = document.getElementById('generate-spinner');
             const imageOverlay = document.getElementById('imageOverlay');
-            
+
             // Show loading state
             generateText.textContent = '生成中...';
             generateSpinner.classList.remove('hidden');
             generateButton.disabled = true;
             imageOverlay.classList.remove('hidden');
-            
+
             const prompt = document.getElementById('prompt').value;
-            const model = document.getElementById('selectedModel').value;
             let seed = document.getElementById('seed').value;
             const widthInput = document.getElementById('width').value;
             const heightInput = document.getElementById('height').value;
             const resolutionPreset = document.getElementById('resolutionPreset').value;
-            
-            const nologo = document.getElementById('nologo').classList.contains('active');
-            const privateFlag = document.getElementById('private').classList.contains('active');
-            const enhance = document.getElementById('enhance').classList.contains('active');
-            const safe = document.getElementById('safe').classList.contains('active');
-            
+
             // Validate prompt
             if (!prompt.trim()) {
                 showNotification('请输入提示词', true);
@@ -665,241 +649,196 @@
                 imageOverlay.classList.add('hidden');
                 return;
             }
-            
+
             // Set random seed if empty
             if (!seed) {
                 seed = Math.floor(Math.random() * 99999999) + 1;
             }
-            
+
             // Determine resolution
             let width = widthInput;
             let height = heightInput;
-            
+
             if (resolutionPreset && !widthInput && !heightInput) {
                 [width, height] = resolutionPreset.split('x');
             }
-            
+
             // Build API URL
-            let url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?model=${model}&seed=${seed}`;
-            
-            // Add parameters
-            const params = {
-                width: width,
-                height: height,
-                nologo: nologo,
-                private: privateFlag,
-                enhance: enhance,
-                safe: safe
-            };
-            
-            Object.entries(params).forEach(([key, value]) => {
-                if (value !== undefined && value !== '') {
-                    url += `&${key}=${value}`;
-                }
-            });
-            
+            let url = `https://stabledifffusion.com/imagen/${encodeURIComponent(prompt)}?seed=${seed}&width=${width}&height=${height}`;
+
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const blob = await response.blob();
-                
+
                 // Convert to Base64
                 const reader = new FileReader();
-                reader.onloadend = function() {
+                reader.onloadend = function () {
                     const base64data = reader.result;
-                    
+
                     // Display image
                     document.getElementById('imageResult').src = base64data;
-                    
+
                     // Save to history
                     const imageData = {
                         params: {
                             prompt: prompt,
-                            model: model,
                             seed: seed,
                             width: width,
                             height: height,
-                            nologo: nologo,
-                            privateFlag: privateFlag,
-                            enhance: enhance,
-                            safe: safe,
-            resolutionPreset: resolutionPreset
-        },
-        imageUrl: base64data
-    };
-    
-    saveImageToDB(imageData);
-    
-    // Reset button
-    resetGenerateButton();
-    imageOverlay.classList.add('hidden');
-    showNotification('图像生成成功');
-};
+                            resolutionPreset: resolutionPreset
+                        },
+                        imageUrl: base64data
+                    };
 
-reader.readAsDataURL(blob);
+                    saveImageToDB(imageData);
 
-} catch (error) {
-    console.error('Error generating image:', error);
-    showNotification('生成图像出错: ' + error.message, true);
-    resetGenerateButton();
-    imageOverlay.classList.add('hidden');
-}
-}
+                    // Reset button
+                    resetGenerateButton();
+                    imageOverlay.classList.add('hidden');
+                    showNotification('图像生成成功');
+                };
 
-// Reset generate button state
-function resetGenerateButton() {
-    document.getElementById('generate-text').textContent = '生成图像';
-    document.getElementById('generate-spinner').classList.add('hidden');
-    document.getElementById('generate-button').disabled = false;
-}
+                reader.readAsDataURL(blob);
 
-// Download image
-function downloadImage() {
-    const imageBase64 = document.getElementById('imageResult').src;
-    if (!imageBase64 || imageBase64.includes('imgapi.xl0408.top')) {
-        showNotification('没有可下载的图像', true);
-        return;
-    }
-        // 生成默认文件名，如果输入为空
-        let defaultFilename = `image-siliconflow-${Date.now()}`;
-    const promptText = document.getElementById('prompt').value.trim();
-    if (promptText) {
-        defaultFilename = promptText.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 30);
-    } else {
-        defaultFilename = `image-pollinations-${Date.now()}`;
-    }
-
-    const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : defaultFilename;
-    const a = document.createElement('a');
-    a.href = imageBase64;
-    a.download = `${filename}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    showNotification('下载已开始');
-}
-
-// Randomize seed
-function randomizeSeed() {
-    const seed = Math.floor(Math.random() * 999999999) + 1;
-    document.getElementById('seed').value = seed;
-    showNotification('已生成随机种子');
-}
-
-function clearSeed() {
-    document.getElementById('seed').value = '';
-    showNotification('已清除种子');
-}
-
-// Clear width/height
-function clearWidthHeight() {
-    document.getElementById('width').value = '';
-    document.getElementById('height').value = '';
-}
-
-// Paste text
-async function pasteText() {
-    try {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-            document.getElementById('prompt').value = text;
-            showNotification('已粘贴剪贴板内容');
-        } else {
-            showNotification('剪贴板为空', true);
+            } catch (error) {
+                console.error('Error generating image:', error);
+                showNotification('生成图像出错: ' + error.message, true);
+                resetGenerateButton();
+                imageOverlay.classList.add('hidden');
+            }
         }
-    } catch (err) {
-        console.error('Failed to read clipboard:', err);
-        showNotification('无法访问剪贴板', true);
-    }
-}
 
-// Copy text
-function copyText() {
-    const text = document.getElementById('prompt').value;
-    if (!text.trim()) {
-        showNotification('没有内容可复制', true);
-        return;
-    }
-    
-    navigator.clipboard.writeText(text).then(() => {
-        showNotification('已复制提示词');
-    }).catch(err => {
-        console.error('Failed to copy:', err);
-        showNotification('复制失败', true);
-    });
-}
+        // Reset generate button state
+        function resetGenerateButton() {
+            document.getElementById('generate-text').textContent = '生成图像';
+            document.getElementById('generate-spinner').classList.add('hidden');
+            document.getElementById('generate-button').disabled = false;
+        }
 
-// Clear all inputs
-function clearAll() {
-    document.getElementById('prompt').value = '';
-    document.getElementById('modelFluxBtn').classList.add('active');
-    document.getElementById('modelTurboBtn').classList.remove('active');
-    document.getElementById('selectedModel').value = 'flux';
-    document.getElementById('seed').value = '';
-    document.getElementById('width').value = '';
-    document.getElementById('height').value = '';
-    document.getElementById('resolutionPreset').value = '720x1280';
-    document.getElementById('filenameInput').value = '';
-    
-    // Reset toggle buttons
-    ['nologo', 'private', 'enhance'].forEach(id => {
-        document.getElementById(id).classList.add('active');
-    });
-    document.getElementById('safe').classList.remove('active');
-    
-    showNotification('已清除所有输入');
-}
+        // Download image
+        function downloadImage() {
+            const imageBase64 = document.getElementById('imageResult').src;
+            if (!imageBase64 || imageBase64.includes('imgapi.xl0408.top')) {
+                showNotification('没有可下载的图像', true);
+                return;
+            }
+            // 生成默认文件名，如果输入为空
+            let defaultFilename = `image-siliconflow-${Date.now()}`;
+            const promptText = document.getElementById('prompt').value.trim();
+            if (promptText) {
+                defaultFilename = promptText.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 30);
+            } else {
+                defaultFilename = `image-pollinations-${Date.now()}`;
+            }
 
-// Initialize on DOM load
-document.addEventListener('DOMContentLoaded', async function() {
-    // Initialize database
-    await initDB();
-    await updateHistoryList();
-    
-    // Setup model buttons
-    document.querySelectorAll('.model-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            document.querySelectorAll('.model-btn').forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            document.getElementById('selectedModel').value = this.dataset.model;
+            const filename = filenameInput.value.trim() !== '' ? filenameInput.value.trim() : defaultFilename;
+            const a = document.createElement('a');
+            a.href = imageBase64;
+            a.download = `${filename}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            showNotification('下载已开始');
+        }
+
+        // Randomize seed
+        function randomizeSeed() {
+            const seed = Math.floor(Math.random() * 999999999) + 1;
+            document.getElementById('seed').value = seed;
+            showNotification('已生成随机种子');
+        }
+
+        function clearSeed() {
+            document.getElementById('seed').value = '';
+            showNotification('已清除种子');
+        }
+
+        // Clear width/height
+        function clearWidthHeight() {
+            document.getElementById('width').value = '';
+            document.getElementById('height').value = '';
+        }
+
+        // Paste text
+        async function pasteText() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    document.getElementById('prompt').value = text;
+                    showNotification('已粘贴剪贴板内容');
+                } else {
+                    showNotification('剪贴板为空', true);
+                }
+            } catch (err) {
+                console.error('Failed to read clipboard:', err);
+                showNotification('无法访问剪贴板', true);
+            }
+        }
+
+        // Copy text
+        function copyText() {
+            const text = document.getElementById('prompt').value;
+            if (!text.trim()) {
+                showNotification('没有内容可复制', true);
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('已复制提示词');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showNotification('复制失败', true);
+            });
+        }
+
+        // Clear all inputs
+        function clearAll() {
+            document.getElementById('prompt').value = '';
+            document.getElementById('seed').value = '';
+            document.getElementById('width').value = '';
+            document.getElementById('height').value = '';
+            document.getElementById('resolutionPreset').value = '512x512';
+            document.getElementById('filenameInput').value = '';
+
+            showNotification('已清除所有输入');
+        }
+
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Initialize database
+            await initDB();
+            await updateHistoryList();
+
+            // Enter key for prompt
+            document.getElementById('prompt').addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    generateImage();
+                }
+            });
+
+            // Enter key for filename
+            document.getElementById('filenameInput').addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    downloadImage();
+                }
+            });
+
+            // Resolution preset change
+            document.getElementById('resolutionPreset').addEventListener('change', function () {
+                if (!document.getElementById('width').value && !document.getElementById('height').value) {
+                    const [width, height] = this.value.split('x');
+                    document.getElementById('width').value = width;
+                    document.getElementById('height').value = height;
+                }
+            });
         });
-    });
-    
-    // Setup checkbox buttons
-    document.querySelectorAll('.checkbox-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            this.classList.toggle('active');
-        });
-    });
-    
-    // Enter key for prompt
-    document.getElementById('prompt').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            generateImage();
-        }
-    });
-    
-    // Enter key for filename
-    document.getElementById('filenameInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            downloadImage();
-        }
-    });
-    
-    // Resolution preset change
-    document.getElementById('resolutionPreset').addEventListener('change', function() {
-        if (!document.getElementById('width').value && !document.getElementById('height').value) {
-            const [width, height] = this.value.split('x');
-            document.getElementById('width').value = width;
-            document.getElementById('height').value = height;
-        }
-    });
-});
-</script>
+    </script>
 </body>
+
 </html>
