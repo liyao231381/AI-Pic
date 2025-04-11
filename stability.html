@@ -74,27 +74,25 @@
         <div class="md:w-1/4 md:overflow-y-auto md:border-r md:border-gray-700 p-4">
             <header class="mb-6">
                 <div class="flex items-center justify-center space-x-3 mb-2">
-                    <div class="bg-primary-500 p-2 rounded-lg">
                         <i class="fas fa-robot text-white text-2xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold">Stable Diffusion 3</h1>
-                        <p class="text-gray-400 text-sm">AI Image Generation</p>
-                    </div>
+                        <h1 class="text-2xl font-bold wrap" onclick="window.location.href='./index.html'">Stable Diffusion 3</h1>
                 </div>
                 <div class="flex items-center justify-center space-x-2 text-sm text-primary mb-4">
                     <button onclick="window.history.back()" class="text-sm text-primary transition flex items-center"
                         title="返回">
                         <i class="fas fa-arrow-left mr-2"></i>
                     </button>
-                    <a href="./pollinations.html" class="text-sm text-primary transition" title="Pollinations">
-                        <i class="fas fa-seedling mr-2"></i>
+                    <a href="./edit.html" class="text-sm text-primary transition" title="Edit" target="_blank">
+                        <i class="fas fa-edit mr-2"></i>
                     </a>
-                    <a href="./together.html" class="text-sm text-primary transition" title="together.ai">
+                    <a href="./together.html" class="text-sm text-primary transition" title="together.ai" target="_blank">
                         <i class="fas fa-exchange-alt mr-2"></i>
                     </a>
-                    <a href="./edit.html" class="text-sm text-primary transition" title="Edit">
-                        <i class="fas fa-edit"></i>
+                    <a href="./pollinations.html" class="text-sm text-primary transition" title="Pollinations" target="_blank">
+                        <i class="fas fa-seedling mr-2"></i>
+                    </a>
+                    <a href="./stable.html" class="text-sm text-primary transition" title="Stable" target="_blank">
+                        <i class="fas fa-tree"></i>
                     </a>
                 </div>
             </header>
@@ -109,17 +107,17 @@
                         </label>
                         <textarea id="prompt" rows="3"
                             class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                            placeholder="Describe the image you want to generate..."></textarea>
+                            placeholder="Describe the image you want to generate..." onkeydown="if (event.keyCode == 13) { generateImage(); return false; }"></textarea>
                     </div>
                     <div class="flex space-x-2 mt-2">
                         <button onclick="pasteText()" class="bg-blue-900 hover:bg-blue-600 text-white text-sm py-1 px-3 rounded-md transition-all flex items-center space-x-1">
-                            <i class="fas fa-paste"></i><span class="hidden xl:inline ml-2">粘贴</span>
+                            <i class="fas fa-paste py-1 px-2"></i><span class="hidden xl:inline ml-2">粘贴</span>
                         </button>
                         <button onclick="copyText()" class="bg-gray-700 hover:bg-gray-600 text-white text-sm py-1 px-3 rounded-md transition-all flex items-center space-x-1" id="copy-prompt-btn">
-                            <i class="fas fa-copy"></i><span class="hidden xl:inline ml-2">复制</span>
+                            <i class="fas fa-copy py-1 px-2"></i><span class="hidden xl:inline ml-2">复制</span>
                         </button>
                         <button onclick="clearAll()" class="bg-red-900 hover:bg-red-600 text-white text-sm py-1 px-3 rounded-md transition-all flex items-center space-x-1">
-                            <i class="fas fa-trash-alt"></i><span class="hidden xl:inline ml-2">清除</span>
+                            <i class="fas fa-trash-alt py-1 px-2"></i><span class="hidden xl:inline ml-2">清除</span>
                         </button>
                     </div>   
                 </div>
@@ -131,7 +129,7 @@
                         负面提示词
                     </label>
                     <textarea id="negative-prompt" rows="2"
-                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">bad quality, low quality, deformed, distorted, bad proportions, ugly</textarea>
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all" onkeydown="if (event.keyCode == 13) { generateImage(); return false; }">bad quality, low quality, deformed, distorted, bad proportions, ugly</textarea>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -160,8 +158,8 @@
                         </label>
                         <select id="resolution"
                             class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                            <option value="720x1280">Default 720x1280 (9:16)</option>
-                            <option disabled>──── Square ────</option>
+                            <option value="720x1280">默认 720x1280 (9:16)</option>
+                            <option disabled>──── 方图 ────</option>
                             <option value="512x512">512x512 (1:1)</option>
                             <option value="1024x1024">1024x1024 (1:1)</option>
                             <option value="1280x1280">1280x1280 (1:1)</option>
@@ -169,7 +167,7 @@
                             <option value="1600x1600">1600x1600 (1:1)</option>
                             <option value="1792x1792">1792x1792 (1:1)</option>
                             <option value="2048x2048">2048x2048 (1:1)</option>
-                            <option disabled>──── Portrait ────</option>
+                            <option disabled>──── 竖图 ────</option>
                             <option value="480x640">480x640 (3:4)</option>
                             <option value="600x800">600x800 (3:4)</option>
                             <option value="768x1024">768x1024 (3:4)</option>
@@ -182,7 +180,7 @@
                             <option value="810x1440">810x1440 (9:16 HD+)</option>
                             <option value="900x1600">900x1600 (9:16 HD+)</option>
                             <option value="1080x1920">1080x1920 (9:16 FHD)</option>
-                            <option disabled>──── Landscape ────</option>
+                            <option disabled>──── 横图 ────</option>
                             <option value="640x480">640x480 (4:3 VGA)</option>
                             <option value="800x600">800x600 (4:3 SVGA)</option>
                             <option value="1024x768">1024x768 (4:3 XGA)</option>
@@ -247,16 +245,6 @@
                     <i class="fas fa-magic"></i>
                     <span>生成图片</span>
                 </button>
-
-                <!-- Advanced Options Toggle -->
-                <div class="pt-2">
-                    <button id="advanced-toggle"
-                        class="text-xs text-gray-400 hover:text-gray-200 flex items-center space-x-1">
-                        <i class="fas fa-cog"></i>
-                        <span>Advanced Options</span>
-                        <i class="fas fa-chevron-down text-xs ml-1 transition-transform duration-200"></i>
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -319,6 +307,7 @@
                 <div class="flex justify-center items-center mt-4">
                     <div class="flex">
                         <input type="text" id="filenameInput" placeholder="自定义文件名"
+                                onkeydown="if (event.keyCode == 13) { downloadImage(); return false; }"
                                 class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary text-black">
                         <button onclick="downloadImage()"
                                 id="download-btn"
@@ -549,7 +538,6 @@
             generatedImage.src = item.imageBase64; // 使用保存的 base64 字符串
             generatedImage.classList.remove('hidden');
             placeholder.classList.add('hidden');
-            downloadBtn.classList.remove('hidden');
             generationInfo.classList.remove('hidden');
 
             // Update generation info
@@ -604,7 +592,7 @@
 
             navigator.clipboard.writeText(promptTextarea.value).then(() => {
                 const originalText = copyPromptBtn.innerHTML;
-                copyPromptBtn.innerHTML = '<i class="fas fa-check"></i> <span>已复制</span>';
+                copyPromptBtn.innerHTML = '<i class="fas fa-check py-1 px-2"></i> <span class="ml-2">已复制</span>';
                 setTimeout(() => {
                     copyPromptBtn.innerHTML = originalText;
                 }, 2000);
@@ -630,7 +618,6 @@
             loadingMessage.classList.remove('hidden');
             errorMessage.classList.add('hidden');
             generationInfo.classList.add('hidden');
-            downloadBtn.classList.add('hidden');
 
             // Simulate progress (in a real app, you'd get this from the API)
             let progress = 0;
@@ -767,7 +754,6 @@
                             // --- Existing code START ---
                             generatedImage.classList.remove('hidden');
                             loadingMessage.classList.add('hidden');
-                            downloadBtn.classList.remove('hidden');
                             updateProgress(100);
                             clearTimeout(retryTimeout);
                             errorMessage.classList.add('hidden'); // 确保成功时错误信息隐藏
@@ -927,7 +913,6 @@ async function tryFetchImageWithRetry(imageUrl, maxRetries, initialDelay) {
                 generatedImage.src = objectURL; // 设置图片源
                 generatedImage.classList.remove('hidden'); // 显示图片
                 loadingMessage.classList.add('hidden'); // 隐藏加载信息
-                downloadBtn.classList.remove('hidden');
                 updateProgress(100);
 
                 return objectURL; // 返回本地URL
