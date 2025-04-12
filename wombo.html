@@ -1,63 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WOMBO Dream API</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        /* Custom styles for JSON display with scrollbars */
-        #json-display-1,
-        #json-display-2,
-        #json-display-1-desktop,
-        #json-display-2-desktop {
-            white-space: pre-wrap;
-            font-family: monospace;
-            background-color: rgba(255, 255, 255, 0.3);
-            /* Glassmorphism background */
-            padding: 10px;
-            border-radius: 5px;
-            backdrop-filter: blur(10px);
-            /* Apply blur filter */
-            overflow: auto;
-            /* Enable scroll if content overflows */
-            max-height: 200px;
-            /* Fixed max height for scroll */
-        }
-
-        /* Hide scrollbar on Chrome, Safari and Opera */
-        #json-display-1::-webkit-scrollbar,
-        #json-display-2::-webkit-scrollbar,
-        #json-display-1-desktop::-webkit-scrollbar,
-        #json-display-2-desktop::-webkit-scrollbar {
-            width: 0.5em;
-        }
-
-        #json-display-1::-webkit-scrollbar-track,
-        #json-display-2::-webkit-scrollbar-track,
-        #json-display-1-desktop::-webkit-scrollbar-track,
-        #json-display-2-desktop::-webkit-scrollbar-track {
-            background-color: transparent;
-        }
-
-        #json-display-1::-webkit-scrollbar-thumb,
-        #json-display-2::-webkit-scrollbar-thumb,
-        #json-display-1-desktop::-webkit-scrollbar-thumb,
-        #json-display-2-desktop::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 5px;
-        }
-
-        /* Hide scrollbar on Firefox */
-        #json-display-1,
-        #json-display-2,
-        #json-display-1-desktop,
-        #json-display-2-desktop {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
-        }
-    </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen font-sans antialiased">
@@ -112,20 +60,7 @@
                 <button id="request-button-1"
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Generate
                     Image</button>
-                <button id="request-button-2"
-                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-4"
-                    disabled>Get Image Status</button>
             </div>
-        </div>
-
-        <div class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4">
-            <h2 class="text-lg font-semibold text-gray-800 mb-2">Request 1 Response:</h2>
-            <div id="json-display-1" class="border rounded p-4"></div>
-        </div>
-
-        <div class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4">
-            <h2 class="text-lg font-semibold text-gray-800 mb-2">Request 2 Response:</h2>
-            <div id="json-display-2" class="border rounded p-4"></div>
         </div>
 
         <div class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4">
@@ -186,23 +121,11 @@
                 <button id="request-button-1-desktop"
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Generate
                     Image</button>
-                <button id="request-button-2-desktop"
-                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-4"
-                    disabled>Get Image Status</button>
             </div>
         </div>
 
-        <!-- JSON Area -->
-        <div class="w-1/4 bg-white/50 backdrop-blur-md p-6 flex flex-col space-y-4">
-            <h2 class="text-lg font-semibold text-gray-800 mb-2">Request 1 Response:</h2>
-            <div id="json-display-1-desktop" class="border rounded p-4 flex-grow overflow-auto"></div>
-
-            <h2 class="text-lg font-semibold text-gray-800 mb-2">Request 2 Response:</h2>
-            <div id="json-display-2-desktop" class="border rounded p-4 flex-grow overflow-auto"></div>
-        </div>
-
         <!-- Image Area -->
-        <div class="w-2/4 bg-white/50 backdrop-blur-md p-6 flex items-center justify-center">
+        <div class="w-3/4 bg-white/50 backdrop-blur-md p-6 flex items-center justify-center">
             <img id="final-image-desktop" src="" alt="Generated Image" class="max-w-full max-h-full rounded-lg">
         </div>
 
@@ -212,17 +135,11 @@
     <script>
         // Mobile elements
         const requestButton1Mobile = document.getElementById('request-button-1');
-        const requestButton2Mobile = document.getElementById('request-button-2');
-        const jsonDisplay1Mobile = document.getElementById('json-display-1');
-        const jsonDisplay2Mobile = document.getElementById('json-display-2');
         const finalImageMobile = document.getElementById('final-image');
         const authTokenInputMobile = document.getElementById('authorization-token'); // Authorization Token Input
 
         // Desktop elements
         const requestButton1Desktop = document.getElementById('request-button-1-desktop');
-        const requestButton2Desktop = document.getElementById('request-button-2-desktop');
-        const jsonDisplay1Desktop = document.getElementById('json-display-1-desktop');
-        const jsonDisplay2Desktop = document.getElementById('json-display-2-desktop');
         const finalImageDesktop = document.getElementById('final-image-desktop');
         const authTokenInputDesktop = document.getElementById('authorization-token-desktop'); // Authorization Token Input
 
@@ -302,10 +219,6 @@
 
                 const data = await response.json();
 
-                // Update displays for both mobile and desktop
-                jsonDisplay1Mobile.textContent = JSON.stringify(data, null, 2);
-                jsonDisplay1Desktop.textContent = JSON.stringify(data, null, 2);
-
                 taskId = data.id; // Store the task ID
 
                 // Save the token to local storage on successful request
@@ -317,10 +230,6 @@
                 handleSecondRequest(isDesktop);
 
             } catch (error) {
-                // Update displays for both mobile and desktop in case of error
-                jsonDisplay1Mobile.textContent = `Error: ${error}`;
-                jsonDisplay1Desktop.textContent = `Error: ${error}`;
-
                 console.error("Error:", error);
             }
         }
@@ -329,7 +238,6 @@
         async function handleSecondRequest(isDesktop = false) {
             // Determine if the call is from desktop or mobile
             const authTokenInput = isDesktop ? authTokenInputDesktop : authTokenInputMobile; // Authorization Token Input
-            const jsonDisplay2 = isDesktop ? jsonDisplay2Desktop : jsonDisplay2Mobile;
             const finalImage = isDesktop ? finalImageDesktop : finalImageMobile;
             const authTokenValue = authTokenInput.value; // Get Authorization Token
 
@@ -358,11 +266,6 @@
 
                 const data = await response.json();
 
-                // Update displays for both mobile and desktop
-                jsonDisplay2Mobile.textContent = JSON.stringify(data, null, 2);
-                jsonDisplay2Desktop.textContent = JSON.stringify(data, null, 2);
-
-
 
                 if (data.state === "completed") {
                      if (data.result && data.result.final) {
@@ -370,9 +273,6 @@
                         finalImageMobile.alt = "WOMBO Dream Image";
                         finalImageDesktop.src = data.result.final;
                         finalImageDesktop.alt = "WOMBO Dream Image";
-                        // Image is complete, enable the second button
-                        requestButton2Mobile.disabled = true;
-                        requestButton2Desktop.disabled = true;
                         polling = false; // Stop polling
                         if (timeoutId) {
                             clearTimeout(timeoutId); // Clear the timeout if it's still running
@@ -390,10 +290,6 @@
                     finalImageDesktop.alt = "No image generated yet.";
                     timeoutId = setTimeout(() => handleSecondRequest(isDesktop), 1000); // Store timeout ID
                 } else {
-                    // Handle other states or errors if needed
-                    console.log("Task state:", data.state);
-                    requestButton2Mobile.disabled = false;
-                    requestButton2Desktop.disabled = false;
                      polling = false; // Stop polling in case of other states
                      if (timeoutId) {
                            clearTimeout(timeoutId); // Clear the timeout if it's still running
@@ -402,9 +298,6 @@
 
 
             } catch (error) {
-                // Update displays for both mobile and desktop in case of error
-                jsonDisplay2Mobile.textContent = `Error: ${error}`;
-                jsonDisplay2Desktop.textContent = `Error: ${error}`;
                 console.error("Error:", error);
                 polling = false; // Stop polling in case of error
                 if (timeoutId) {
