@@ -8,11 +8,6 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Authorization Token is required' });
         }
 
-        // 添加 "bearer " 前缀 (如果不存在)
-        if (!authorizationToken.startsWith('bearer ')) {
-            authorizationToken = 'bearer ' + authorizationToken;
-        }
-
         // 获取请求体中的 Base64 编码的图片数据
         const { image } = req.body;
 

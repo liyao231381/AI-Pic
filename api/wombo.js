@@ -1,16 +1,27 @@
 // api/wombo.js
 export default async function handler(req, res) {
+    // Add CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Adjust in production!
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+        // Handle preflight request
+        res.status(200).end();
+        return;
+    }
+
     if (req.method === 'POST') {
       // 从请求头中获取 Authorization Token
       const authorizationToken = req.headers.authorization;
-  
+
       if (!authorizationToken) {
         return res.status(401).json({ error: 'Authorization Token is required' });
       }
-  
+
       // 获取请求体中的数据
-      const { prompt, aspect_ratio, style, display_freq } = req.body;
-  
+      const { prompt, aspect_ratio, style, display_freq, input_image } = req.body.input_spec || req.body; // Handle nested or top-level structure
+
       // 构造要转发给 WOMBO API 的请求体
       const requestBody = {
         "is_premium": false,
@@ -21,7 +32,15 @@ export default async function handler(req, res) {
           "display_freq": parseInt(display_freq)
         }
       };
-  
+
+        // If input_image exists, add it to the requestBody
+        if (input_image && input_image.mediastore_id && input_image.weight) {
+            requestBody.input_spec.input_image = {
+                "weight": input_image.weight,
+                "mediastore_id": input_image.mediastore_id
+            };
+        }
+
       // WOMBO API 的请求头
       const headers = {
         'authority': 'paint.api.wombo.ai',
@@ -43,8 +62,8 @@ export default async function handler(req, res) {
         'x-app-version': 'WEB-2.0.0',
         'x-validation-token': 'eyJraWQiOiJEX28wMGciLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIxOjE4MTY4MTU2OTM1OTp3ZWI6Mjc3MTMzYjU3ZmVjZjU3YWYwZjQzYSIsImF1ZCI6WyJwcm9qZWN0c1wvMTgxNjgxNTY5MzU5IiwicHJvamVjdHNcL3BhaW50LXByb2QiXSwicHJvdmlkZXIiOiJyZWNhcHRjaGFfZW50ZXJwcmlzZSIsImlzcyI6Imh0dHBzOlwvXC9maXJlYmFzZWFwcGNoZWNrLmdvb2dsZWFwaXMuY29tXC8xODE2ODE1NjkzNTkiLCJleHAiOjE3NDQ0NjE3NjgsImlhdCI6MTc0NDQ0Mzc2OCwianRpIjoiT05vanNaMUN3dE1FdjMyQml3RzBJaTdqRzktMnlXZDFOS3ZDZmVLWnBPZyJ9.JX-JqMI5jUWe6ppXN3_ARUN9yZD32pNMYLO82HUsJWv6EHhd4IP7e0t3ACHPIRfuj5k8UJnC_GIeESGz9bMOWeXwSL1-Yu_WuvGxKrZh54t5FQC9vbl39WmRXK1T16orS0Ei_-G25oLLb7DcclX6tmMHA15S5IOqppzEdWPAfvBdyuwq6jA9HMt9oXcjwg5ykvvxLKxdX4m7a17KavZSU4-YU_2GiLhHU48S-fZXpQzDyAfvDY7sSiDQrrLs6NyuCdHKw3NkeT7EmW8XUPC2FNwsKPhGDsod0uZKLH9cudGkgmZqMTsTdl5xevyJl0Wj1QM1iYziJfODWrf2pOKuiL3dLlDfAZf402AdCjNr4n0fAtSK_B3ji-tmgmfBUQLq_78bK9mSqQqCvRXZFkDtE-Y4HvHpyN6O-sOaWseXHSPyeq4CzxfX8MuB_T5icwUgqG9sBYiU6acsEEOLnJoJ6qmW1tcNx2xTcQ1C3ZkDhXW09ZXaKW4TBn8hFZ_AJJ7-'
       };
-  
-  
+
+
       try {
         // 使用 `fetch` 将请求转发给 WOMBO API
         const response = await fetch('https://paint.api.wombo.ai/api/v2/tasks', {
@@ -52,14 +71,14 @@ export default async function handler(req, res) {
           headers: headers,
           body: JSON.stringify(requestBody)
         });
-  
+
         const data = await response.json();
-  
+
         // 设置 CORS 头，允许来自你的域的请求
         res.setHeader('Access-Control-Allow-Origin', '*'); //  实际部署时替换为你的域名
         res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
         // 返回 WOMBO API 的响应
         res.status(200).json(data);
       } catch (error) {
@@ -76,4 +95,3 @@ export default async function handler(req, res) {
       res.status(405).json({ error: 'Method Not Allowed' });
     }
   }
-  
