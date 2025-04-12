@@ -241,6 +241,9 @@
 
         let taskId = null; // Store the task ID from the first request
         const LOCAL_STORAGE_TOKEN_KEY = 'wombo_auth_token'; // Key for local storage
+        let polling = true; // Flag to control polling
+        let timeoutId = null; // Store the timeout ID for clearing
+
 
         // Function to save the token to local storage
         function saveTokenToLocalStorage(token) {
@@ -271,7 +274,6 @@
             const displayFreqInput = isDesktop ? displayFreqInputDesktop : displayFreqInputMobile;
             const authTokenInput = isDesktop ? authTokenInputDesktop : authTokenInputMobile; // Authorization Token Input
 
-
             const promptValue = promptInput.value;
             const aspectRatioValue = aspectRatioSelect.value;
             const styleValue = styleInput.value;
@@ -282,7 +284,6 @@
                 alert("Please enter your Authorization Token.");
                 return;
             }
-
 
             try {
                 const response = await fetch('/api/wombo', {  //  改为你的 Vercel Function 地址
@@ -306,14 +307,14 @@
                 jsonDisplay1Desktop.textContent = JSON.stringify(data, null, 2);
 
                 taskId = data.id; // Store the task ID
-                // Enable the second button on both platforms
-                requestButton2Mobile.disabled = false;
-                requestButton2Desktop.disabled = false;
 
-                console.log("Task ID:", taskId);
-                 // Save the token to local storage on successful request
+                // Save the token to local storage on successful request
                 saveTokenToLocalStorage(authTokenValue);
 
+                console.log("Task ID:", taskId);
+                polling = true; // Reset polling flag
+                // Immediately trigger the second request
+                handleSecondRequest(isDesktop);
 
             } catch (error) {
                 // Update displays for both mobile and desktop in case of error
@@ -324,20 +325,27 @@
             }
         }
 
-        // Function to handle the second API request
+        // Function to handle the second API request and poll for completion
         async function handleSecondRequest(isDesktop = false) {
             // Determine if the call is from desktop or mobile
             const authTokenInput = isDesktop ? authTokenInputDesktop : authTokenInputMobile; // Authorization Token Input
+            const jsonDisplay2 = isDesktop ? jsonDisplay2Desktop : jsonDisplay2Mobile;
+            const finalImage = isDesktop ? finalImageDesktop : finalImageMobile;
             const authTokenValue = authTokenInput.value; // Get Authorization Token
 
             if (!taskId) {
                 alert("Task ID is not available. Please generate an image first.");
                 return;
             }
-                if (!authTokenValue) {
+
+            if (!authTokenValue) {
                 alert("Please enter your Authorization Token.");
                 return;
             }
+                if (!polling) {
+                    console.log("Polling stopped.");
+                    return;
+                }
 
             try {
                 const response = await fetch(`/api/get-wombo-status?taskId=${taskId}`, {
@@ -355,17 +363,41 @@
                 jsonDisplay2Desktop.textContent = JSON.stringify(data, null, 2);
 
 
-                if (data.result && data.result.final) {
-                    finalImageMobile.src = data.result.final;
-                    finalImageMobile.alt = "WOMBO Dream Image";
-                    finalImageDesktop.src = data.result.final;
-                    finalImageDesktop.alt = "WOMBO Dream Image";
-                } else {
+
+                if (data.state === "completed") {
+                     if (data.result && data.result.final) {
+                        finalImageMobile.src = data.result.final;
+                        finalImageMobile.alt = "WOMBO Dream Image";
+                        finalImageDesktop.src = data.result.final;
+                        finalImageDesktop.alt = "WOMBO Dream Image";
+                        // Image is complete, enable the second button
+                        requestButton2Mobile.disabled = true;
+                        requestButton2Desktop.disabled = true;
+                        polling = false; // Stop polling
+                        if (timeoutId) {
+                            clearTimeout(timeoutId); // Clear the timeout if it's still running
+                        }
+                        console.log("Image complete. Polling stopped.");
+                     }
+                    return; // Stop polling
+
+                } else if (data.state === "pending") {
+                    // Image is still pending, poll again after 1 second
+                      // 清空图片区域
                     finalImageMobile.src = "";
                     finalImageMobile.alt = "No image generated yet.";
                     finalImageDesktop.src = "";
                     finalImageDesktop.alt = "No image generated yet.";
-                    alert("Image not yet generated.  Check again later.");
+                    timeoutId = setTimeout(() => handleSecondRequest(isDesktop), 1000); // Store timeout ID
+                } else {
+                    // Handle other states or errors if needed
+                    console.log("Task state:", data.state);
+                    requestButton2Mobile.disabled = false;
+                    requestButton2Desktop.disabled = false;
+                     polling = false; // Stop polling in case of other states
+                     if (timeoutId) {
+                           clearTimeout(timeoutId); // Clear the timeout if it's still running
+                     }
                 }
 
 
@@ -374,14 +406,17 @@
                 jsonDisplay2Mobile.textContent = `Error: ${error}`;
                 jsonDisplay2Desktop.textContent = `Error: ${error}`;
                 console.error("Error:", error);
+                polling = false; // Stop polling in case of error
+                if (timeoutId) {
+                    clearTimeout(timeoutId); // Clear the timeout if it's still running
+                }
             }
         }
 
+
         // Attach event listeners to the buttons for both mobile and desktop
         requestButton1Mobile.addEventListener('click', () => handleFirstRequest(false));
-        requestButton2Mobile.addEventListener('click', () => handleSecondRequest(false));
         requestButton1Desktop.addEventListener('click', () => handleFirstRequest(true));
-        requestButton2Desktop.addEventListener('click', () => handleSecondRequest(true));
     </script>
 
 </body>
