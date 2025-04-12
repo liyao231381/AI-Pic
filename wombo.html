@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -10,9 +10,10 @@
 
 <body class="bg-gray-100 min-h-screen font-sans antialiased">
 
-    <!-- Mobile View -->
-    <div class="md:hidden p-4 space-y-4">
-        <div class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4">
+    <div class="p-4 space-y-4 md:flex md:flex-row md:h-screen">
+
+        <!-- Parameter Area -->
+        <div class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4 md:w-1/4 md:overflow-y-auto">
             <h1 class="text-2xl font-bold mb-4 text-gray-800">WOMBO Dream</h1>
 
             <!-- Authorization Token Input -->
@@ -49,13 +50,6 @@
                     value="123">
             </div>
 
-            <div class="mb-4">
-                <label for="display_freq" class="block text-gray-700 text-sm font-bold mb-2">Display Frequency:</label>
-                <input type="number" id="display_freq"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    value="10">
-            </div>
-
             <div class="flex justify-start">
                 <button id="request-button-1"
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Generate
@@ -63,139 +57,49 @@
             </div>
         </div>
 
-        <div class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4">
-            <h2 class="text-lg font-semibold text-gray-800 mb-2">Final Image:</h2>
-            <img id="final-image" src="" alt="Generated Image" class="max-w-full rounded-lg">
-        </div>
-    </div>
-
-    <!-- Desktop View -->
-    <div class="hidden md:flex flex-row h-screen">
-
-        <!-- Parameter Area -->
-        <div class="w-1/4 bg-white/50 backdrop-blur-md p-6 space-y-4 overflow-y-auto">
-            <h1 class="text-2xl font-bold mb-4 text-gray-800">WOMBO Dream</h1>
-            <!-- Authorization Token Input -->
-            <div class="mb-4">
-                <label for="authorization-token-desktop"
-                    class="block text-gray-700 text-sm font-bold mb-2">Authorization
-                    Token:</label>
-                <input type="text" id="authorization-token-desktop"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    placeholder="Enter your Authorization Token">
-            </div>
-
-            <div class="mb-4">
-                <label for="prompt" class="block text-gray-700 text-sm font-bold mb-2">Prompt:</label>
-                <input type="text" id="prompt-desktop"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    value="cow eat grass">
-            </div>
-
-            <div class="mb-4">
-                <label for="aspect_ratio" class="block text-gray-700 text-sm font-bold mb-2">Aspect Ratio:</label>
-                <select id="aspect_ratio-desktop"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    <option value="old_vertical_ratio">Old Vertical Ratio</option>
-                    <option value="square">Square</option>
-                    <option value="widescreen">Widescreen</option>
-                    <option value="vertical">Vertical</option>
-                </select>
-            </div>
-
-            <div class="mb-4">
-                <label for="style" class="block text-gray-700 text-sm font-bold mb-2">Style:</label>
-                <input type="number" id="style-desktop"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    value="123">
-            </div>
-
-            <div class="mb-4">
-                <label for="display_freq" class="block text-gray-700 text-sm font-bold mb-2">Display Frequency:</label>
-                <input type="number" id="display_freq-desktop"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    value="10">
-            </div>
-
-            <div class="flex justify-start">
-                <button id="request-button-1-desktop"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Generate
-                    Image</button>
-            </div>
-        </div>
-
         <!-- Image Area -->
-        <div class="w-3/4 bg-white/50 backdrop-blur-md p-6 flex items-center justify-center">
-            <img id="final-image-desktop" src="" alt="Generated Image" class="max-w-full max-h-full rounded-lg">
+        <div
+            class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4 md:w-3/4 md:flex md:items-center md:justify-center">
+            <img id="final-image" src="" alt="Generated Image" class="max-w-full rounded-lg md:max-h-full">
         </div>
 
     </div>
-
 
     <script>
-        // Mobile elements
-        const requestButton1Mobile = document.getElementById('request-button-1');
-        const finalImageMobile = document.getElementById('final-image');
-        const authTokenInputMobile = document.getElementById('authorization-token'); // Authorization Token Input
+        const requestButton1 = document.getElementById('request-button-1');
+        const finalImage = document.getElementById('final-image');
+        const authTokenInput = document.getElementById('authorization-token');
 
-        // Desktop elements
-        const requestButton1Desktop = document.getElementById('request-button-1-desktop');
-        const finalImageDesktop = document.getElementById('final-image-desktop');
-        const authTokenInputDesktop = document.getElementById('authorization-token-desktop'); // Authorization Token Input
+        const promptInput = document.getElementById('prompt');
+        const aspectRatioSelect = document.getElementById('aspect_ratio');
+        const styleInput = document.getElementById('style');
 
+        let taskId = null;
+        const LOCAL_STORAGE_TOKEN_KEY = 'wombo_auth_token';
+        let polling = true;
+        let timeoutId = null;
+        const DEFAULT_DISPLAY_FREQ = 10; // 设置默认的 Display Frequency
 
-        // Input elements (shared between mobile and desktop for simplicity)
-        const promptInputMobile = document.getElementById('prompt');
-        const aspectRatioSelectMobile = document.getElementById('aspect_ratio');
-        const styleInputMobile = document.getElementById('style');
-        const displayFreqInputMobile = document.getElementById('display_freq');
-
-        const promptInputDesktop = document.getElementById('prompt-desktop');
-        const aspectRatioSelectDesktop = document.getElementById('aspect_ratio-desktop');
-        const styleInputDesktop = document.getElementById('style-desktop');
-        const displayFreqInputDesktop = document.getElementById('display_freq-desktop');
-
-
-        let taskId = null; // Store the task ID from the first request
-        const LOCAL_STORAGE_TOKEN_KEY = 'wombo_auth_token'; // Key for local storage
-        let polling = true; // Flag to control polling
-        let timeoutId = null; // Store the timeout ID for clearing
-
-
-        // Function to save the token to local storage
         function saveTokenToLocalStorage(token) {
             localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, token);
         }
 
-        // Function to retrieve the token from local storage
         function getTokenFromLocalStorage() {
             return localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
         }
 
-        // On page load, try to get the token from local storage and populate the input fields
         window.addEventListener('load', () => {
             const storedToken = getTokenFromLocalStorage();
             if (storedToken) {
-                authTokenInputMobile.value = storedToken;
-                authTokenInputDesktop.value = storedToken;
+                authTokenInput.value = storedToken;
             }
         });
 
-
-        // Function to handle the first API request
-        async function handleFirstRequest(isDesktop = false) {
-            // Determine if the call is from desktop or mobile
-            const promptInput = isDesktop ? promptInputDesktop : promptInputMobile;
-            const aspectRatioSelect = isDesktop ? aspectRatioSelectDesktop : aspectRatioSelectMobile;
-            const styleInput = isDesktop ? styleInputDesktop : styleInputMobile;
-            const displayFreqInput = isDesktop ? displayFreqInputDesktop : displayFreqInputMobile;
-            const authTokenInput = isDesktop ? authTokenInputDesktop : authTokenInputMobile; // Authorization Token Input
-
+        async function handleFirstRequest() {
             const promptValue = promptInput.value;
             const aspectRatioValue = aspectRatioSelect.value;
             const styleValue = styleInput.value;
-            const displayFreqValue = displayFreqInput.value;
-            const authTokenValue = authTokenInput.value; // Get Authorization Token
+            const authTokenValue = authTokenInput.value;
 
             if (!authTokenValue) {
                 alert("Please enter your Authorization Token.");
@@ -203,43 +107,36 @@
             }
 
             try {
-                const response = await fetch('/api/wombo', {  //  改为你的 Vercel Function 地址
+                const response = await fetch('/api/wombo', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `bearer ${authTokenValue}` // Set Authorization Header
+                        'Authorization': `bearer ${authTokenValue}`
                     },
                     body: JSON.stringify({
                         prompt: promptValue,
                         aspect_ratio: aspectRatioValue,
                         style: styleValue,
-                        display_freq: displayFreqValue
-                    }) //  传递数据
+                        display_freq: DEFAULT_DISPLAY_FREQ // 使用默认值
+                    })
                 });
 
                 const data = await response.json();
 
-                taskId = data.id; // Store the task ID
-
-                // Save the token to local storage on successful request
+                taskId = data.id;
                 saveTokenToLocalStorage(authTokenValue);
 
                 console.log("Task ID:", taskId);
-                polling = true; // Reset polling flag
-                // Immediately trigger the second request
-                handleSecondRequest(isDesktop);
+                polling = true;
+                handleSecondRequest();
 
             } catch (error) {
                 console.error("Error:", error);
             }
         }
 
-        // Function to handle the second API request and poll for completion
-        async function handleSecondRequest(isDesktop = false) {
-            // Determine if the call is from desktop or mobile
-            const authTokenInput = isDesktop ? authTokenInputDesktop : authTokenInputMobile; // Authorization Token Input
-            const finalImage = isDesktop ? finalImageDesktop : finalImageMobile;
-            const authTokenValue = authTokenInput.value; // Get Authorization Token
+        async function handleSecondRequest() {
+            const authTokenValue = authTokenInput.value;
 
             if (!taskId) {
                 alert("Task ID is not available. Please generate an image first.");
@@ -250,10 +147,11 @@
                 alert("Please enter your Authorization Token.");
                 return;
             }
-                if (!polling) {
-                    console.log("Polling stopped.");
-                    return;
-                }
+
+            if (!polling) {
+                console.log("Polling stopped.");
+                return;
+            }
 
             try {
                 const response = await fetch(`/api/get-wombo-status?taskId=${taskId}`, {
@@ -266,50 +164,41 @@
 
                 const data = await response.json();
 
-
                 if (data.state === "completed") {
-                     if (data.result && data.result.final) {
-                        finalImageMobile.src = data.result.final;
-                        finalImageMobile.alt = "WOMBO Dream Image";
-                        finalImageDesktop.src = data.result.final;
-                        finalImageDesktop.alt = "WOMBO Dream Image";
-                        polling = false; // Stop polling
+                    if (data.result && data.result.final) {
+                        finalImage.src = data.result.final;
+                        finalImage.alt = "WOMBO Dream Image";
+                        polling = false;
                         if (timeoutId) {
-                            clearTimeout(timeoutId); // Clear the timeout if it's still running
+                            clearTimeout(timeoutId);
                         }
                         console.log("Image complete. Polling stopped.");
-                     }
-                    return; // Stop polling
+                    }
+                    return;
 
                 } else if (data.state === "pending") {
-                    // Image is still pending, poll again after 1 second
-                      // 清空图片区域
-                    finalImageMobile.src = "";
-                    finalImageMobile.alt = "No image generated yet.";
-                    finalImageDesktop.src = "";
-                    finalImageDesktop.alt = "No image generated yet.";
-                    timeoutId = setTimeout(() => handleSecondRequest(isDesktop), 1000); // Store timeout ID
+                    // 清空图片区域
+                    finalImage.src = "";
+                    finalImage.alt = "No image generated yet.";
+                    timeoutId = setTimeout(() => handleSecondRequest(), 1000);
                 } else {
-                     polling = false; // Stop polling in case of other states
-                     if (timeoutId) {
-                           clearTimeout(timeoutId); // Clear the timeout if it's still running
-                     }
+                    polling = false;
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                    }
                 }
 
 
             } catch (error) {
                 console.error("Error:", error);
-                polling = false; // Stop polling in case of error
+                polling = false;
                 if (timeoutId) {
-                    clearTimeout(timeoutId); // Clear the timeout if it's still running
+                    clearTimeout(timeoutId);
                 }
             }
         }
 
-
-        // Attach event listeners to the buttons for both mobile and desktop
-        requestButton1Mobile.addEventListener('click', () => handleFirstRequest(false));
-        requestButton1Desktop.addEventListener('click', () => handleFirstRequest(true));
+        requestButton1.addEventListener('click', handleFirstRequest);
     </script>
 
 </body>
