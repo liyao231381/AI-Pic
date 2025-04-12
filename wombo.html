@@ -6,6 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WOMBO Dream API</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 历史记录删除按钮样式 */
+        .history-item-delete {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background-color: rgba(220, 38, 38, 0.8); /* Red 80% opacity */
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            line-height: 1;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .history-item:hover .history-item-delete {
+            opacity: 1; /* Show on hover */
+        }
+    </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen font-sans antialiased">
@@ -30,7 +53,7 @@
                 <label for="aspect_ratio" class="block text-gray-700 text-sm font-bold mb-2">宽高比 (Aspect Ratio):</label>
                 <select id="aspect_ratio"
                     class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    <option value="old_vertical_ratio">旧垂直比例</option>
+                    <option value="old_vertical_ratio">默认 960×1568</option>
                     <option value="old_horizontal_ratio">正方形</option>
                     <option value="widescreen">宽屏</option>
                     <option value="vertical">垂直</option>
@@ -41,7 +64,7 @@
                 <label for="style" class="block text-gray-700 text-sm font-bold mb-2">风格 ID (Style ID):</label>
                 <input type="number" id="style"
                     class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    value="115">
+                    value="147">
             </div>
 
             <div class="mb-4">
@@ -60,6 +83,13 @@
                 <input type="file" id="image-upload" accept="image/jpeg, image/png"
                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
             </div>
+            <div class="mb-4">
+                <label for="mediastore-uid" class="block text-gray-700 text-sm font-bold mb-2">Mediastore UID:</label>
+                <input type="text" id="mediastore-uid"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    placeholder="输入 Mediastore UID">
+            </div>
+
 
             <!-- Weight Selection Radios -->
             <div class="mb-4">
@@ -87,12 +117,6 @@
                     </button>
             </div>
 
-             <!-- Response Display Area -->
-            <div class="mt-2">
-                <label class="block text-gray-700 text-sm font-bold mb-1">Mediastore 响应:</label>
-                <pre id="mediastore-response" class="bg-gray-200 p-2 rounded text-xs overflow-x-auto h-32"></pre>
-            </div>
-
             <div class="flex justify-start mb-4">
                 <button id="request-button-1"
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">生成
@@ -102,12 +126,23 @@
 
         <!-- Image Area -->
         <div
-            class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4 md:w-3/4 md:flex md:items-center md:justify-center">
+            class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4 md:w-1/2 md: flex flex-col md:items-center md:justify-center">
             <img id="final-image" src="" alt="生成的图片区域" class="max-w-full rounded-lg md:max-h-full">
+            <div class="mt-4 flex flex-row items-center">
+                <input type="text" id="filename" placeholder="自定义文件名 (可选)" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2">
+                <button id="download-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">下载</button>
+            </div>            
+        </div>
+
+        <!-- History Area -->
+        <div class="bg-white/50 backdrop-blur-md rounded-lg shadow-md p-4 md:w-1/4 md:overflow-y-auto">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">历史记录</h2>
+            <div id="history-container" class="space-y-2">
+                <!-- 历史记录项将在此处动态生成 -->
+            </div>
         </div>
 
     </div>
-
     <script>
         const requestButton1 = document.getElementById('request-button-1');
         const finalImage = document.getElementById('final-image');
@@ -119,8 +154,11 @@
 
         // New elements for image upload
         const imageUploadInput = document.getElementById('image-upload');
-        const mediastoreResponseOutput = document.getElementById('mediastore-response');
         const clearButton = document.getElementById('clear-button');
+        const mediastoreUidInput = document.getElementById('mediastore-uid');
+
+        // History elements
+        const historyContainer = document.getElementById('history-container');
 
         let taskId = null;
         const LOCAL_STORAGE_TOKEN_KEY = 'wombo_auth_token';
@@ -131,6 +169,45 @@
         let selectedFileType = 'jpeg'; // 默认或检测到的文件类型
         let mediastoreUid = null; // Store the mediastore_uid from the upload response
 
+        // --- IndexedDB Setup ---
+        const DB_NAME = 'womboDreamHistoryDB';
+        const DB_VERSION = 1; // Increment to trigger onupgradeneeded
+        const OBJECT_STORE_NAME = 'imageHistory';
+
+        let db;
+
+        function initializeDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error("Database open error:", event);
+                    reject(event);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log("Database opened successfully");
+                    resolve();
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+
+                    // 如果旧版本的数据库存在，删除旧的对象仓库
+                    if (db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
+                        db.deleteObjectStore(OBJECT_STORE_NAME);
+                    }
+
+                    // 创建新的对象仓库
+                    const objectStore = db.createObjectStore(OBJECT_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    objectStore.createIndex('prompt', 'prompt', { unique: false }); // 创建 prompt 索引
+                    console.log("Object store created");
+                };
+            });
+        }
+
+        // --- Local Storage Functions ---
         function saveTokenToLocalStorage(token) {
             localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, token);
         }
@@ -139,13 +216,182 @@
             return localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
         }
 
-        window.addEventListener('load', () => {
+        // --- Utility Functions ---
+        function generateUniqueId() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2);
+        }
+
+        function displayHistory() {
+            historyContainer.innerHTML = ''; // Clear existing history items
+            getAllHistoryItems().then(items => {
+                items.forEach(item => {
+                    addHistoryItemToUI(item);
+                });
+            });
+        }
+
+        // --- IndexedDB Functions ---
+        function saveImageToDB(data, imageBase64) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+                const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+
+                const item = {
+                    ...data,
+                    image: imageBase64 // Store the base64 image
+                };
+
+                const request = objectStore.add(item);
+
+                request.onsuccess = (event) => {
+                    console.log('Image saved to DB with id:', event.target.result);
+                    resolve(event.target.result); // Resolve with the new ID
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error saving image to DB:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        function getAllHistoryItems() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
+                const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+                const request = objectStore.getAll();
+
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error getting all history items:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        function deleteHistoryItem(id) {
+           return new Promise((resolve, reject) => {
+                const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+                const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+                const request = objectStore.delete(id);
+
+                request.onsuccess = (event) => {
+                    console.log('History item deleted from DB with id:', id);
+                    resolve();
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error deleting history item from DB:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        // --- UI Manipulation Functions ---
+        function addHistoryItemToUI(item) {
+            const historyItemDiv = document.createElement('div');
+            historyItemDiv.classList.add('history-item', 'bg-gray-200', 'p-2', 'rounded', 'relative');
+            historyItemDiv.dataset.id = item.id; // Store ID for easy access
+
+            historyItemDiv.innerHTML = `
+                <div class="flex items-start">
+                    <img src="${item.image}" alt="${item.prompt}" 
+                        class="w-16 h-16 rounded-md object-cover flex-shrink-0 hover:scale-105 transition duration-200 ease-in-out">
+                    <div class="ml-3 flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-800 truncate-2-lines">${item.prompt}</p>
+                        <p class="text-xs text-green-500 mt-1">${item.style}</p>
+                        <p class="text-xs text-gray-500 mt-1">${item.mediastore_uid || ''}</p>
+                    </div>
+                </div>
+                <div class="history-actions absolute top-1 right-1 flex space-x-1">
+                    <button
+                        class="history-item-delete w-6 h-6 flex items-center justify-center hover:text-red-600 text-s transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            historyItemDiv.addEventListener('click', () => {
+                // Set Input field
+                promptInput.value = item.prompt;
+                styleInput.value = item.style;
+                aspectRatioSelect.value = item.aspect_ratio;
+                // Set Image field
+                finalImage.src = item.image;
+                finalImage.alt = "WOMBO Dream Image";
+                // Set Mediastore field
+                mediastoreUid = item.mediastore_uid;
+                mediastoreUidInput.value = item.mediastore_uid; // Set the input field
+
+                // Set radio field
+                if (item.weight) {
+                    const weightRadio = document.querySelector(`input[name="weight"][value="${item.weight}"]`);
+                    if (weightRadio) {
+                        weightRadio.checked = true;
+                    }
+                }
+
+                // HightLight
+                document.querySelectorAll('.history-item').forEach(el => el.classList.remove('bg-blue-300'));
+                historyItemDiv.classList.add('bg-blue-300');
+            });
+
+            // Add delete function
+            const deleteButton = historyItemDiv.querySelector('.history-item-delete');
+            deleteButton.addEventListener('click', (event) => {
+                event.stopPropagation(); // Prevent item click
+                const itemId = parseInt(historyItemDiv.dataset.id);
+                deleteHistoryItem(itemId).then(() => {
+                    historyItemDiv.remove(); // Remove from UI
+                });
+            });
+
+            historyContainer.appendChild(historyItemDiv);
+        }
+
+        function imageToBase64(imageUrl) {
+            const proxiedImageUrl = `https://aipic.liyao.sbs/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const dataURL = canvas.toDataURL();
+                    resolve(dataURL);
+                };
+
+                img.onerror = (error) => {
+                    reject(error);
+                };
+
+                img.src = proxiedImageUrl;
+            });
+        }
+
+        // --- Event Listeners and Initialization ---
+        window.addEventListener('load', async () => {
             const storedToken = getTokenFromLocalStorage();
             if (storedToken) {
                 authTokenInput.value = storedToken;
             }
             finalImage.alt = "生成的图片区域"; // 设置初始 alt 文本
-            mediastoreResponseOutput.textContent = "选择一张图片会自动上传。";
+
+            try {
+                await initializeDatabase();
+                displayHistory();
+            } catch (error) {
+                console.error("Failed to initialize database:", error);
+                // Handle the error appropriately, e.g., display a message to the user
+            }
         });
 
         // --- Generate Image Logic (Existing + Modified) ---
@@ -154,6 +400,7 @@
             const aspectRatioValue = aspectRatioSelect.value;
             const styleValue = styleInput.value;
             const authTokenValue = authTokenInput.value;
+            mediastoreUid = mediastoreUidInput.value.trim() || null;
 
             if (!authTokenValue) {
                 alert("请输入你的授权令牌。");
@@ -268,11 +515,37 @@
 
                 if (data.state === "completed") {
                     if (data.result && data.result.final) {
-                        finalImage.src = data.result.final;
+                        const imageUrl = data.result.final; // Get the image URL
+                        finalImage.src = imageUrl;
                         finalImage.alt = "WOMBO Dream Image";
                         polling = false;
                         if (timeoutId) clearTimeout(timeoutId);
                         console.log("图像已完成。轮询已停止。");
+
+                        // Convert image URL to Base64
+                        imageToBase64(imageUrl)
+                            .then(imageBase64 => {
+                                // --- Store to IndexDB after successful image generation ---
+                                const currentParams = {
+                                    prompt: promptInput.value,
+                                    style: styleInput.value,
+                                    aspect_ratio: aspectRatioSelect.value,
+                                    mediastore_uid: mediastoreUid,
+                                    weight: document.querySelector('input[name="weight"]:checked').value
+                                };
+
+                                saveImageToDB(currentParams, imageBase64)
+                                    .then(() => {
+                                        displayHistory(); // Refresh history
+                                    })
+                                    .catch(err => {
+                                        console.error("Error saving image to history:", err);
+                                    });
+                            })
+                            .catch(error => {
+                                console.error("Error converting image to base64:", error);
+                                // Handle error, maybe store the URL instead, or show an error message
+                            });
                     } else {
                         // 已完成但没有最终图像？处理错误
                         polling = false;
@@ -330,7 +603,8 @@
             if (file) {
                // Clear previous mediastore data
                clearMediastoreData(); // Call the clear function
-               mediastoreResponseOutput.textContent = "Uploading..."; // Update Status
+               mediastoreUid = null; // Clear existing mediastoreUid
+               mediastoreUidInput.value = ''; // Clear the input field
 
                 const reader = new FileReader();
                 reader.onload = async function(e) {
@@ -376,14 +650,10 @@
 
                        // Store the mediastore_uid
                        mediastoreUid = responseData.mediastore_uid;
-
-                      // Display the response JSON
-                      mediastoreResponseOutput.textContent = JSON.stringify(responseData, null, 2);
-                      console.log("Mediastore Response:", responseData);
+                       mediastoreUidInput.value = mediastoreUid;
 
                   } catch (error) {
                       console.error("上传到 mediastore 时出错:", error);
-                      mediastoreResponseOutput.textContent = `错误: ${error.message}`;
                       alert(`上传图像时出错: ${error.message}`);
                   }
                 }
@@ -391,7 +661,6 @@
                     console.error("读取文件时出错:", e);
                     alert("读取文件时出错。");
                     selectedFileBase64 = null;
-                    mediastoreResponseOutput.textContent = "读取文件时出错。";
                 }
                 reader.readAsDataURL(file); // 将文件读取为 Data URL
             } else {
@@ -399,17 +668,57 @@
             }
         });
 
-        // --- Clear Button Logic ---
         function clearMediastoreData() {
             selectedFileBase64 = null;
             mediastoreUid = null;
             imageUploadInput.value = ''; // Clear the file input
-            mediastoreResponseOutput.textContent = "选择一张图片会自动上传。";
+            mediastoreUidInput.value = ''; // Clear the input field
         }
 
         clearButton.addEventListener('click', () => {
             clearMediastoreData();
         });
+
+        const downloadButton = document.getElementById('download-button');
+        const filenameInput = document.getElementById('filename');
+
+        downloadButton.addEventListener('click', () => {
+            const imageUrl = finalImage.src;
+            if (imageUrl) {
+                let filename = filenameInput.value.trim();
+                if (!filename) {
+                    filename = promptInput.value.trim().substring(0, 30) || 'wombo-dream-image';
+                }
+                downloadImage(imageUrl, filename);
+            } else {
+                alert('请先生成图片！');
+            }
+        });
+
+        function downloadImage(imageUrl, filename) {
+            fetch(imageUrl, {
+                    method: 'GET',
+                    mode: 'cors', // 解决跨域问题
+                    headers: {
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename + '.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    console.error('下载图片时出错:', error);
+                    alert('下载图片时出错，请检查控制台。');
+                });
+        }
 
     </script>
 
