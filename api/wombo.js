@@ -1,6 +1,13 @@
 // api/wombo.js
 export default async function handler(req, res) {
     if (req.method === 'POST') {
+      // 从请求头中获取 Authorization Token
+      const authorizationToken = req.headers.authorization;
+  
+      if (!authorizationToken) {
+        return res.status(401).json({ error: 'Authorization Token is required' });
+      }
+  
       // 获取请求体中的数据
       const { prompt, aspect_ratio, style, display_freq } = req.body;
   
@@ -21,7 +28,7 @@ export default async function handler(req, res) {
         'accept': '*/*',
         'accept-encoding': 'gzip, deflate, br, zstd',
         'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-        'authorization': 'bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjcxMTE1MjM1YTZjNjE0NTRlZmRlZGM0NWE3N2U0MzUxMzY3ZWViZTAiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoibGl5YW8yMzEzODEiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EtL0FMVi1Vald0S2ptZkhHblFZWmJUS3BiX0xOa1U5UGV4SDdIX005Mi0wZndRaVkzUElTaXlMUnlZPXM5Ni1jIiwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL3BhaW50LXByb2QiLCJhdWQiOiJwYWludC1wcm9kIiwiYXV0aF90aW1lIjoxNzQ0MTcyMDkxLCJ1c2VyX2lkIjoiM2RFTUppOEdhZ1pXTHoyeWU5UVZ3eUFrTGlQMiIsInN1YiI6IjNkRU1KaThHYWdaV0x6MnllOVFWd3lBa0xpUDIiLCJpYXQiOjE3NDQ0NDczODYsImV4cCI6MTc0NDQ1MDk4NiwiZW1haWwiOiJxcTIzMTM4MTQyMjFAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZ29vZ2xlLmNvbSI6WyIxMDg4MjgxNTMxMzM3MTIxODc0NjciXSwiZW1haWwiOlsicXEyMzEzODE0MjIxQGdtYWlsLmNvbSJdfSwic2lnbl9pbl9wcm92aWRlciI6Imdvb2dsZS5jb20ifX0.fGx6Orhag53NoH2vR3BG3Hq5u9o5HuciZtZYvN279mMO88SPVcSKusQKlNWaw12jwJGagfC1gcctbsDxfkCAMuw56ABHH71vgqOpPTl63G2XkmG-dfvoF9mshNZlKqowWEoqb45Z6IcpSmnYuUf5Q4Q4d9wrHgyZaxPI68Kztilstb8EqHxwQ8muL7yjlEHP38Lv-gvJOamav3PLBRmF-QkRDsimJe7yjxxlD3-PrGXHYVHxWDtOvCKD6lbqUP0tIaehhfVhNHS_3eeFVxBxU1tOK0SeIkAw-ysAi-ZrLzd8LMnTzmD96p6zXxfqePA3CfB9LoMeaGxS9um0nPkXTA',
+        'authorization': authorizationToken, // 使用从前端传递过来的 Token
         'content-type': 'application/json',
         'origin': 'https://dream.ai',
         'priority': 'u=1, i',

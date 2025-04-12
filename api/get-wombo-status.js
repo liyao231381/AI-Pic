@@ -1,6 +1,11 @@
 //api/get-wombo-status.js
 export default async function handler(req, res) {
     if (req.method === 'GET') {
+          const authorizationToken = req.headers.authorization;
+  
+          if (!authorizationToken) {
+          return res.status(401).json({ error: 'Authorization Token is required' });
+          }
       const { taskId } = req.query;
   
       if (!taskId) {
@@ -8,7 +13,11 @@ export default async function handler(req, res) {
       }
   
       try {
-        const response = await fetch(`https://paint.api.wombo.ai/api/v2/tasks/${taskId}`);
+        const response = await fetch(`https://paint.api.wombo.ai/api/v2/tasks/${taskId}`, {
+           headers: {
+                  'Authorization': authorizationToken, // 使用从前端传递过来的 Token
+           }
+        });
         const data = await response.json();
   
         res.setHeader('Access-Control-Allow-Origin', '*');
