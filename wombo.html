@@ -1,460 +1,563 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WOMBO Dream API</title>
-    <script src="https://cdn.tailwindcss.com"></script> <!-- Use Tailwind v3 for wider compatibility if possible, but v2 works -->
+    <title>WOMBO Dream 艺术生成</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #6366f1; /* Example primary color */
-            --danger: #ef4444; /* Example danger color */
-            --gray: #94a3b8; /* Example gray color */
-            --dark: #1e293b; /* Example dark color */
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9; /* Example background */
-            color: var(--dark);
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             height: 100vh;
-            overflow: hidden; /* Prevent body scroll, panels will scroll */
+            overflow: hidden;
         }
-
-        /* Glass Effect */
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.6); /* Slightly less transparent */
+        
+        .container-wrapper {
+            display: flex;
+            height: 100vh;
+            padding: 1rem;
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border-radius: 0.5rem; /* rounded-lg */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
         }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        
+        .panel:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 3px;
+        
+        .gradient-btn {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
         }
-        ::-webkit-scrollbar-thumb {
-            background: var(--gray);
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary);
-        }
-
-        /* Input & Select Styles */
-        .form-input, .form-select {
-            @apply shadow-sm appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition duration-150 ease-in-out;
-        }
-
-        /* Generate Button Styles */
-        .btn-generate {
-            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%);
-            @apply text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-all duration-300 ease-in-out flex items-center justify-center;
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
-        }
-        .btn-generate:hover {
-            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #1E40AF 100%);
-            box-shadow: 0 6px 8px rgba(37, 99, 235, 0.4);
+        
+        .gradient-btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
         }
-        .btn-generate:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+        
+        .secondary-btn {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
         }
-        .btn-generate:disabled {
-            background: linear-gradient(135deg, #93C5FD 0%, #60A5FA 50%, #3B82F6 100%);
-            transform: none;
-            box-shadow: none;
-            cursor: not-allowed;
+        
+        .download-btn {
+            background: linear-gradient(45deg, #0ba360 0%, #3cba92 100%);
         }
-        .btn-generate .spinner {
-            animation: spin 1s linear infinite;
+        
+        .history-item-delete {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background-color: rgba(220, 38, 38, 0.8);
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            line-height: 1;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
         }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* Secondary Button */
-        .btn-secondary {
-            @apply bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out;
-        }
-        .btn-secondary:hover {
-             transform: translateY(-1px);
-        }
-
-        /* Success Button */
-        .btn-success {
-             @apply bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out;
-        }
-         .btn-success:hover {
-             transform: translateY(-1px);
-        }
-
-        /* History Item Styles */
-        .history-item {
-            @apply bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition cursor-pointer relative overflow-hidden; /* Added overflow-hidden */
-        }
-        .history-item:hover {
-            transform: translateY(-2px);
-        }
-        .history-item .history-actions {
-            @apply absolute top-1 right-1 flex space-x-1 opacity-0 transition-opacity duration-200 ease-in-out;
-        }
-        .history-item:hover .history-actions {
+        
+        .history-item:hover .history-item-delete {
             opacity: 1;
         }
-        .history-item-delete {
-             @apply w-6 h-6 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 rounded-full transition duration-150 ease-in-out;
+        
+        .input-field {
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
         }
-        .history-item.selected { /* Style for selected history item */
-            @apply ring-2 ring-offset-1 ring-indigo-400 bg-indigo-50;
+        
+        .input-field:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
         }
-
-        /* Notification Styles */
-        .notification {
-            animation: slideIn 0.3s ease, fadeOut 0.5s ease 2.5s forwards;
-            @apply fixed bottom-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg mb-2 flex items-center text-white;
+        
+        .file-upload {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
         }
-        .notification.success { @apply bg-green-500; }
-        .notification.error { @apply bg-red-600; }
-        .notification.info { @apply bg-blue-500; }
-
-        @keyframes slideIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        
+        .file-upload-btn {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        @keyframes fadeOut { to { opacity: 0; } }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            body {
-                height: auto;
-                overflow: auto;
-            }
-            .main-container {
-                flex-direction: column;
-                height: auto;
-            }
-            .panel {
-                width: 100% !important;
-                height: auto !important;
-                max-height: none; /* Allow panels to grow */
-                margin-bottom: 1rem; /* Add space between panels */
-            }
-            .panel:last-child {
-                 margin-bottom: 0;
-            }
+        
+        .file-upload-btn:hover {
+            border-color: #667eea;
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+        
+        .file-upload input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .radio-btn:checked + .radio-label {
+            border-color: #667eea;
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+        
+        .preview-image-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: #f8fafc;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .preview-placeholder {
+            color: #94a3b8;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .history-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .history-item:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #667eea;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Toggle button styles */
+        .toggle-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+        
+        .toggle-btn:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+        
+        .toggle-btn i {
+            transition: transform 0.3s ease;
+        }
+        
+        .image-ref-section {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+        
+        .image-ref-section.expanded {
+            max-height: 500px;
         }
     </style>
 </head>
 
-<body class="flex flex-col">
-
-    <!-- Main Content Area -->
-    <div class="main-container flex flex-1 overflow-hidden p-4 space-x-4">
-
-        <!-- Parameter Panel (Left) -->
-        <div class="panel glass-effect w-full md:w-1/4 h-full overflow-y-auto p-4 flex flex-col">
-            <h1 class="text-2xl font-bold mb-4 text-indigo-600">
-                <i class="fas fa-paint-brush mr-2"></i>WOMBO Dream
-            </h1>
-
-            <!-- Authorization Token Input -->
+<body>
+    <div class="container-wrapper gap-4">
+        <!-- Left Panel - Parameters -->
+        <div class="panel w-80 p-4 flex flex-col">
+            <div class="flex items-center mb-2">
+                <div class="bg-gradient-to-r from-purple-500 to-blue-500 w-10 h-10 rounded-lg flex items-center justify-center text-white mr-3">
+                    <i class="fas fa-magic"></i>
+                </div>
+                <h1 class="text-xl font-bold text-gray-800">WOMBO Dream</h1>
+            </div>
+            <div class="flex justify-center items-center mb-4">
+                <a href="./wombohistory.html" target="_blank" class="text-blue-500">WOMBO Style 画廊</a>
+            </div>
             <div class="mb-4">
-                <label for="authorization-token" class="block text-gray-700 text-sm font-bold mb-2">
-                    <i class="fas fa-key mr-1 text-yellow-500"></i>授权令牌:
+                <label for="authorization-token" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <i class="fas fa-key mr-2 text-gray-500"></i> 授权令牌
                 </label>
-                <input type="text" id="authorization-token" class="form-input" placeholder="输入你的授权令牌">
+                <input type="text" id="authorization-token"
+                    class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
+                    placeholder="输入你的授权令牌">
             </div>
-            <hr class="my-4 border-gray-200">
+            
+            <div class="border-t border-gray-200 pt-4">
+                <h2 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                    <i class="fas fa-image mr-2 text-blue-500"></i> 生成设置
+                </h2>
+                
+                <div class="mb-3">
+                    <label for="aspect_ratio" class="block text-sm font-medium text-gray-700 mb-1">宽高比</label>
+                    <select id="aspect_ratio"
+                        class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none">
+                        <option value="old_vertical_ratio">默认 960×1568</option>
+                        <option value="old_horizontal_ratio">正方形</option>
+                        <option value="widescreen">宽屏</option>
+                        <option value="vertical">垂直</option>
+                    </select>
+                </div>
 
-            <h2 class="text-lg font-semibold mb-3 text-gray-700">
-                <i class="fas fa-cogs mr-1 text-gray-500"></i>生成设置
-            </h2>
-            <div class="mb-4">
-                <label for="aspect_ratio" class="block text-gray-700 text-sm font-bold mb-2">
-                    <i class="fas fa-expand-alt mr-1 text-blue-500"></i>宽高比:
-                </label>
-                <select id="aspect_ratio" class="form-select">
-                    <option value="old_vertical_ratio">默认 960×1568</option>
-                    <option value="old_horizontal_ratio">正方形</option>
-                    <option value="widescreen">宽屏</option>
-                    <option value="vertical">垂直</option>
-                </select>
-            </div>
+                <div class="mb-3">
+                    <label for="style" class="block text-sm font-medium text-gray-700 mb-1">风格 ID</label>
+                    <input type="number" id="style"
+                        class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
+                        value="147"
+                        onkeydown="if (event.keyCode == 13) { handleFirstRequest(); return false; }">
+                </div>
 
-            <div class="mb-4">
-                <label for="style" class="block text-gray-700 text-sm font-bold mb-2">
-                    <i class="fas fa-palette mr-1 text-pink-500"></i>风格 ID:
-                </label>
-                <input type="number" id="style" class="form-input" value="147">
-            </div>
-
-            <div class="mb-4">
-                <label for="prompt" class="block text-gray-700 text-sm font-bold mb-2">
-                    <i class="fas fa-comment-dots mr-1 text-green-500"></i>提示词:
-                </label>
-                <input type="text" id="prompt" class="form-input" value="cow eat grass">
-            </div>
-
-            <hr class="my-4 border-gray-200">
-
-            <h2 class="text-lg font-semibold mb-3 text-gray-700">
-                 <i class="fas fa-image mr-1 text-gray-500"></i>参考图片 (可选)
-            </h2>
-            <!-- Image Upload Section -->
-            <div class="mb-4">
-                <label for="image-upload" class="block text-gray-700 text-sm font-bold mb-2">选择图片:</label>
-                <input type="file" id="image-upload" accept="image/jpeg, image/png"
-                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"/>
-            </div>
-            <div class="mb-4">
-                <label for="mediastore-uid" class="block text-gray-700 text-sm font-bold mb-2">Mediastore UID:</label>
-                <input type="text" id="mediastore-uid" class="form-input" placeholder="上传后自动填充或手动输入">
-            </div>
-
-
-            <!-- Weight Selection Radios -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    <i class="fas fa-balance-scale-right mr-1 text-purple-500"></i>图片权重:
-                </label>
-                <div class="flex items-center space-x-4">
-                    <div>
-                        <input type="radio" id="weight-low" name="weight" value="LOW" class="mr-1 focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" checked>
-                        <label for="weight-low" class="text-gray-700 text-sm">低</label>
-                    </div>
-                    <div>
-                        <input type="radio" id="weight-medium" name="weight" value="MEDIUM" class="mr-1 focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                        <label for="weight-medium" class="text-gray-700 text-sm">中</label>
-                    </div>
-                    <div>
-                        <input type="radio" id="weight-high" name="weight" value="HIGH" class="mr-1 focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                        <label for="weight-high" class="text-gray-700 text-sm">高</label>
-                    </div>
+                <div class="mb-3">
+                    <label for="prompt" class="block text-sm font-medium text-gray-700 mb-1">提示词</label>
+                    <input type="text" id="prompt"
+                        class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
+                        value="a woman in A-POSE, white background"
+                        onkeydown="if (event.keyCode == 13) { handleFirstRequest(); return false; }">
                 </div>
             </div>
-
-            <!-- Clear Button -->
-            <div class="flex justify-start mb-4">
-                 <button id="clear-button" class="btn-secondary text-sm">
-                     <i class="fas fa-eraser mr-1"></i>清除参考图
-                 </button>
+            
+            <!-- Image Reference Toggle Button -->
+            <div class="toggle-btn" id="toggle-image-ref">
+                <i class="fas fa-caret-right mr-2 text-gray-500"></i>
+                <span class="text-sm font-medium text-gray-700">图片参考</span>
             </div>
+            
+            <!-- Image Reference Section (initially hidden) -->
+            <div class="image-ref-section mb-3 overflow-y-auto" id="image-ref-section">
+                <div class="mb-3">
+                    <div class="file-upload">
+                        <div class="file-upload-btn">
+                            <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-1"></i>
+                            <p class="text-sm text-gray-500">拖放文件到这里或点击上传</p>
+                            <span class="text-xs text-gray-400">支持 JPG, PNG</span>
+                        </div>
+                        <input type="file" id="image-upload" accept="image/jpeg, image/png">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="mediastore-uid" class="block text-sm font-medium text-gray-700 mb-1">Mediastore UID</label>
+                    <input type="text" id="mediastore-uid"
+                        class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
+                        placeholder="输入 Mediastore UID">
+                </div>
 
-            <!-- Generate Button -->
-            <div class="mt-auto pt-4"> <!-- Push button to bottom -->
-                 <button id="request-button-1" class="btn-generate w-full">
-                     <span id="generate-text">生成图片</span>
-                     <span id="generate-spinner" class="ml-2 hidden">
-                         <i class="fas fa-spinner spinner"></i>
-                     </span>
-                 </button>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">权重</label>
+                    <div class="flex flex-wrap gap-2">
+                        <div class="flex items-center">
+                            <input type="radio" id="weight-low" name="weight" value="LOW" class="hidden radio-btn" checked>
+                            <label for="weight-low" class="radio-label px-3 py-1 border rounded-lg cursor-pointer transition">低</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="weight-medium" name="weight" value="MEDIUM" class="hidden radio-btn">
+                            <label for="weight-medium" class="radio-label px-3 py-1 border rounded-lg cursor-pointer transition">中</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="weight-high" name="weight" value="HIGH" class="hidden radio-btn">
+                            <label for="weight-high" class="radio-label px-3 py-1 border rounded-lg cursor-pointer transition">高</label>
+                        </div>
+                    </div>
+                </div>
+                <button id="clear-button"
+                    class="w-full py-2 px-3 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300 transition flex items-center justify-center">
+                    <i class="fas fa-trash-alt mr-2"></i> 清除
+                </button>
+            </div>
+            
+            <div>
+                <button id="request-button-1"
+                    class="w-full py-2 px-3 rounded-lg text-white text-sm font-medium gradient-btn flex items-center justify-center">
+                    <i class="fas fa-magic mr-2"></i> 生成图片
+                </button>
             </div>
         </div>
-
-        <!-- Image Panel (Center) -->
-        <div class="panel glass-effect w-full md:w-1/2 h-full flex flex-col items-center justify-center p-4">
-             <div id="image-display-area" class="w-full h-full flex items-center justify-center flex-grow mb-4">
-                 <img id="final-image" src="" alt="生成的图片区域" class="max-w-full max-h-full object-contain rounded-lg shadow-sm transition duration-300 ease-in-out">
-                 <!-- Placeholder/Loading state could go here -->
-                 <div id="image-placeholder" class="text-center text-gray-500 hidden">
-                     <i class="fas fa-image fa-3x mb-2"></i>
-                     <p>图片将在这里显示</p>
-                 </div>
-                  <div id="image-loading" class="text-center text-indigo-500 hidden">
-                     <i class="fas fa-spinner fa-spin fa-3x mb-2"></i>
-                     <p>生成中...</p>
-                 </div>
-             </div>
-             <div class="flex items-center w-full max-w-md mt-auto"> <!-- Push download to bottom -->
-                 <input type="text" id="filename" placeholder="自定义文件名 (可选)" class="form-input rounded-r-none flex-grow">
-                 <button id="download-button" class="btn-success rounded-l-none flex-shrink-0">
-                     <i class="fas fa-download mr-1"></i>下载
-                 </button>
+        
+        <!-- Center Panel - Image Preview -->
+        <div class="panel flex-1 p-4 flex flex-col">
+            <div class="preview-image-container mb-3">
+                <img id="final-image" src="" alt="生成的图片" class="w-full h-full object-contain hidden">
+                <div id="preview-placeholder" class="preview-placeholder">
+                    <i class="fas fa-image fa-3x mb-2 text-gray-300"></i>
+                    <p class="text-gray-500">图片预览区域</p>
+                    <p class="text-xs text-gray-400 mt-1">生成的图片将显示在这里</p>
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <input type="text" id="filename" placeholder="自定义文件名 (可选)" 
+                    class="input-field flex-1 px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none text-sm">
+                <button id="download-button" 
+                    class="download-btn py-2 px-4 rounded-lg text-white text-sm font-medium flex items-center">
+                    <i class="fas fa-download mr-2"></i> 下载
+                </button>
             </div>
         </div>
-
-        <!-- History Panel (Right) -->
-        <div class="panel glass-effect w-full md:w-1/4 h-full overflow-y-auto p-4">
-            <h2 class="text-lg font-semibold mb-4 text-gray-700">
-                <i class="fas fa-history mr-1"></i> 历史记录
-            </h2>
-            <div id="history-container" class="space-y-3">
-                <!-- 历史记录项将在此处动态生成 -->
-                 <div id="empty-history" class="text-center py-10 text-gray-400 hidden">
-                     <i class="fas fa-box-open fa-2x mb-2"></i>
-                     <p>还没有历史记录</p>
-                 </div>
+        
+        <!-- Right Panel - History -->
+        <div class="panel w-80 p-4 flex flex-col">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-md font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-history mr-2 text-purple-500"></i> 历史记录
+                </h2>
+                <button id="export-button"
+                    class="ml-2 py-1 px-2 rounded-lg bg-gray-200 text-gray-700 text-xs font-medium hover:bg-gray-300 transition flex items-center">
+                    <i class="fas fa-file-export mr-1"></i> 导出
+                </button>
+                <span id="history-count" class="bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-0.5 rounded-full">0</span>
+            </div>
+            
+            <div id="history-container" class="space-y-2 flex-1 overflow-y-auto pb-2">
+                <div id="empty-history" class="text-center py-8">
+                    <i class="fas fa-images fa-2x text-gray-300 mb-2"></i>
+                    <p class="text-gray-500">暂无历史记录</p>
+                    <p class="text-xs text-gray-400 mt-1">生成的图片将显示在这里</p>
+                </div>
             </div>
         </div>
-
     </div>
 
-    <!-- Notification container -->
-    <div id="notificationContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
-
+    <!-- Original JavaScript Code (unchanged) -->
     <script>
-        // --- Element References ---
+        // All original JavaScript code goes here unchanged
+        // Only the HTML and CSS have been restyled
+        
+        // ==== ORIGINAL JAVASCRIPT CODE ==== //
         const requestButton1 = document.getElementById('request-button-1');
-        const generateText = document.getElementById('generate-text');
-        const generateSpinner = document.getElementById('generate-spinner');
         const finalImage = document.getElementById('final-image');
-        const imagePlaceholder = document.getElementById('image-placeholder');
-        const imageLoading = document.getElementById('image-loading');
-        const imageDisplayArea = document.getElementById('image-display-area');
-
         const authTokenInput = document.getElementById('authorization-token');
+        const previewPlaceholder = document.getElementById('preview-placeholder');
+        const emptyHistory = document.getElementById('empty-history');
+        const historyCount = document.getElementById('history-count');
+
         const promptInput = document.getElementById('prompt');
         const aspectRatioSelect = document.getElementById('aspect_ratio');
         const styleInput = document.getElementById('style');
+
+        // New elements for image upload
         const imageUploadInput = document.getElementById('image-upload');
         const clearButton = document.getElementById('clear-button');
         const mediastoreUidInput = document.getElementById('mediastore-uid');
-        const historyContainer = document.getElementById('history-container');
-        const emptyHistory = document.getElementById('empty-history');
-        const downloadButton = document.getElementById('download-button');
-        const filenameInput = document.getElementById('filename');
-        const notificationContainer = document.getElementById('notificationContainer');
 
-        // --- State Variables ---
+        // History elements
+        const historyContainer = document.getElementById('history-container');
+        const exportButton = document.getElementById('export-button');
+
         let taskId = null;
         const LOCAL_STORAGE_TOKEN_KEY = 'wombo_auth_token';
-        let polling = false; // Start as false, only true when actively polling
+        let polling = true;
         let timeoutId = null;
-        const DEFAULT_DISPLAY_FREQ = 10;
-        let selectedFileBase64 = null;
-        let selectedFileType = 'jpeg';
-        let mediastoreUid = null;
+        const DEFAULT_DISPLAY_FREQ = 10; // 设置默认的 Display Frequency
+        let selectedFileBase64 = null; // 用于存储所选文件的 Base64 字符串
+        let selectedFileType = 'jpeg'; // 默认或检测到的文件类型
+        let mediastoreUid = null; // Store the mediastore_uid from the upload response
 
-        // --- Database Variables ---
+        // --- IndexedDB Setup ---
         const DB_NAME = 'womboDreamHistoryDB';
-        const DB_VERSION = 1;
+        const DB_VERSION = 1; // Increment to trigger onupgradeneeded
         const OBJECT_STORE_NAME = 'imageHistory';
+
         let db;
 
-        // --- UI Helper Functions ---
-        function showImageLoading() {
-            finalImage.src = "";
-            finalImage.alt = "生成中...";
-            finalImage.classList.add('hidden');
-            imagePlaceholder.classList.add('hidden');
-            imageLoading.classList.remove('hidden');
-            requestButton1.disabled = true;
-            generateText.textContent = '生成中';
-            generateSpinner.classList.remove('hidden');
-        }
-
-        function showImageResult(src, alt = "WOMBO Dream Image") {
-            finalImage.src = src;
-            finalImage.alt = alt;
-            finalImage.classList.remove('hidden');
-            imagePlaceholder.classList.add('hidden');
-            imageLoading.classList.add('hidden');
-            requestButton1.disabled = false;
-            generateText.textContent = '生成图片';
-            generateSpinner.classList.add('hidden');
-        }
-
-         function showImageError(errorMessage) {
-            finalImage.src = "";
-            finalImage.alt = errorMessage;
-            finalImage.classList.add('hidden');
-            imagePlaceholder.classList.add('hidden');
-            imageLoading.classList.add('hidden'); // Hide loading spinner on error too
-             // Optionally show an error icon/message in the display area
-            requestButton1.disabled = false;
-            generateText.textContent = '生成图片';
-            generateSpinner.classList.add('hidden');
-         }
-
-        function showImagePlaceholder() {
-            finalImage.src = "";
-            finalImage.alt = "生成的图片区域";
-            finalImage.classList.add('hidden');
-            imagePlaceholder.classList.remove('hidden');
-            imageLoading.classList.add('hidden');
-            requestButton1.disabled = false;
-            generateText.textContent = '生成图片';
-            generateSpinner.classList.add('hidden');
-        }
-
-        // Show notification
-        function showNotification(message, type = 'info') { // types: info, success, error
-            const notification = document.createElement('div');
-            notification.classList.add('notification', type); // Add type class
-
-            let iconClass = 'fa-info-circle'; // Default icon
-            if (type === 'success') iconClass = 'fa-check-circle';
-            if (type === 'error') iconClass = 'fa-exclamation-circle';
-
-            notification.innerHTML = `
-                <i class="fas ${iconClass} mr-2"></i>
-                <span>${message}</span>
-            `;
-
-            notificationContainer.appendChild(notification);
-
-            // Auto remove after animation ends (3s total)
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-
-        // --- Database Functions ---
         function initializeDatabase() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
+
                 request.onerror = (event) => {
                     console.error("Database open error:", event);
-                    showNotification('数据库初始化失败', 'error');
                     reject(event);
                 };
+
                 request.onsuccess = (event) => {
                     db = event.target.result;
                     console.log("Database opened successfully");
                     resolve();
                 };
+
                 request.onupgradeneeded = (event) => {
                     const db = event.target.result;
+
+                    // 如果旧版本的数据库存在，删除旧的对象仓库
                     if (db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
                         db.deleteObjectStore(OBJECT_STORE_NAME);
                     }
+
+                    // 创建新的对象仓库
                     const objectStore = db.createObjectStore(OBJECT_STORE_NAME, { keyPath: 'id', autoIncrement: true });
-                    objectStore.createIndex('prompt', 'prompt', { unique: false });
+                    objectStore.createIndex('prompt', 'prompt', { unique: false }); // 创建 prompt 索引
                     console.log("Object store created");
                 };
             });
         }
 
+        // --- Local Storage Functions ---
+        function saveTokenToLocalStorage(token) {
+            localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, token);
+        }
+
+        function getTokenFromLocalStorage() {
+            return localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
+        }
+
+        // --- Utility Functions ---
+        function generateUniqueId() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2);
+        }
+
+        function displayHistory() {
+            getAllHistoryItems().then(items => {
+                // 反转数组，使最新的记录排在最前面
+                items.reverse();
+                // 使用新的方式更新UI
+                updateHistoryUI(items);
+                historyCount.textContent = items.length;
+            });
+        }
+
+        function updateHistoryUI(items) {
+            // 首先清空历史记录容器
+            historyContainer.innerHTML = '';
+
+            if (items.length > 0) {
+                emptyHistory.style.display = 'none';
+                // 使用文档片段优化性能
+                const fragment = document.createDocumentFragment();
+                items.forEach(item => {
+                    const historyItemDiv = createHistoryItemDiv(item);
+                    fragment.appendChild(historyItemDiv);
+                });
+                historyContainer.appendChild(fragment);
+            } else {
+                emptyHistory.style.display = 'block';
+            }
+        }
+
+        function createHistoryItemDiv(item) {
+            const historyItemDiv = document.createElement('div');
+            historyItemDiv.classList.add('history-item', 'bg-white', 'p-2', 'rounded-lg', 'shadow-sm', 'relative', 'hover:shadow-md');
+            historyItemDiv.dataset.id = item.id; // Store ID for easy access
+            historyItemDiv.innerHTML = `
+                <div class="flex items-start">
+                    <div class="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
+                        <img src="${item.image}" alt="${item.prompt}" 
+                            class="w-full h-full object-cover transition duration-200 ease-in-out">
+                    </div>
+                    <div class="ml-2 flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-800 line-clamp-2">${item.prompt || '无提示词'}</p>
+                        <div class="flex items-center mt-1">
+                            <span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                            <span class="text-xs text-gray-500 font-bold">${item.style}</span>
+                        </div>
+                        ${item.mediastore_uid ? `<p class="text-xs text-gray-400 mt-1 truncate">${item.mediastore_uid}</p>` : ''}
+                    </div>
+                </div>
+                <button class="history-item-delete">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            historyItemDiv.addEventListener('click', () => {
+                // Set Input field
+                promptInput.value = item.prompt;
+                styleInput.value = item.style;
+                aspectRatioSelect.value = item.aspect_ratio;
+                // Set Image field
+                finalImage.src = item.image;
+                finalImage.classList.remove('hidden');
+                previewPlaceholder.style.display = 'none';
+                finalImage.alt = "WOMBO Dream Image";
+                // Set Mediastore field
+                mediastoreUid = item.mediastore_uid;
+                mediastoreUidInput.value = item.mediastore_uid; // Set the input field
+                // Set radio field
+                if (item.weight) {
+                    const weightRadio = document.querySelector(`input[name="weight"][value="${item.weight}"]`);
+                    if (weightRadio) {
+                        weightRadio.checked = true;
+                        document.querySelector(`label[for="${weightRadio.id}"]`).classList.add('border-blue-500', 'bg-blue-50');
+                    }
+                }
+                // HightLight
+                document.querySelectorAll('.history-item').forEach(el => el.classList.remove('ring-2', 'ring-blue-500'));
+                historyItemDiv.classList.add('ring-2', 'ring-blue-500');
+            });
+            // Add delete function
+            const deleteButton = historyItemDiv.querySelector('.history-item-delete');
+            deleteButton.addEventListener('click', (event) => {
+                event.stopPropagation(); // Prevent item click
+                const itemId = parseInt(historyItemDiv.dataset.id);
+                deleteHistoryItem(itemId).then(() => {
+                    // 删除成功后，从 UI 中移除该元素
+                    const itemToRemove = document.querySelector(`.history-item[data-id="${itemId}"]`);
+                    if (itemToRemove) {
+                        historyContainer.removeChild(itemToRemove);
+                    }
+                    // 重新获取历史记录数量并更新
+                    getAllHistoryItems().then(items => {
+                        historyCount.textContent = items.length;
+                        if (items.length === 0) {
+                            emptyHistory.style.display = 'block';
+                        }
+                    });
+                }).catch(err => {
+                    console.error('Error deleting history item:', err);
+                });
+            });
+            return historyItemDiv;
+        }
+
+        // --- IndexedDB Functions ---
         function saveImageToDB(data, imageBase64) {
             return new Promise((resolve, reject) => {
-                if (!db) return reject("Database not initialized");
                 const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
                 const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
-                const item = { ...data, image: imageBase64, timestamp: Date.now() }; // Add timestamp
+
+                const item = {
+                    ...data,
+                    image: imageBase64 // Store the base64 image
+                };
+
                 const request = objectStore.add(item);
+
                 request.onsuccess = (event) => {
                     console.log('Image saved to DB with id:', event.target.result);
-                    resolve(event.target.result);
+                    resolve(event.target.result); // Resolve with the new ID
                 };
+
                 request.onerror = (event) => {
                     console.error('Error saving image to DB:', event);
-                    showNotification('保存历史记录失败', 'error');
                     reject(event);
                 };
             });
@@ -462,194 +565,140 @@
 
         function getAllHistoryItems() {
             return new Promise((resolve, reject) => {
-                 if (!db) return reject("Database not initialized");
                 const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
                 const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
-                // Get all and sort by timestamp descending in JS
                 const request = objectStore.getAll();
 
                 request.onsuccess = (event) => {
-                    const items = event.target.result;
-                    items.sort((a, b) => b.timestamp - a.timestamp); // Sort newest first
-                    resolve(items);
-                 };
-                 request.onerror = (event) => {
+                    resolve(event.target.result);
+                };
+
+                request.onerror = (event) => {
                     console.error('Error getting all history items:', event);
-                    showNotification('加载历史记录失败', 'error');
                     reject(event);
                 };
             });
         }
 
         function deleteHistoryItem(id) {
-           return new Promise((resolve, reject) => {
-                if (!db) return reject("Database not initialized");
+            return new Promise((resolve, reject) => {
                 const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
                 const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
                 const request = objectStore.delete(id);
                 request.onsuccess = (event) => {
                     console.log('History item deleted from DB with id:', id);
-                    showNotification('历史记录已删除', 'success');
                     resolve();
                 };
                 request.onerror = (event) => {
                     console.error('Error deleting history item from DB:', event);
-                    showNotification('删除历史记录失败', 'error');
                     reject(event);
                 };
             });
         }
 
-        // --- Local Storage ---
-        function saveTokenToLocalStorage(token) {
-            localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, token);
-        }
-        function getTokenFromLocalStorage() {
-            return localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
-        }
-
-        // --- History UI ---
-        function displayHistory() {
-            historyContainer.innerHTML = ''; // Clear existing items first
-             // Ensure emptyHistory div exists before trying to modify it
-            if (emptyHistory) emptyHistory.classList.add('hidden');
-
-            getAllHistoryItems().then(items => {
-                if (items.length === 0) {
-                    if (emptyHistory) emptyHistory.classList.remove('hidden');
-                } else {
-                     if (emptyHistory) emptyHistory.classList.add('hidden');
-                    items.forEach(item => addHistoryItemToUI(item));
-                }
-            }).catch(error => {
-                console.error("Failed to display history:", error);
-                 if (emptyHistory) emptyHistory.classList.remove('hidden'); // Show empty state on error too
-            });
-        }
-
-
         function addHistoryItemToUI(item) {
-            const historyItemDiv = document.createElement('div');
-            historyItemDiv.classList.add('history-item', 'relative');
-            historyItemDiv.dataset.id = item.id;
-
-            historyItemDiv.innerHTML = `
-                <div class="flex items-start space-x-3">
-                    <img src="${item.image}" alt="${item.prompt}"
-                        class="w-16 h-16 rounded-md object-cover flex-shrink-0 border border-gray-200">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-800 truncate" title="${item.prompt}">${item.prompt}</p>
-                        <p class="text-xs text-gray-500 mt-1">风格: ${item.style}</p>
-                         <p class="text-xs text-gray-400 mt-1">${new Date(item.timestamp).toLocaleString()}</p>
-                    </div>
-                </div>
-                <div class="history-actions absolute top-0 right-0">
-                    <button class="history-item-delete" title="删除">
-                        <i class="fas fa-times fa-xs"></i>
-                    </button>
-                </div>
-            `;
-
-            historyItemDiv.addEventListener('click', () => {
-                promptInput.value = item.prompt;
-                styleInput.value = item.style;
-                aspectRatioSelect.value = item.aspect_ratio;
-                showImageResult(item.image, "WOMBO Dream Image"); // Show image in main area
-                mediastoreUid = item.mediastore_uid;
-                mediastoreUidInput.value = item.mediastore_uid || '';
-
-                if (item.weight) {
-                    const weightRadio = document.querySelector(`input[name="weight"][value="${item.weight}"]`);
-                    if (weightRadio) weightRadio.checked = true;
-                } else {
-                    // Default to low if weight not saved (older items)
-                     document.getElementById('weight-low').checked = true;
-                }
-
-                // Highlight selected item
-                document.querySelectorAll('.history-item').forEach(el => el.classList.remove('selected'));
-                historyItemDiv.classList.add('selected');
-                showNotification('历史记录已加载');
-            });
-
-            const deleteButton = historyItemDiv.querySelector('.history-item-delete');
-            deleteButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                const itemId = parseInt(historyItemDiv.dataset.id);
-                if (confirm('确定要删除这条历史记录吗?')) {
-                    deleteHistoryItem(itemId).then(() => {
-                        historyItemDiv.remove();
-                         // Check if history is now empty after removing item
-                         // Use querySelectorAll to count actual history items excluding the placeholder
-                         const remainingItems = historyContainer.querySelectorAll('.history-item');
-                         if (remainingItems.length === 0 && emptyHistory) {
-                             emptyHistory.classList.remove('hidden');
-                         }
-                    });
-                }
-            });
-
-            // Prepend the new item instead of appending
-            if (historyContainer.firstChild && historyContainer.firstChild.id === 'empty-history') {
-                 historyContainer.insertBefore(historyItemDiv, historyContainer.firstChild.nextSibling);
-            } else {
-                 historyContainer.insertBefore(historyItemDiv, historyContainer.firstChild);
-            }
-            // Ensure empty history placeholder is hidden if we just added an item
-             if (emptyHistory) emptyHistory.classList.add('hidden');
+            const historyItemDiv = createHistoryItemDiv(item);
+            historyContainer.appendChild(historyItemDiv);
         }
 
-
-        // --- Image Conversion ---
         function imageToBase64(imageUrl) {
             const proxiedImageUrl = `https://aipic.liyao.sbs/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+
             return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
+
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     canvas.width = img.width;
                     canvas.height = img.height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0);
-                    const dataURL = canvas.toDataURL('image/png'); // Specify format if needed
+                    const dataURL = canvas.toDataURL();
                     resolve(dataURL);
                 };
+
                 img.onerror = (error) => {
-                     console.error("Error loading image for base64 conversion:", error);
-                     showNotification('图片转换Base64失败', 'error');
-                     reject(error);
+                    reject(error);
                 };
+
                 img.src = proxiedImageUrl;
             });
         }
 
-        // --- Core API Logic ---
+        // Update radio button styling when changed
+        document.querySelectorAll('input[name="weight"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.radio-label').forEach(label => {
+                    label.classList.remove('border-blue-500', 'bg-blue-50');
+                });
+                document.querySelector(`label[for="${this.id}"]`).classList.add('border-blue-500', 'bg-blue-50');
+            });
+        });
+
+        // Initialize radio buttons
+        document.querySelector('input[name="weight"]:checked + label').classList.add('border-blue-500', 'bg-blue-50');
+
+        // --- Event Listeners and Initialization ---
+        window.addEventListener('load', async () => {
+            const storedToken = getTokenFromLocalStorage();
+            if (storedToken) {
+                authTokenInput.value = storedToken;
+            }
+            finalImage.alt = "生成的图片区域"; // 设置初始 alt 文本
+
+            try {
+                await initializeDatabase();
+                displayHistory();
+            } catch (error) {
+                console.error("Failed to initialize database:", error);
+                // Handle the error appropriately, e.g., display a message to the user
+            }
+        });
+
+        // --- Image Reference Toggle Functionality ---
+        const toggleImageRefBtn = document.getElementById('toggle-image-ref');
+        const imageRefSection = document.getElementById('image-ref-section');
+
+        toggleImageRefBtn.addEventListener('click', () => {
+            imageRefSection.classList.toggle('expanded');
+            const icon = toggleImageRefBtn.querySelector('i');
+            if (imageRefSection.classList.contains('expanded')) {
+                icon.classList.remove('fa-caret-right');
+                icon.classList.add('fa-caret-down');
+            } else {
+                icon.classList.remove('fa-caret-down');
+                icon.classList.add('fa-caret-right');
+            }
+        });
+
+        // --- Generate Image Logic (Existing + Modified) ---
         async function handleFirstRequest() {
-            console.log("Generate button clicked"); // Debugging line
             const promptValue = promptInput.value;
             const aspectRatioValue = aspectRatioSelect.value;
             const styleValue = styleInput.value;
             const authTokenValue = authTokenInput.value;
-            // Read mediastoreUid from input field directly before request
             mediastoreUid = mediastoreUidInput.value.trim() || null;
 
             if (!authTokenValue) {
-                showNotification("请输入授权令牌", 'error');
-                return;
-            }
-             if (!promptValue) {
-                showNotification("请输入提示词", 'error');
+                alert("请输入你的授权令牌。");
                 return;
             }
 
-            showImageLoading(); // Show loading state
-            polling = false; // Stop any previous polling
-            if (timeoutId) clearTimeout(timeoutId);
+             // Clear previous image and stop polling if any
+            finalImage.src = "";
+            finalImage.classList.add('hidden');
+            previewPlaceholder.style.display = 'flex';
+            finalImage.alt = "生成中...";
+            polling = false;
+             if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+
 
             try {
-                let requestUrl = 'https://aipic.liyao.sbs/api/wombo';
-                let requestBody = {
+                let requestUrl = 'https://aipic.liyao.sbs/api/wombo'; // Default URL
+                let requestBody = { // Default body
                     prompt: promptValue,
                     aspect_ratio: aspectRatioValue,
                     style: styleValue,
@@ -657,335 +706,333 @@
                 };
 
                 if (mediastoreUid) {
-                    requestUrl = 'https://aipic.liyao.sbs/api/wombo-with-image';
-                    const weightValue = document.querySelector('input[name="weight"]:checked').value;
-                    requestBody = {
-                        ...requestBody, // Include base params
-                        mediastore_id: mediastoreUid,
-                        weight: weightValue
-                    };
+                  // Use the new API endpoint and structure
+                  requestUrl = 'https://aipic.liyao.sbs/api/wombo-with-image';
+                   const weightValue = document.querySelector('input[name="weight"]:checked').value; // Get selected weight
+                  requestBody = {
+                    prompt: promptValue,
+                    aspect_ratio: aspectRatioValue,
+                    style: styleValue,
+                    display_freq: DEFAULT_DISPLAY_FREQ,
+                    mediastore_id: mediastoreUid,
+                    weight: weightValue
+                  };
+
                 }
 
-                console.log("Sending request to:", requestUrl, "with body:", requestBody); // Debugging
-
-                const response = await fetch(requestUrl, {
+                // Use the existing or new proxy endpoint for generating images
+                const response = await fetch(requestUrl, { // Dynamic URL
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `bearer ${authTokenValue}`
                     },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify(requestBody) // Dynamic body
                 });
 
-                console.log("Response status:", response.status); // Debugging
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ message: '无法解析错误信息' })); // Catch JSON parse errors
-                    console.error("API Error Data:", errorData); // Debugging
-                    throw new Error(`启动任务失败: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+                 if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`启动生成任务失败: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
                 }
 
                 const data = await response.json();
-                 console.log("API Success Data:", data); // Debugging
+
                 if (!data.id) {
-                    throw new Error(`响应中缺少任务 ID: ${JSON.stringify(data)}`);
+                     throw new Error(`响应中找不到任务 ID: ${JSON.stringify(data)}`);
                 }
 
                 taskId = data.id;
-                saveTokenToLocalStorage(authTokenValue);
+                saveTokenToLocalStorage(authTokenValue); // 成功启动时保存令牌
+
                 console.log("任务 ID:", taskId);
-                showNotification("生成任务已启动...", 'info');
-                polling = true;
-                handleSecondRequest(); // Start polling
+                polling = true; // 开始轮询
+                handleSecondRequest(); // 开始检查状态
 
             } catch (error) {
                 console.error("启动图像生成时出错:", error);
-                const userErrorMessage = `生成启动失败: ${error.message.split(' - ')[0]}`; // Shorter message
-                showImageError(userErrorMessage); // Show error in image area
-                showNotification(userErrorMessage, 'error');
+                finalImage.alt = `生成图像时出错: ${error.message}`;
+                alert(`生成图像时出错: ${error.message}`);
             }
         }
 
         async function handleSecondRequest() {
-            const authTokenValue = getTokenFromLocalStorage(); // Get fresh token
+            const authTokenValue = authTokenInput.value;
 
-            if (!taskId || !polling) {
-                 console.log("Polling stopped or no task ID. TaskID:", taskId, "Polling:", polling);
-                 return;
+            if (!taskId) {
+                console.log("尝试在没有任务 ID 的情况下进行轮询。");
+                return; // 如果正确调用，则不应发生
             }
 
             if (!authTokenValue) {
+                // 令牌可能已被清除，停止轮询
                 polling = false;
-                console.log("轮询停止：缺少令牌。");
-                showNotification("缺少授权令牌，轮询停止", 'error');
-                 showImageError("轮询停止：缺少令牌");
+                 console.log("轮询已停止：缺少身份验证令牌。");
                 return;
             }
 
-             console.log("Polling for task status:", taskId); // Debugging
+            if (!polling) {
+                console.log("轮询已停止。");
+                return;
+            }
 
             try {
-                const response = await fetch(`https://aipic.liyao.sbs/api/get-wombo-status?taskId=${taskId}`, {
+                 // Use the proxy endpoint for getting status
+                const response = await fetch(`https://aipic.liyao.sbs/api/get-wombo-status?taskId=${taskId}`, { // 假设代理在 /api/get-wombo-status
                     method: 'GET',
-                    headers: { 'Authorization': `bearer ${authTokenValue}` },
+                    headers: {
+                         // 如果你的代理/API 需要，也发送令牌以进行状态检查
+                        'Authorization': `bearer ${authTokenValue}`
+                    },
                 });
 
-                 console.log("Polling response status:", response.status); // Debugging
-
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error("Polling API Error Text:", errorText); // Debugging
-                    // Handle specific errors like 401 Unauthorized
-                     if (response.status === 401) {
-                         polling = false;
-                         showNotification("授权令牌无效或已过期", 'error');
-                         showImageError("授权令牌无效");
-                         saveTokenToLocalStorage(''); // Clear invalid token
-                         authTokenInput.value = '';
-                         return;
-                     }
-                    throw new Error(`获取状态失败: ${response.status} ${response.statusText} - ${errorText}`);
-                }
+                     const errorText = await response.text();
+                     throw new Error(`获取任务状态失败: ${response.status} ${response.statusText} - ${errorText}`);
+                 }
+
 
                 const data = await response.json();
-                 console.log("Polling API Success Data:", data); // Debugging
 
                 if (data.state === "completed") {
-                    polling = false;
-                    if (timeoutId) clearTimeout(timeoutId);
                     if (data.result && data.result.final) {
-                        const imageUrl = data.result.final;
-                        console.log("图像已完成:", imageUrl);
-                        showImageResult(imageUrl); // Display final image
-                        showNotification("图片生成成功!", 'success');
+                        const imageUrl = data.result.final; // Get the image URL
+                        finalImage.src = imageUrl;
+                        finalImage.classList.remove('hidden');
+                        previewPlaceholder.style.display = 'none';
+                        finalImage.alt = "WOMBO Dream Image";
+                        polling = false;
+                        if (timeoutId) clearTimeout(timeoutId);
+                        console.log("图像已完成。轮询已停止。");
 
+                        // Convert image URL to Base64
                         imageToBase64(imageUrl)
                             .then(imageBase64 => {
+                                // --- Store to IndexDB after successful image generation ---
                                 const currentParams = {
                                     prompt: promptInput.value,
                                     style: styleInput.value,
                                     aspect_ratio: aspectRatioSelect.value,
-                                    mediastore_uid: mediastoreUidInput.value.trim() || null, // Get current UID value
-                                    weight: document.querySelector('input[name="weight"]:checked')?.value || 'LOW'
+                                    mediastore_uid: mediastoreUid,
+                                    weight: document.querySelector('input[name="weight"]:checked').value
                                 };
-                                saveImageToDB(currentParams, imageBase64)
+
+                                saveImageToDB(currentParams,imageBase64)
                                     .then(() => {
-                                        displayHistory(); // Refresh history list
-                                        // Don't show another notification here, completion is enough
+                                        displayHistory(); // Refresh history
+                                    })
+                                    .catch(err => {
+                                        console.error("Error saving image to history:", err);
                                     });
                             })
-                            .catch(error => console.error("Failed to save to DB after conversion:", error));
+                            .catch(error => {
+                                console.error("Error converting image to base64:", error);
+                                // Handle error, maybe store the URL instead, or show an error message
+                            });
                     } else {
-                        console.error("任务完成但无最终图片:", data);
-                         showImageError("任务完成但未找到图片");
-                         showNotification("任务完成但未找到图片", 'error');
+                        // 已完成但没有最终图像？处理错误
+                        polling = false;
+                        if (timeoutId) clearTimeout(timeoutId);
+                        finalImage.alt = "任务已完成，但未找到最终图像 URL。";
+                        console.error("任务已完成但没有最终图像 URL:", data);
                     }
-                    return;
+                    return; // 停止轮询
 
                 } else if (data.state === "failed") {
                     polling = false;
                     if (timeoutId) clearTimeout(timeoutId);
-                    const errorMsg = data.result?.error || '未知错误';
+                    finalImage.alt = `图像生成失败: ${data.result?.error || '未知错误'}`;
                     console.error("图像生成失败:", data);
-                    showImageError(`生成失败: ${errorMsg}`);
-                    showNotification(`图片生成失败: ${errorMsg}`, 'error');
-                    return;
+                    alert(`图像生成失败: ${data.result?.error || '未知错误'}`);
+                     return; // 停止轮询
 
                 } else if (data.state === "pending" || data.state === "generating") {
-                    const progress = data.photo_url_list?.length > 0 ? ` (${data.photo_url_list.length * 10}%)` : '';
-                    // Update loading text, maybe show intermediate image
-                    if (imageLoading && !imageLoading.classList.contains('hidden')) {
-                        imageLoading.querySelector('p').textContent = `生成中... ${data.state}${progress}`;
-                    }
-                    // if (data.photo_url_list?.length > 0) {
-                         // Show intermediate image (optional, can flicker)
-                         // showImageResult(data.photo_url_list[data.photo_url_list.length - 1], `生成中... ${data.state}`);
-                    // }
-                    // Continue polling
-                    timeoutId = setTimeout(handleSecondRequest, 1500); // Poll every 1.5 seconds
+                     // Update status if needed (e.g., display progress)
+                     const progress = data.photo_url_list && data.photo_url_list.length > 0 ? ` (${data.photo_url_list.length * 10}%)` : '';
+                     finalImage.alt = `生成中... ${data.state}${progress}`;
+                     if (data.photo_url_list && data.photo_url_list.length > 0) {
+                         // 可选择显示中间图像
+                         finalImage.src = data.photo_url_list[data.photo_url_list.length - 1];
+                         finalImage.classList.remove('hidden');
+                         previewPlaceholder.style.display = 'none';
+                     } else {
+                         // 如果没有中间图像可用，则清除图像
+                         finalImage.src = "";
+                         finalImage.classList.add('hidden');
+                         previewPlaceholder.style.display = 'flex';
+                     }
+                     // Continue polling
+                    timeoutId = setTimeout(() => handleSecondRequest(), 1500); // 每 1.5 秒轮询一次
                 } else {
-                    polling = false; // Unknown state, stop
-                    if (timeoutId) clearTimeout(timeoutId);
-                    console.warn("未知任务状态:", data);
-                    showImageError(`未知任务状态: ${data.state}`);
-                    showNotification(`未知任务状态: ${data.state}`, 'error');
-                    return;
+                     // Unknown state, stop polling to prevent infinite loops
+                     polling = false;
+                     if (timeoutId) clearTimeout(timeoutId);
+                     finalImage.alt = `未知任务状态: ${data.state}`;
+                     console.warn("收到未知任务状态:", data);
+                     return; // 停止轮询
                 }
 
             } catch (error) {
-                polling = false; // Stop polling on error
-                if (timeoutId) clearTimeout(timeoutId);
-                console.error("轮询状态时出错:", error);
-                const userErrorMessage = `检查状态出错: ${error.message.split(' - ')[0]}`;
-                showImageError(userErrorMessage);
-                showNotification(userErrorMessage, 'error');
+                console.error("轮询任务状态时出错:", error);
+                finalImage.alt = `检查状态时出错: ${error.message}`;
+                polling = false; // 发生错误时停止轮询
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
             }
         }
 
-        // --- Image Upload ---
+        requestButton1.addEventListener('click', handleFirstRequest);
+
+        // --- Image Upload Logic ---
         imageUploadInput.addEventListener('change', async (event) => {
             const file = event.target.files[0];
             if (file) {
-                clearMediastoreData(false); // Clear previous data without notification
-                mediastoreUid = null;
-                mediastoreUidInput.value = ''; // Clear the input field visually
-                mediastoreUidInput.disabled = true; // Disable while uploading
-                mediastoreUidInput.placeholder = "图片上传中...";
+               // Clear previous mediastore data
+               clearMediastoreData(); // Call the clear function
+               mediastoreUid = null; // Clear existing mediastoreUid
+               mediastoreUidInput.value = ''; // Clear the input field
 
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     const fullBase64 = e.target.result;
+                    // 仅提取逗号后面的 Base64 部分
                     selectedFileBase64 = fullBase64.split(',')[1];
-                    selectedFileType = file.type === 'image/png' ? 'png' : 'jpeg';
-
-                    try {
-                        const authTokenValue = getTokenFromLocalStorage();
-                        if (!authTokenValue) {
-                            showNotification("请先输入授权令牌再上传", 'error');
-                            clearMediastoreData(false); // Reset upload state
-                            return;
-                        }
-
-                        const payload = {
-                            media_suffix: selectedFileType,
-                            num_uploads: 1,
-                            image: selectedFileBase64
-                        };
-
-                        const response = await fetch('https://aipic.liyao.sbs/api/mediastore-proxy', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `bearer ${authTokenValue}`
-                            },
-                            body: JSON.stringify(payload)
-                        });
-
-                        const responseData = await response.json();
-                        if (!response.ok) {
-                             console.error("Upload API Error Data:", responseData); // Debugging
-                            throw new Error(`上传失败: ${response.status} - ${JSON.stringify(responseData)}`);
-                        }
-
-                        mediastoreUid = responseData.mediastore_uid;
-                        mediastoreUidInput.value = mediastoreUid; // Fill the input
-                        showNotification('参考图片上传成功!', 'success');
-
-                    } catch (error) {
-                        console.error("上传到 mediastore 时出错:", error);
-                        showNotification(`图片上传失败: ${error.message.split(' - ')[0]}`, 'error');
-                        clearMediastoreData(false); // Reset on error
-                    } finally {
-                         mediastoreUidInput.disabled = false; // Re-enable input
-                         mediastoreUidInput.placeholder = "上传后自动填充或手动输入";
+                    // 确定 media_suffix 的文件类型
+                    if (file.type === 'image/png') {
+                        selectedFileType = 'png';
+                    } else {
+                        selectedFileType = 'jpeg'; // 默认为 jpeg
                     }
+
+                  // Automatically upload after reading
+                  try {
+                      const authTokenValue = authTokenInput.value;
+                      if (!authTokenValue) {
+                          alert("请输入你的授权令牌。");
+                          return;
+                      }
+
+                      const payload = {
+                          media_suffix: selectedFileType,
+                          num_uploads: 1,
+                          image: selectedFileBase64
+                      };
+
+                      // Call the new backend proxy endpoint
+                      const response = await fetch('https://aipic.liyao.sbs/api/mediastore-proxy', { // Use the new proxy endpoint
+                          method: 'POST',
+                          headers: {
+                              'Content-Type': 'application/json', // Frontend sends JSON to proxy
+                              'Authorization': `bearer ${authTokenValue}` // Send token to proxy
+                          },
+                          body: JSON.stringify(payload) // Send JSON payload
+                      });
+
+                      const responseData = await response.json(); // Assume proxy forwards JSON
+
+                      if (!response.ok) {
+                           throw new Error(`Mediastore 上传失败: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`);
+                       }
+
+                       // Store the mediastore_uid
+                       mediastoreUid = responseData.mediastore_uid;
+                       mediastoreUidInput.value = mediastoreUid;
+
+                       // Show success message
+                       alert('图片上传成功！现在可以生成新的图像了。');
+
+                  } catch (error) {
+                      console.error("上传到 mediastore 时出错:", error);
+                      alert(`上传图像时出错: ${error.message}`);
+                  }
                 }
                 reader.onerror = function(e) {
                     console.error("读取文件时出错:", e);
-                    showNotification("读取文件失败", 'error');
-                    clearMediastoreData(false);
-                     mediastoreUidInput.disabled = false;
-                     mediastoreUidInput.placeholder = "上传后自动填充或手动输入";
+                    alert("读取文件时出错。");
+                    selectedFileBase64 = null;
                 }
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(file); // 将文件读取为 Data URL
             } else {
-                clearMediastoreData(false);
+                 clearMediastoreData(); // Clear if no file is selected
             }
         });
 
-        function clearMediastoreData(notify = true) {
+        function clearMediastoreData() {
             selectedFileBase64 = null;
             mediastoreUid = null;
-            imageUploadInput.value = ''; // Clear the file input visually
-            mediastoreUidInput.value = ''; // Clear the UID input
-             mediastoreUidInput.disabled = false;
-             mediastoreUidInput.placeholder = "上传后自动填充或手动输入";
-            if (notify) showNotification('参考图信息已清除');
+            imageUploadInput.value = ''; // Clear the file input
+            mediastoreUidInput.value = ''; // Clear the input field
         }
 
         clearButton.addEventListener('click', () => {
             clearMediastoreData();
         });
 
-        // --- Download ---
+        const downloadButton = document.getElementById('download-button');
+        const filenameInput = document.getElementById('filename');
+
         downloadButton.addEventListener('click', () => {
             const imageUrl = finalImage.src;
-             // Check if src is present and not a placeholder/loading state
-            if (imageUrl && !finalImage.classList.contains('hidden')) {
-                 let filename = filenameInput.value.trim();
-                 if (!filename) {
-                     // Generate filename from prompt or default
-                     filename = promptInput.value.trim().substring(0, 50).replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'wombo-dream-image';
-                 }
-                 downloadImage(imageUrl, filename);
+            if (imageUrl) {
+                let filename = filenameInput.value.trim();
+                if (!filename) {
+                    filename = promptInput.value.trim().substring(0, 30) || 'wombo-dream-image';
+                }
+                downloadImage(imageUrl, filename);
             } else {
-                showNotification('没有可下载的图片', 'error');
+                alert('请先生成图片！');
             }
         });
 
         function downloadImage(imageUrl, filename) {
-             showNotification('准备下载...', 'info');
-             // Use the proxy for download as well if CORS issues persist with direct fetch
-            // const downloadUrl = `https://aipic.liyao.sbs/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
-            const downloadUrl = imageUrl; // Try direct fetch first
-
-            fetch(downloadUrl) // No CORS headers needed if using proxy or if source allows it
-                .then(response => {
-                     if (!response.ok) {
-                         throw new Error(`下载失败: ${response.status} ${response.statusText}`);
-                     }
-                     return response.blob();
-                 })
+            fetch(imageUrl, {
+                    method: 'GET',
+                    mode: 'cors', // 解决跨域问题
+                    headers: {
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                })
+                .then(response => response.blob())
                 .then(blob => {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.style.display = 'none';
                     a.href = url;
-                    // Determine extension based on blob type or default to png
-                    const extension = blob.type.split('/')[1] || 'png';
-                    a.download = `${filename}.${extension}`;
+                    a.download = filename + '.png';
                     document.body.appendChild(a);
                     a.click();
+                    document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
-                    a.remove();
-                    showNotification('下载已开始', 'success');
                 })
                 .catch(error => {
                     console.error('下载图片时出错:', error);
-                    showNotification(`下载失败: ${error.message}`, 'error');
+                    alert('下载图片时出错，请检查控制台。');
                 });
         }
 
-
-        // --- Initialization ---
-        window.addEventListener('load', async () => {
-            const storedToken = getTokenFromLocalStorage();
-            if (storedToken) {
-                authTokenInput.value = storedToken;
-            }
-            showImagePlaceholder(); // Show placeholder initially
-
+        exportButton.addEventListener('click', async () => {
             try {
-                await initializeDatabase();
-                displayHistory(); // Load history after DB init
+                const allItems = await getAllHistoryItems();
+                if (allItems.length === 0) {
+                    alert('没有历史记录可以导出！');
+                    return;
+                }
+                const json = JSON.stringify(allItems);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'wombo-dream-history.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             } catch (error) {
-                console.error("Initialization failed:", error);
-                // DB error already shown in initializeDatabase
-                 if (emptyHistory) emptyHistory.classList.remove('hidden'); // Show empty history on DB error
+                console.error('导出历史记录时出错:', error);
+                alert('导出历史记录时出错，请检查控制台。');
             }
-        });
-
-        // --- Event Listeners ---
-        requestButton1.addEventListener('click', handleFirstRequest); // *** THIS LINE WAS MISSING ***
-
-        // Add listener for token input changes to save potentially
-        authTokenInput.addEventListener('change', () => {
-            // Optional: Save token immediately on change, or rely on successful generation
-             // saveTokenToLocalStorage(authTokenInput.value);
-             // showNotification('令牌已（临时）保存', 'info'); // Example feedback
         });
 
     </script>
-
 </body>
 </html>
+
