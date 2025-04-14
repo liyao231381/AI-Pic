@@ -306,11 +306,7 @@
 
             // 使用循环来逐个下载图片，并添加延迟
             for (const item of items) {
-<<<<<<< HEAD
-                await downloadImageWithDelay(item.image, `${item.style}.png`, 1000); // 延迟1秒
-=======
                 await downloadImageWithDelay(item.image, `${item.style}.png`, 500); // 延迟1秒
->>>>>>> f952398a0577134ae80480b0fcb6397f0cb88f88
             }
             alert('所有图片已开始下载！');
         });
