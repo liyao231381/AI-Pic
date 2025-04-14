@@ -191,6 +191,24 @@
         .image-ref-section.expanded {
             max-height: 500px;
         }
+
+        #styleGalleryContainer {
+            display: none;
+        }
+        #styleGalleryContainer.show {
+            display: block;
+        }
+        #imagePreviewContainer {
+            border: 2px dashed #cbd5e0;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        #imagePreview {
+            max-height: 100%;
+            object-fit: contain; /* Add this line */
+            justify-self: center;
+        }
     </style>
 </head>
 
@@ -207,7 +225,7 @@
             <div class="flex justify-center items-center mb-4">
                 <a href="./wombohistory.html" target="_blank" class="text-blue-500">WOMBO Style 画廊</a>
             </div>
-            <div class="mb-4">
+            <div class="mb-2">
                 <label for="authorization-token" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                     <i class="fas fa-key mr-2 text-gray-500"></i> 授权令牌
                 </label>
@@ -216,13 +234,10 @@
                     placeholder="输入你的授权令牌">
             </div>
             
-            <div class="border-t border-gray-200 pt-4">
-                <h2 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
-                    <i class="fas fa-image mr-2 text-blue-500"></i> 生成设置
-                </h2>
+            <div>
                 
-                <div class="mb-3">
-                    <label for="aspect_ratio" class="block text-sm font-medium text-gray-700 mb-1">宽高比</label>
+                <div class="mb-2">
+                    <label for="aspect_ratio" class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-image mr-2 text-blue-500"></i>宽高比</label>
                     <select id="aspect_ratio"
                         class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none">
                         <option value="old_vertical_ratio">默认 960×1568</option>
@@ -232,15 +247,20 @@
                     </select>
                 </div>
 
-                <div class="mb-3">
-                    <label for="style" class="block text-sm font-medium text-gray-700 mb-1">风格 ID</label>
+                <div class="mb-2">
+                    <label for="style" class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-seedling mr-2 text-blue-500"></i>风格 ID</label>
                     <input type="number" id="style"
                         class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
                         value="147"
                         onkeydown="if (event.keyCode == 13) { handleFirstRequest(); return false; }">
+                        <div class="flex items-center justify-between">
+                        <div id="imagePreviewContainer" class="mt-1 h-48 rounded-lg overflow-hidden p-2">
+                            <img id="imagePreview" src="" alt="预览">
+                        </div>
+                        </div>
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-2">
                     <label for="prompt" class="block text-sm font-medium text-gray-700 mb-1">提示词</label>
                     <input type="text" id="prompt"
                         class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
@@ -256,8 +276,8 @@
             </div>
             
             <!-- Image Reference Section (initially hidden) -->
-            <div class="image-ref-section mb-3 overflow-y-auto" id="image-ref-section">
-                <div class="mb-3">
+            <div class="image-ref-section mb-2 overflow-y-auto" id="image-ref-section">
+                <div class="mb-2">
                     <div class="file-upload">
                         <div class="file-upload-btn">
                             <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-1"></i>
@@ -268,14 +288,14 @@
                     </div>
                 </div>
                 
-                <div class="mb-3">
+                <div class="mb-2">
                     <label for="mediastore-uid" class="block text-sm font-medium text-gray-700 mb-1">Mediastore UID</label>
                     <input type="text" id="mediastore-uid"
                         class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
                         placeholder="输入 Mediastore UID">
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">权重</label>
                     <div class="flex flex-wrap gap-2">
                         <div class="flex items-center">
@@ -306,6 +326,140 @@
             </div>
         </div>
         
+        <!-- Style Gallery Container -->
+        <div id="styleGalleryContainer" class="fixed top-0 left-0 w-full bg-black bg-opacity-50 z-50 hidden items-center justify-center px-8">
+            <div id="styleGallery" class="bg-white rounded-lg shadow-xl p-4 grid grid-cols-4 md:grid-cols-8 lg:grid-cols-12 gap-4 max-h-screen overflow-y-auto">
+            <!-- Image List (Replace with your images) -->
+            <img src="https://img.liyao.sbs/file/WB_style/1744611574347_161.png" alt="161" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611508199_159.png" alt="159" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611579706_158.png" alt="158" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611577432_157.png" alt="157" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611570368_156.png" alt="156" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611567284_155.png" alt="155" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611985721_154.png" alt="154" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611978402_151.png" alt="151" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611584599_150.png" alt="150" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611978433_148.png" alt="148" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611519710_147.png" alt="147" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+                <img src="https://img.liyao.sbs/file/WB_style/1744611943165_146.png" alt="146" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611614777_145.png" alt="145" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611526021_144.png" alt="144" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611613484_143.png" alt="143" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611615841_142.png" alt="142" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611529263_141.png" alt="141" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611619512_139.png" alt="139" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611980227_138.png" alt="138" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611613456_137.png" alt="137" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611528786_136.png" alt="136" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611530805_135.png" alt="135" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611629445_134.png" alt="134" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611623593_133.png" alt="133" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611524632_132.png" alt="132" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611983981_131.png" alt="131" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611625086_130.png" alt="130" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611623510_129.png" alt="129" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611915357_128.png" alt="128" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611633079_127.png" alt="127" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611639652_126.png" alt="126" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611636532_125.png" alt="125" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611631708_124.png" alt="124" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611628917_123.png" alt="123" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611628367_122.png" alt="122" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611632576_121.png" alt="121" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611640430_120.png" alt="120" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611640618_119.png" alt="119" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611631660_118.png" alt="118" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611428368_117.png" alt="117" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611428972_116.png" alt="116" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611437648_115.png" alt="115" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611435895_114.png" alt="114" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611431512_113.png" alt="113" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611635708_112.png" alt="112" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611442809_111.png" alt="111" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611443977_110.png" alt="110" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611448884_109.png" alt="109" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611444660_108.png" alt="108" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611448796_107.png" alt="107" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611446328_106.png" alt="106" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611457282_105.png" alt="105" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611454681_104.png" alt="104" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611450126_103.png" alt="103" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611500532_100.png" alt="100" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611505452_97.png" alt="97" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611396156_96.png" alt="96" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611399935_95.png" alt="95" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611396657_94.png" alt="94" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611394148_84.png" alt="84" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611503020_83.png" alt="83" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611395258_80.png" alt="80" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611393550_78.png" alt="78" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611390634_77.png" alt="77" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611390509_76.png" alt="76" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611387358_74.png" alt="74" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611391625_73.png" alt="73" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611382962_72.png" alt="72" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611390913_71.png" alt="71" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611381405_68.png" alt="68" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611381954_67.png" alt="67" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611383822_66.png" alt="66" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611379603_65.png" alt="65" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611379550_63.png" alt="63" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611376105_61.png" alt="61" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611579947_60.png" alt="60" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611377177_58.png" alt="58" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611380794_57.png" alt="57" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611568477_55.png" alt="55" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611505579_54.png" alt="54" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611502722_53.png" alt="53" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611574535_52.png" alt="52" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611490556_50.png" alt="50" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611493556_49.png" alt="49" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611491029_48.png" alt="48" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611492868_47.png" alt="47" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611570898_46.png" alt="46" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611494574_45.png" alt="45" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611564551_42.png" alt="42" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611550432_41.png" alt="41" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611563362_40.png" alt="40" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611979658_39.png" alt="39" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611566544_38.png" alt="38" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611567097_37.png" alt="37" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611572034_36.png" alt="36" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611979889_35.png" alt="35" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611568522_34.png" alt="34" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611913749_32.png" alt="32" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611916349_31.png" alt="31" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611913971_29.png" alt="29" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611556201_28.png" alt="28" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611476752_27.png" alt="27" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611484368_26.png" alt="26" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611483344_25.png" alt="25" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611479576_24.png" alt="24" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611475293_23.png" alt="23" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611481750_22.png" alt="22" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611341897_21.png" alt="21" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611550009_20.png" alt="20" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611339874_19.png" alt="19" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611341334_18.png" alt="18" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611335681_17.png" alt="17" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611334323_16.png" alt="16" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611337133_15.png" alt="15" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611330568_14.png" alt="14" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611329262_13.png" alt="13" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611331118_12.png" alt="12" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611322582_11.png" alt="11" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611331312_10.png" alt="10" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611329489_9.png" alt="9" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611327141_8.png" alt="8" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611320337_7.png" alt="7" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611321222_6.png" alt="6" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611317504_5.png" alt="5" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611317151_4.png" alt="4" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611322146_3.png" alt="3" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611315181_2.png" alt="2" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611319218_1.png" alt="1" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            </div>
+        </div>
         <!-- Center Panel - Image Preview -->
         <div class="panel flex-1 p-4 flex flex-col">
             <div class="preview-image-container mb-3">
@@ -375,6 +529,12 @@
         // History elements
         const historyContainer = document.getElementById('history-container');
         const exportButton = document.getElementById('export-button');
+
+        const openGalleryBtn = document.getElementById('imagePreviewContainer');
+        const styleGalleryContainer = document.getElementById('styleGalleryContainer');
+        const styleGallery = document.getElementById('styleGallery');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
 
         let taskId = null;
         const LOCAL_STORAGE_TOKEN_KEY = 'wombo_auth_token';
@@ -1032,6 +1192,57 @@
             }
         });
 
+        // Function to update the image preview based on gallery alt
+        function updateImagePreview(inputValue) {
+            if (inputValue) {
+            // Find the image in the gallery with the matching alt
+            const galleryImage = styleGallery.querySelector(`img[alt="${inputValue}"]`);
+            if (galleryImage) {
+                // If the image is found, set the preview image source
+                const imageSource = galleryImage.src;
+                imagePreview.src = imageSource;
+                imagePreviewContainer.classList.add('show');
+                imagePreviewContainer.classList.remove('hidden');
+            } else {
+                // If no image is found, clear the preview and hide the container
+                imagePreview.src = '';
+                imagePreviewContainer.classList.remove('show');
+                imagePreviewContainer.classList.add('hidden');
+            }
+            } else {
+            // If input is empty, clear the preview and hide the container
+            imagePreview.src = '';
+            imagePreviewContainer.classList.remove('show');
+            imagePreviewContainer.classList.add('hidden');
+            }
+        }
+        // Open Gallery
+        openGalleryBtn.addEventListener('click', () => {
+            styleGalleryContainer.classList.add('show', 'flex'); // Show and use flexbox
+            styleGalleryContainer.classList.remove('hidden');
+        });
+        // Click on Image
+        styleGallery.addEventListener('click', (event) => {
+            if (event.target.tagName === 'IMG') {
+            styleInput.value = event.target.alt;
+            styleGalleryContainer.classList.remove('show', 'flex'); // Hide and remove flexbox
+            styleGalleryContainer.classList.add('hidden');
+            updateImagePreview(event.target.alt); // Update the preview
+            }
+        });
+        // Close gallery when clicking outside
+        styleGalleryContainer.addEventListener('click', (event) => {
+            if (event.target === styleGalleryContainer) {
+            styleGalleryContainer.classList.remove('show', 'flex'); // Hide and remove flexbox
+            styleGalleryContainer.classList.add('hidden');
+            }
+        });
+        // Listen for input changes to update the preview
+        styleInput.addEventListener('input', () => {
+            updateImagePreview(styleInput.value);
+        });
+        // Initialize preview based on initial input value (if any)
+        updateImagePreview(styleInput.value);
     </script>
 </body>
 </html>
