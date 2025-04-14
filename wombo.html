@@ -240,15 +240,17 @@
                 <label for="authorization-token" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                     <i class="fas fa-key mr-2 text-gray-500"></i> 授权令牌
                 </label>
-                <input type="text" id="authorization-token"
-                    class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none pr-10"
-                    placeholder="输入你的授权令牌">
-                <button id="refresh-token-button"
-                    class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg p-2 transition">
-                    <i class="fas fa-sync"></i>
-                </button>
-            </div>            
-            
+                <div class="relative">
+                    <input type="text" id="authorization-token"
+                        class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none pr-10"
+                        placeholder="输入你的授权令牌">
+                    <button id="refresh-token-button"
+                        class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-r-lg p-2 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+            </div>
+                   
             <div>
                 
                 <div>
