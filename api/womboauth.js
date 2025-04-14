@@ -13,8 +13,8 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const apiKey = process.env.FIREBASE_API_KEY; // 从环境变量中获取API密钥 
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${apiKey}`;
+    const apiKey = process.env.FIREBASE_API_KEY; // 从环境变量中获取API密钥
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`; // 修改后的 API 端点 URL
 
     const headers = {
       'authority': 'identitytoolkit.googleapis.com',
@@ -36,12 +36,13 @@ export default async function handler(req, res) {
       'x-firebase-gmpid': '1:181681569359:web:277133b57fecf57af0f43a',
     };
 
-    const data = req.body.data;
+    const requestBody = req.body; // 直接从 req.body 获取请求体数据
+
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify(data)
+        body: JSON.stringify(requestBody) // 使用获取到的请求体数据
       });
 
       const responseData = await response.json();

@@ -209,6 +209,16 @@
             object-fit: contain; /* Add this line */
             justify-self: center;
         }
+        .input-field {
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .input-field:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
     </style>
 </head>
 
@@ -222,33 +232,27 @@
                 </div>
                 <h1 class="text-xl font-bold text-gray-800">WOMBO Dream</h1>
             </div>
-            <div class="flex justify-center items-center mb-4">
-                <a href="./wombohistory.html" target="_blank" class="text-blue-500">WOMBO Style 画廊</a>
+            <div class="flex flex-row justify-center items-center mb-4">
+                <a href="./wombohistory.html" target="_blank" class="text-blue-500">批量下载</a>
+                <a href="./womboauth.html" target="_blank" class="text-blue-500 ml-4">授权令牌</a>
             </div>
-            <div class="mb-2">
+            <div class="mb-2 relative">
                 <label for="authorization-token" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                     <i class="fas fa-key mr-2 text-gray-500"></i> 授权令牌
                 </label>
                 <input type="text" id="authorization-token"
-                    class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
+                    class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none pr-10"
                     placeholder="输入你的授权令牌">
                 <button id="refresh-token-button"
-                    class="ml-2 py-2 px-4 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300 transition flex items-center">
-                    <i class="fas fa-sync-alt mr-1"></i> 刷新
+                    class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg p-2 transition">
+                    <i class="fas fa-sync"></i>
                 </button>
-            </div>
+            </div>            
             
             <div>
                 
-                <div class="mb-2">
-                    <label for="aspect_ratio" class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-image mr-2 text-blue-500"></i>宽高比</label>
-                    <select id="aspect_ratio"
-                        class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none">
-                        <option value="old_vertical_ratio">默认 960×1568</option>
-                        <option value="old_horizontal_ratio">正方形</option>
-                        <option value="widescreen">宽屏</option>
-                        <option value="vertical">垂直</option>
-                    </select>
+                <div>
+                    <input type="hidden" id="aspect_ratio" value="old_vertical_ratio">
                 </div>
 
                 <div class="mb-2">
@@ -522,7 +526,6 @@
         const historyCount = document.getElementById('history-count');
 
         const promptInput = document.getElementById('prompt');
-        const aspectRatioSelect = document.getElementById('aspect_ratio');
         const styleInput = document.getElementById('style');
 
         // New elements for image upload
@@ -838,10 +841,10 @@
             }
         });
 
-        // --- Generate Image Logic (Existing + Modified) ---
         async function handleFirstRequest() {
             const promptValue = promptInput.value;
-            const aspectRatioValue = aspectRatioSelect.value;
+            // const aspectRatioValue = aspectRatioSelect.value;  // 删除这行
+            const aspectRatioValue = "old_vertical_ratio";  // 使用固定值
             const styleValue = styleInput.value;
             const authTokenValue = authTokenInput.value;
             mediastoreUid = mediastoreUidInput.value.trim() || null;
@@ -851,13 +854,13 @@
                 return;
             }
 
-             // Clear previous image and stop polling if any
+            // Clear previous image and stop polling if any
             finalImage.src = "";
             finalImage.classList.add('hidden');
             previewPlaceholder.style.display = 'flex';
             finalImage.alt = "生成中...";
             polling = false;
-             if (timeoutId) {
+            if (timeoutId) {
                 clearTimeout(timeoutId);
             }
 
@@ -872,17 +875,17 @@
                 };
 
                 if (mediastoreUid) {
-                  // Use the new API endpoint and structure
-                  requestUrl = 'https://aipic.liyao.sbs/api/wombo-with-image';
-                   const weightValue = document.querySelector('input[name="weight"]:checked').value; // Get selected weight
-                  requestBody = {
+                // Use the new API endpoint and structure
+                requestUrl = 'https://aipic.liyao.sbs/api/wombo-with-image';
+                const weightValue = document.querySelector('input[name="weight"]:checked').value; // Get selected weight
+                requestBody = {
                     prompt: promptValue,
                     aspect_ratio: aspectRatioValue,
                     style: styleValue,
                     display_freq: DEFAULT_DISPLAY_FREQ,
                     mediastore_id: mediastoreUid,
                     weight: weightValue
-                  };
+                };
 
                 }
 
@@ -896,7 +899,7 @@
                     body: JSON.stringify(requestBody) // Dynamic body
                 });
 
-                 if (!response.ok) {
+                if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(`启动生成任务失败: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
                 }
@@ -904,7 +907,7 @@
                 const data = await response.json();
 
                 if (!data.id) {
-                     throw new Error(`响应中找不到任务 ID: ${JSON.stringify(data)}`);
+                    throw new Error(`响应中找不到任务 ID: ${JSON.stringify(data)}`);
                 }
 
                 taskId = data.id;
@@ -1284,25 +1287,41 @@
         }
 
         async function refreshToken() {
-            const backendUrl = 'https://aipic.liyao.sbs/api/womboauth'; // 后端转发的API端点
-            const appCheckToken = generateAppCheckToken();
-            const data = {
-                "requestUri": "https://paint-prod.firebaseapp.com/__/auth/handler#state=AMbdmDlfRZhkuP5Q8uu0AXf07VjnAaM4-p6aq1gfn--L1kElzHTiPnMrcZdyBvzOXqcBSI2heok8jkc7eRiMC6K5X7nRDkyOzqTdhQ6NteGIYVm49D1YnsjHXDHZkRhq3W2gFryRm-f6qJa05yR_1ufLVVPlMGgjRTkxXaHbJtbDAwjyeXxGbB_6eb3HW8meh7PCbT-8d4VafzU3NdTJQHz3RT5kh8JuXTCPljfWnHoknT_sPViZVRIeDrVpr6GYgUTCbCiGkVqoVyUHOgQCjYY6ZgsOGOIRYf2Xf06qoBoi08tdtJlQRXGGoBF_peFAH7_sRyU&id_token=eyJhbGciOiJSUzI1NiIsImtpZCI6ImM3ZTA0NDY1NjQ5ZmZhNjA2NTU3NjUwYzdlNjVmMGE4N2FlMDBmZTgiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiMTgxNjgxNTY5MzU5LWFxdDdyMGoydWx1dDgwZ3RwaHV1bDh1cTlmMXZwbzM5LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiMTgxNjgxNTY5MzU5LWFxdDdyMGoydWx1dDgwZ3RwaHV1bDh1cTlmMXZwbzM5LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTA4ODI4MTUzMTMzNzEyMTg3NDY3IiwiZW1haWwiOiJxcTIzMTM4MTQyMjFAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5vbmNlIjoiZDYxYWFhZTNlNjY4OTk1YzFjZmE4ZDY1OTgyNThiZDhiZmM2OTk1NTE1NzE2NWJlOWYxMTJkN2VkMTBhMzY2OCIsIm5iZiI6MTc0NDY0MjIxOCwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hLS9BTFYtVWpXdEtqbWZIR25RWVpiVEtwYl9MTmtVOVBleEg3SF9NOTItMGZ3UWlZM1BJU2l5TFJ5WT1zOTYtYyIsImlhdCI6MTc0NDY0MjUxOCwiZXhwIjoxNzQ0NjQ2MTE4LCJqdGkiOiIwODhlNDc4ZDFhNWRlZDFmYjY4ZTQ3YmE4OWFiYmI1MTUyZWQ4Y2JhIn0.7GbBvqpk3t4entQ-M976MZZm_mySole7VZIR_VEW3bcatY9d_X_U3l0ar7Ns1MWA4KsVmKoKz-eBG-JGs03djLIdyNxK055PlRRCN6X6cpYIeQBcQvQOujjEdqa7KvJl4WQWUQU6-2CGovn4E3r2NcS2aoetHxWl8c5iWEU5IFJsmcfbCqxDYS3mKCgeHr1qZAZOdiLKG5Qynu0gx0xdLjXq-e1gsGl0jBtiGEiVx6FuGmpXOQXwryDR-GterwRuP-wMQBuaDqp7JsYFCQGMFnFB9RSzHypCJPfoVprUoqzFlZ5AdQb2pJ4VMy4Azq6oZqyzLKAjyy3E3Sq_GPykxA&authuser=0&prompt=none",
-                "sessionId": "kEnV7EYSisyXP20QAXKBLcoqYbQ",
-                "returnSecureToken": true,
-                "returnIdpCredential": true
+            const backendUrl = 'https://aipic.liyao.sbs/api/womboauth'; // Firebase API Endpoint
+            const appCheckToken = generateAppCheckToken(); // 模拟生成 x-firebase-appcheck
+            const email = "2313814221@qq.com"; //  你的邮箱
+            const password = "liyao2313814221"; // 你的密码
+            
+            const requestBody = {
+                returnSecureToken: true,
+                email: email,
+                password: password,
+                clientType: "CLIENT_TYPE_WEB"
             };
 
             try {
                 const response = await fetch(backendUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
+                        'authority': 'identitytoolkit.googleapis.com',
+                        'accept': '*/*',
+                        'accept-encoding': 'gzip, deflate, br, zstd',
+                        'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+                        'content-type': 'application/json',
+                        'origin': 'https://dream.ai',
+                        'priority': 'u=1, i',
+                        'sec-ch-ua': '"Microsoft Edge";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
+                        'sec-ch-ua-mobile': '?0',
+                        'sec-ch-ua-platform': '"Windows"',
+                        'sec-fetch-dest': 'empty',
+                        'sec-fetch-mode': 'cors',
+                        'sec-fetch-site': 'cross-site',
+                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0',
+                        'x-client-version': 'Chrome/JsCore/9.23.0/FirebaseCore-web',
                         'x-firebase-appcheck': appCheckToken,
-                        data: data
-                    })
+                        'x-firebase-gmpid': '1:181681569359:web:277133b57fecf57af0f43a',
+                    },
+                    body: JSON.stringify(requestBody) // 使用构建好的请求体
                 });
 
                 const responseData = await response.json();
