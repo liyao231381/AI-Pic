@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase认证演示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .copy-icon {
+            transition: all 0.2s ease;
+        }
+        
+        .copy-icon:hover {
+            transform: scale(1.1);
+            color: #3b82f6;
+        }
+        
+        .highlight-item {
+            animation: highlight 2s ease-in-out;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: rgba(59, 130, 246, 0.1); }
+            100% { background-color: transparent; }
+        }
+        
+        .glass-card {
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            background-color: rgba(255, 255, 255, 0.75);
+            border-radius: 12px;
+            border: 1px solid rgba(209, 213, 219, 0.3);
+        }
+        
+        .response-item {
+            transition: all 0.2s ease;
+        }
+        
+        .response-item:hover {
+            background-color: rgba(241, 245, 249, 0.6);
+        }
+        
+        .token-value {
+            word-break: break-all;
+            position: relative;
+        }
+        
+        .token-value::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -2px;
+            width: 0;
+            height: 1px;
+            background-color: #3b82f6;
+            transition: width 0.3s ease;
+        }
+        
+        .token-value:hover::after {
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8 px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-4xl">
+        <!-- 页眉区域 -->
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center mb-4">
+                <i class="fas fa-fire text-4xl text-blue-500 mr-3"></i>
+                <h1 class="text-3xl font-bold text-gray-800">Firebase 认证</h1>
+            </div>
+        </div>
+        
+        <!-- 主卡片 -->
+        <div class="glass-card p-6 shadow-xl mb-8">
+            <div class="flex flex-col space-y-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2">操作面板</h2>
+                </div>
+                
+                <button id="fetchButton" class="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>发起认证请求</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 响应区域 -->
+        <div class="glass-card p-6 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">
+                    <i class="fas fa-reply text-blue-500 mr-2"></i>响应数据
+                </h2>
+                <button id="copyAllBtn" class="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-copy mr-1"></i>复制全部
+                </button>
+            </div>
+            
+            <div id="response" class="bg-white bg-opacity-50 rounded-lg p-4 space-y-3 max-h-96 overflow-y-auto">
+                <div class="text-center text-gray-400 py-8">
+                    <i class="fas fa-inbox text-4xl mb-2"></i>
+                    <p>等待响应数据...</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center text-sm text-gray-500 mt-4">
+                <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+                <p>点击任意值可复制到剪贴板，<span class="font-semibold text-blue-600">idToken</span>项已特别高亮显示</p>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <div class="text-center text-sm text-gray-500 mt-8">
+            <p>Firebase 认证演示 &copy; 2023</p>
+            <p class="mt-1">使用 Firebase AppCheck 和认证服务</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('fetchButton').addEventListener('click', fetchData);
+        document.getElementById('copyAllBtn').addEventListener('click', copyAllResponse);
+
+        async function fetchData() {
+            const backendUrl = 'https://aipic.liyao.sbs/api/womboauth';
+            
+            // 显示加载状态
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                    <p class="text-gray-600">正在请求认证数据...</p>
+                </div>
+            `;
+
+            const appCheckToken = generateAppCheckToken();
+            const data = {
+                "requestUri": "https://paint-prod.firebaseapp.com/__/auth/handler#state=AMbdmDlfRZhkuP5Q8uu0AXf07VjnAaM4-p6aq1gfn--L1kElzHTiPnMrcZdyBvzOXqcBSI2heok8jkc7eRiMC6K5X7nRDkyOzqTdhQ6NteGIYVm49D1YnsjHXDHZkRhq3W2gFryRm-f6qJa05yR_1ufLVVPlMGgjRTkxXaHbJtbDAwjyeXxGbB_6eb3HW8meh7PCbT-8d4VafzU3NdTJQHz3RT5kh8JuXTCPljfWnHoknT_sPViZVRIeDrVpr6GYgUTCbCiGkVqoVyUHOgQCjYY6ZgsOGOIRYf2Xf06qoBoi08tdtJlQRXGGoBF_peFAH7_sRyU&id_token=eyJhbGciOiJSUzI1NiIsImtpZCI6ImM3ZTA0NDY1NjQ5ZmZhNjA2NTU3NjUwYzdlNjVmMGE4N2FlMDBmZTgiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiMTgxNjgxNTY5MzU5LWFxdDdyMGoydWx1dDgwZ3RwaHV1bDh1cTlmMXZwbzM5LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiMTgxNjgxNTY5MzU5LWFxdDdyMGoydWx1dDgwZ3RwaHV1bDh1cTlmMXZwbzM5LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTA4ODI4MTUzMTMzNzEyMTg3NDY3IiwiZW1haWwiOiJxcTIzMTM4MTQyMjFAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5vbmNlIjoiZDYxYWFhZTNlNjY4OTk1YzFjZmE4ZDY1OTgyNThiZDhiZmM2OTk1NTE1NzE2NWJlOWYxMTJkN2VkMTBhMzY2OCIsIm5iZiI6MTc0NDY0MjIxOCwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hLS9BTFYtVWpXdEtqbWZIR25RWVpiVEtwYl9MTmtVOVBleEg3SF9NOTItMGZ3UWlZM1BJU2l5TFJ5WT1zOTYtYyIsImlhdCI6MTc0NDY0MjUxOCwiZXhwIjoxNzQ0NjQ2MTE4LCJqdGkiOiIwODhlNDc4ZDFhNWRlZDFmYjY4ZTQ3YmE4OWFiYmI1MTUyZWQ4Y2JhIn0.7GbBvqpk3t4entQ-M976MZZm_mySole7VZIR_VEW3bcatY9d_X_U3l0ar7Ns1MWA4KsVmKoKz-eBG-JGs03djLIdyNxK055PlRRCN6X6cpYIeQBcQvQOujjEdqa7KvJl4WQWUQU6-2CGovn4E3r2NcS2aoetHxWl8c5iWEU5IFJsmcfbCqxDYS3mKCgeHr1qZAZOdiLKG5Qynu0gx0xdLjXq-e1gsGl0jBtiGEiVx6FuGmpXOQXwryDR-GterwRuP-wMQBuaDqp7JsYFCQGMFnFB9RSzHypCJPfoVprUoqzFlZ5AdQb2pJ4VMy4Azq6oZqyzLKAjyy3E3Sq_GPykxA&authuser=0&prompt=none",
+                "sessionId": "kEnV7EYSisyXP20QAXKBLcoqYbQ",
+                "returnSecureToken": true,
+                "returnIdpCredential": true
+            };
+
+            try {
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        'x-firebase-appcheck': appCheckToken,
+                        data: data
+                    })
+                });
+
+                const responseData = await response.json();
+                displayResponse(responseData);
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                            <h3 class="text-sm font-medium text-red-800">请求失败</h3>
+                        </div>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>${error.message || error}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function displayResponse(data) {
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = '';
+            
+            // 添加日期时间信息
+            const timestampDiv = document.createElement('div');
+            timestampDiv.className = 'text-sm text-gray-500 mb-4';
+            timestampDiv.innerHTML = `<i class="far fa-clock mr-2"></i>${new Date().toLocaleString()}`;
+            responseDiv.appendChild(timestampDiv);
+            
+            // 分割线
+            const divider = document.createElement('div');
+            divider.className = 'border-b border-gray-200 mb-4';
+            responseDiv.appendChild(divider);
+            
+            let hasIdToken = false;
+            
+            for (const key in data) {
+                if (data.hasOwnProperty(key)) {
+                    const value = data[key];
+                    const isIdToken = key.toLowerCase().includes('idtoken') || key.toLowerCase().includes('token');
+                    
+                    if (isIdToken) hasIdToken = true;
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = `response-item p-3 rounded-lg ${isIdToken ? 'highlight-item bg-blue-50 border border-blue-100' : ''}`;
+                    
+                    // 键名部分
+                    const keyDiv = document.createElement('div');
+                    keyDiv.className = 'flex items-center mb-1';
+                    
+                    const keyIcon = document.createElement('i');
+                    keyIcon.className = isIdToken ? 'fas fa-key text-blue-500 mr-2' : 'fas fa-info-circle text-gray-400 mr-2';
+                    keyDiv.appendChild(keyIcon);
+                    
+                    const keySpan = document.createElement('span');
+                    keySpan.className = isIdToken ? 'font-semibold text-blue-700' : 'font-medium text-gray-700';
+                    keySpan.textContent = key;
+                    keyDiv.appendChild(keySpan);
+                    
+                    itemDiv.appendChild(keyDiv);
+                    
+                    // 值部分
+                    const valueDiv = document.createElement('div');
+                    valueDiv.className = 'flex items-start justify-between pl-6';
+                    
+                    const valueSpan = document.createElement('span');
+                    valueSpan.className = `token-value ${isIdToken ? 'text-blue-600 font-mono text-sm' : 'text-gray-600'}`;
+                    valueSpan.textContent = value;
+                    valueDiv.appendChild(valueSpan);
+                    
+                    const copyButton = document.createElement('button');
+                    copyButton.title = '复制到剪贴板';
+                    copyButton.className = 'copy-icon ml-2 text-gray-400 hover:text-blue-500';
+                    copyButton.innerHTML = '<i class="far fa-copy"></i>';
+                    copyButton.addEventListener('click', () => copyToClipboard(value));
+                    valueDiv.appendChild(copyButton);
+                    
+                    itemDiv.appendChild(valueDiv);
+                    
+                    responseDiv.appendChild(itemDiv);
+                }
+            }
+            
+            // 如果没有idToken，显示提示
+            if (!hasIdToken) {
+                const noticeDiv = document.createElement('div');
+                noticeDiv.className = 'bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4';
+                noticeDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                        <h3 class="text-sm font-medium text-yellow-800">未发现ID Token</h3>
+                    </div>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <p>响应中不包含身份认证令牌(idToken)</p>
+                    </div>
+                `;
+                responseDiv.appendChild(noticeDiv);
+            }
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('已复制到剪贴板', 'success');
+            } catch (err) {
+                console.error('无法复制: ', err);
+                showToast('复制失败', 'error');
+            }
+        }
+        
+        async function copyAllResponse() {
+            const responseDiv = document.getElementById('response');
+            if (responseDiv.children.length <= 2) return; // 没有数据时
+            
+            let allText = '';
+            const items = responseDiv.querySelectorAll('.response-item');
+            
+            items.forEach(item => {
+                const key = item.querySelector('span.font-medium, span.font-semibold')?.textContent || '';
+                const value = item.querySelector('.token-value')?.textContent || '';
+                allText += `${key}: ${value}\n\n`;
+            });
+            
+            try {
+                await navigator.clipboard.writeText(allText);
+                showToast('全部内容已复制', 'success');
+            } catch (err) {
+                console.error('无法复制: ', err);
+                showToast('全部复制失败', 'error');
+            }
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-8 right-8 transform translate-y-2 opacity-0 transition-all duration-300 flex items-center px-6 py-3 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-50 text-green-800' : type === 'error' ? 'bg-red-50 text-red-800' : 'bg-blue-50 text-blue-800'}`;
+            
+            toast.innerHTML = `
+                <i class="${type === 'success' ? 'fas fa-check-circle' : type === 'error' ? 'fas fa-times-circle' : 'fas fa-info-circle'} mr-2"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // 显示动画
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2');
+                toast.classList.remove('opacity-0');
+                toast.classList.add('translate-y-0');
+                toast.classList.add('opacity-100');
+            }, 10);
+            
+            // 隐藏动画
+            setTimeout(() => {
+                toast.classList.add('translate-y-2');
+                toast.classList.add('opacity-0');
+            }, 3000);
+            
+            // 移除元素
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3300);
+        }
+
+        // 模拟生成 x-firebase-appcheck
+        function generateAppCheckToken() {
+            const header = {
+                "kid": "D_o00g",
+                "typ": "JWT",
+                "alg": "RS256"
+            };
+            const payload = {
+                "sub": "1:181681569359:web:277133b57fecf57af0f43a",
+                "aud": ["projects/181681569359", "projects/paint-prod"],
+                "provider": "recaptcha_enterprise",
+                "iss": "https://firebaseappcheck.googleapis.com/181681569359",
+                "exp": Math.floor(Date.now() / 1000) + 3600, // 1 hour
+                "iat": Math.floor(Date.now() / 1000),
+                "jti": generateRandomString(32)
+            };
+
+            const encodedHeader = btoa(JSON.stringify(header));
+            const encodedPayload = btoa(JSON.stringify(payload));
+            const signature = generateRandomString(64); // 模拟签名
+
+            return `${encodedHeader}.${encodedPayload}.${signature}`;
+        }
+
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+    </script>
+</body>
+</html>

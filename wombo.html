@@ -232,6 +232,10 @@
                 <input type="text" id="authorization-token"
                     class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
                     placeholder="输入你的授权令牌">
+                <button id="refresh-token-button"
+                    class="ml-2 py-2 px-4 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300 transition flex items-center">
+                    <i class="fas fa-sync-alt mr-1"></i> 刷新
+                </button>
             </div>
             
             <div>
@@ -535,6 +539,8 @@
         const styleGallery = document.getElementById('styleGallery');
         const imagePreview = document.getElementById('imagePreview');
         const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+
+        const refreshTokenButton = document.getElementById('refresh-token-button');
 
         let taskId = null;
         const LOCAL_STORAGE_TOKEN_KEY = 'wombo_auth_token';
@@ -1243,6 +1249,82 @@
         });
         // Initialize preview based on initial input value (if any)
         updateImagePreview(styleInput.value);
+
+        // 模拟生成 x-firebase-appcheck
+        function generateAppCheckToken() {
+            const header = {
+                "kid": "D_o00g",
+                "typ": "JWT",
+                "alg": "RS256"
+            };
+            const payload = {
+                "sub": "1:181681569359:web:277133b57fecf57af0f43a",
+                "aud": ["projects/181681569359", "projects/paint-prod"],
+                "provider": "recaptcha_enterprise",
+                "iss": "https://firebaseappcheck.googleapis.com/181681569359",
+                "exp": Math.floor(Date.now() / 1000) + 3600, // 1 hour
+                "iat": Math.floor(Date.now() / 1000),
+                "jti": generateRandomString(32)
+            };
+
+            const encodedHeader = btoa(JSON.stringify(header));
+            const encodedPayload = btoa(JSON.stringify(payload));
+            const signature = generateRandomString(64); // 模拟签名
+
+            return `${encodedHeader}.${encodedPayload}.${signature}`;
+        }
+
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        async function refreshToken() {
+            const backendUrl = 'https://aipic.liyao.sbs/api/womboauth'; // 后端转发的API端点
+            const appCheckToken = generateAppCheckToken();
+            const data = {
+                "requestUri": "https://paint-prod.firebaseapp.com/__/auth/handler#state=AMbdmDlfRZhkuP5Q8uu0AXf07VjnAaM4-p6aq1gfn--L1kElzHTiPnMrcZdyBvzOXqcBSI2heok8jkc7eRiMC6K5X7nRDkyOzqTdhQ6NteGIYVm49D1YnsjHXDHZkRhq3W2gFryRm-f6qJa05yR_1ufLVVPlMGgjRTkxXaHbJtbDAwjyeXxGbB_6eb3HW8meh7PCbT-8d4VafzU3NdTJQHz3RT5kh8JuXTCPljfWnHoknT_sPViZVRIeDrVpr6GYgUTCbCiGkVqoVyUHOgQCjYY6ZgsOGOIRYf2Xf06qoBoi08tdtJlQRXGGoBF_peFAH7_sRyU&id_token=eyJhbGciOiJSUzI1NiIsImtpZCI6ImM3ZTA0NDY1NjQ5ZmZhNjA2NTU3NjUwYzdlNjVmMGE4N2FlMDBmZTgiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiMTgxNjgxNTY5MzU5LWFxdDdyMGoydWx1dDgwZ3RwaHV1bDh1cTlmMXZwbzM5LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiMTgxNjgxNTY5MzU5LWFxdDdyMGoydWx1dDgwZ3RwaHV1bDh1cTlmMXZwbzM5LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTA4ODI4MTUzMTMzNzEyMTg3NDY3IiwiZW1haWwiOiJxcTIzMTM4MTQyMjFAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5vbmNlIjoiZDYxYWFhZTNlNjY4OTk1YzFjZmE4ZDY1OTgyNThiZDhiZmM2OTk1NTE1NzE2NWJlOWYxMTJkN2VkMTBhMzY2OCIsIm5iZiI6MTc0NDY0MjIxOCwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hLS9BTFYtVWpXdEtqbWZIR25RWVpiVEtwYl9MTmtVOVBleEg3SF9NOTItMGZ3UWlZM1BJU2l5TFJ5WT1zOTYtYyIsImlhdCI6MTc0NDY0MjUxOCwiZXhwIjoxNzQ0NjQ2MTE4LCJqdGkiOiIwODhlNDc4ZDFhNWRlZDFmYjY4ZTQ3YmE4OWFiYmI1MTUyZWQ4Y2JhIn0.7GbBvqpk3t4entQ-M976MZZm_mySole7VZIR_VEW3bcatY9d_X_U3l0ar7Ns1MWA4KsVmKoKz-eBG-JGs03djLIdyNxK055PlRRCN6X6cpYIeQBcQvQOujjEdqa7KvJl4WQWUQU6-2CGovn4E3r2NcS2aoetHxWl8c5iWEU5IFJsmcfbCqxDYS3mKCgeHr1qZAZOdiLKG5Qynu0gx0xdLjXq-e1gsGl0jBtiGEiVx6FuGmpXOQXwryDR-GterwRuP-wMQBuaDqp7JsYFCQGMFnFB9RSzHypCJPfoVprUoqzFlZ5AdQb2pJ4VMy4Azq6oZqyzLKAjyy3E3Sq_GPykxA&authuser=0&prompt=none",
+                "sessionId": "kEnV7EYSisyXP20QAXKBLcoqYbQ",
+                "returnSecureToken": true,
+                "returnIdpCredential": true
+            };
+
+            try {
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        'x-firebase-appcheck': appCheckToken,
+                        data: data
+                    })
+                });
+
+                const responseData = await response.json();
+
+                // 提取 idToken 并更新 UI
+                if (responseData && responseData.idToken) {
+                    const newToken = responseData.idToken;
+                    authTokenInput.value = newToken;
+                    saveTokenToLocalStorage(newToken);
+                    alert('授权令牌已刷新！');
+                } else {
+                    alert('刷新授权令牌失败，请检查控制台。');
+                    console.error('刷新授权令牌失败：', responseData);
+                }
+
+            } catch (error) {
+                alert(`刷新授权令牌时出错: ${error}`);
+                console.error("刷新授权令牌时出错:", error);
+            }
+        }
+
+        refreshTokenButton.addEventListener('click', refreshToken);
     </script>
 </body>
 </html>
