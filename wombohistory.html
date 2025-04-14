@@ -304,11 +304,19 @@
                 return;
             }
 
+            // 使用循环来逐个下载图片，并添加延迟
             for (const item of items) {
-                downloadImage(item.image, `style_${item.style}.png`);
+                await downloadImageWithDelay(item.image, `${item.style}.png`, 500); // 延迟1秒
             }
             alert('所有图片已开始下载！');
         });
+
+        function downloadImageWithDelay(imageUrl, filename, delay) {
+            return new Promise(resolve => {
+                downloadImage(imageUrl, filename);
+                setTimeout(resolve, delay); // 延迟 delay 毫秒后 resolve Promise
+            });
+        }
 
         function downloadImage(imageUrl, filename) {
             fetch(imageUrl, {
