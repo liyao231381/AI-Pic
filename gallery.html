@@ -160,6 +160,9 @@
                     <li class="mr-2">
                         <button id="tab-together" class="tab-button" onclick="openTab('together')">Together DB</button>
                     </li>
+                    <li class="mr-2">
+                        <button id="tab-pollinations" class="tab-button" onclick="openTab('pollinations')">Pollinations DB</button>
+                    </li>
                 </ul>
             </div>
 
@@ -195,6 +198,13 @@
                     <!-- Together DB items will be displayed here -->
                 </div>
             </div>
+
+            <!-- Tab Content: Pollinations DB -->
+            <div id="pollinations" class="tab-content">
+                <div id="pollinations-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                    <!-- Pollinations DB items will be displayed here -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -210,12 +220,15 @@
         let indexDb; // 保存 imageGeneratorDB 的实例
         let geminiDb; // 保存 geminiImageHistoryDB 的实例
         let togetherDb; // 保存 togetherDB 的实例
+        let pollinationsDb; // 保存 pollinationsDB 的实例
         const INDEX_DB_NAME = 'imageGeneratorDB'; // 要读取的 IndexedDB 数据库名
         const INDEX_OBJECT_STORE_NAME = 'imageHistoryStore'; // indexDB的对象仓库名
         const GEMINI_DB_NAME = 'geminiImageHistoryDB'; // 要读取的 IndexedDB 数据库名
         const GEMINI_OBJECT_STORE_NAME = 'imageHistoryStore'; // geminiDB的对象仓库名
         const TOGETHER_DB_NAME = 'image_generator_db'; // 要读取的 IndexedDB 数据库名
         const TOGETHER_OBJECT_STORE_NAME = 'image_history'; // togetherDB的对象仓库名
+        const POLLINATIONS_DB_NAME = 'imageHistoryDB'; // 要读取的 IndexedDB 数据库名
+        const POLLINATIONS_OBJECT_STORE_NAME = 'imageHistoryStore'; // pollinationsDB的对象仓库名
 
         // Tab management
         function openTab(tabId) {
@@ -230,6 +243,8 @@
 
             if (tabId === 'together') {
                 displayTogetherHistory();
+            } else if (tabId === 'pollinations') {
+                displayPollinationsHistory();
             }
         }
 
@@ -718,11 +733,130 @@
                 displayGeminiHistory();
                 await initializeTogetherDB();
                 displayTogetherHistory();
+                await initializePollinationsDB();
             } catch (error) {
                 console.error("Failed to initialize database:", error);
                 alert("Failed to initialize database. Check console for details.");
             }
         });
+
+        // 初始化 pollinationsDB 数据库
+        function initializePollinationsDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(POLLINATIONS_DB_NAME);
+
+                request.onerror = (event) => {
+                    console.error("POLLINATIONS DB open error:", event);
+                    reject(event);
+                };
+
+                request.onsuccess = (event) => {
+                    pollinationsDb = event.target.result;
+                    console.log("POLLINATIONS DB opened successfully");
+                    resolve();
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(POLLINATIONS_OBJECT_STORE_NAME)) {
+                        // 如果对象存储不存在，则创建它
+                        const objectStore = db.createObjectStore(POLLINATIONS_OBJECT_STORE_NAME, {
+                            keyPath: 'id',
+                            autoIncrement: true
+                        });
+                        // 可以选择创建索引
+                        objectStore.createIndex('prompt', 'params.prompt', {
+                            unique: false
+                        });
+                        objectStore.createIndex('timestamp', 'timestamp', {
+                            unique: false
+                        });
+                        console.log("POLLINATIONS DB object store created");
+                    }
+                };
+            });
+        }
+
+        // 从 pollinationsDB 中读取数据并显示
+        function displayPollinationsHistory() {
+            getAllPollinationsHistoryItems().then(items => {
+                const pollinationsGrid = document.getElementById('pollinations-grid');
+                pollinationsGrid.innerHTML = '';
+
+                items.forEach(item => {
+                    const historyItemDiv = document.createElement('div');
+                    historyItemDiv.classList.add('history-item');
+
+                    // Create download button
+                    const downloadButton = document.createElement('div');
+                    downloadButton.classList.add('overlay-button', 'download-button');
+                    downloadButton.innerHTML = '<i class="fas fa-download"></i>';
+                    downloadButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        downloadImage(item.imageUrl, item.params?.prompt ? item.params.prompt.substring(0, 30) : 'image');
+                    });
+
+                    // Create delete button
+                    const deleteButton = document.createElement('div');
+                    deleteButton.classList.add('overlay-button', 'delete-button');
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        deletePollinationsHistoryItem(item.id);
+                    });
+
+                    let modelInfo = item.params?.model ? `<p class="text-xs text-gray-500">Model: ${item.params.model}</p>` : '';
+
+                    historyItemDiv.innerHTML = `
+                        <div class="image-container">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt}">
+                        </div>
+                        <div class="history-item-details">
+                            <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
+                            ${modelInfo}
+                        </div>
+                    `;
+
+                    historyItemDiv.appendChild(downloadButton);
+                    historyItemDiv.appendChild(deleteButton);
+                    pollinationsGrid.appendChild(historyItemDiv);
+                });
+            });
+        }
+
+        // 从 pollinationsDB 中读取所有数据
+        function getAllPollinationsHistoryItems() {
+            return new Promise((resolve, reject) => {
+                const transaction = pollinationsDb.transaction([POLLINATIONS_OBJECT_STORE_NAME], 'readonly');
+                const objectStore = transaction.objectStore(POLLINATIONS_OBJECT_STORE_NAME);
+                const request = objectStore.getAll();
+
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error getting all POLLINATIONS history items:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        // 删除 Pollinations 历史记录项
+        function deletePollinationsHistoryItem(itemId) {
+            const transaction = pollinationsDb.transaction([POLLINATIONS_OBJECT_STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(POLLINATIONS_OBJECT_STORE_NAME);
+            const request = objectStore.delete(itemId);
+
+            request.onsuccess = () => {
+                console.log(`Item ${itemId} deleted successfully.`);
+                displayPollinationsHistory(); // Refresh the displayed history
+            };
+
+            request.onerror = (event) => {
+                console.error('Error deleting POLLINATIONS history item:', event);
+            };
+        }
     </script>
 </body>
 
