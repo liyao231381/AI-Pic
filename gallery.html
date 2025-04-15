@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,11 +13,9 @@
             height: 100vh;
             overflow: auto;
         }
-
         .container-wrapper {
             padding: 1rem;
         }
-
         .panel {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
@@ -28,32 +25,28 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
         }
-
         .panel:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
-
         .history-item {
             transition: all 0.3s ease;
             cursor: pointer;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: relative; /* Make it a positioning context */
+            position: relative;
+            /* Make it a positioning context */
         }
-
         .history-item:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
-
         .image-container {
             padding-bottom: 163.33%;
             height: 0;
             position: relative;
             overflow: hidden;
         }
-
         .history-item img {
             position: absolute;
             top: 0;
@@ -62,39 +55,36 @@
             height: 100%;
             object-fit: cover;
         }
-
         .history-item-details {
-            padding: 1rem;
+            padding: 0.5rem;
             background-color: rgba(255, 255, 255, 0.7);
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
         }
-
         /* Download and Delete Button Styles */
         .overlay-button {
             position: absolute;
-            padding: 4px 8px;
+            padding: 0.5rem;
             background-color: rgba(0, 0, 0, 0.5);
             color: white;
             border-radius: 0.375rem;
             cursor: pointer;
             opacity: 0;
             transition: opacity 0.3s ease;
-            z-index: 10; /* Ensure buttons are above other content */
+            z-index: 10;
+            /* Ensure buttons are above other content */
         }
-
         .history-item:hover .overlay-button {
             opacity: 1;
         }
-
         .download-button {
             top: 0.5rem;
             left: 0.5rem;
         }
-
         .delete-button {
             top: 0.5rem;
             right: 0.5rem;
         }
-
         .drop-area {
             border: 2px dashed #cbd5e0;
             border-radius: 8px;
@@ -103,116 +93,143 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
         .drop-area:hover {
             border-color: #667eea;
             background-color: rgba(102, 126, 234, 0.05);
         }
-
         /* Tab styles */
         .tab-button {
             @apply py-2 px-4 rounded-t-lg text-sm font-medium transition;
         }
-
         .tab-button.active {
             @apply bg-blue-500 text-white;
         }
-
         .tab-content {
             display: none;
             padding: 1rem;
         }
-
         .tab-content.active {
             display: block;
         }
+        /* New Tab Styles */
+        .tab-button {
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 0.6rem 0.6rem;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+            font-weight: 900;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .tab-button:hover {
+            background-color: #ddd;
+        }
+        .tab-button.active {
+            background-color: #00aaff;
+            /* Blue 500 */
+            color: white;
+        }
+        .tabs-container {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        #pollinations-grid {
+            z-index: 1;
+            position: relative;
+            /* 确保grid在tabs-container之下 */
+        }
     </style>
 </head>
-
 <body>
     <div class="container-wrapper">
         <div class="panel p-4 flex flex-col">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center">
+            <div class="flex items-center justify-center mb-4">
+                <div class="flex items-center" onclick="window.location.href='./index.html'">
                     <div
                         class="bg-gradient-to-r from-purple-500 to-blue-500 w-10 h-10 rounded-lg flex items-center justify-center text-white mr-3">
-                        <i class="fas fa-magic"></i>
+                        <i class="fas fa-table text-xl"></i>
                     </div>
-                    <h1 class="text-xl font-bold text-gray-800">WOMBO Dream 历史记录查看器</h1>
+                    <h1 class="text-xl font-bold text-gray-800">画廊</h1>
                 </div>
             </div>
-
             <!-- Tabs -->
-            <div class="mb-4 border-b border-gray-200">
+            <div class="mb-4 border-b border-gray-200 tabs-container">
                 <ul class="flex flex-wrap -mb-px">
                     <li class="mr-2">
-                        <button id="tab-wombo" class="tab-button active" onclick="openTab('wombo')">WOMBO DB</button>
+                        <button id="tab-index" class="tab-button" onclick="openTab('index')">硅基流动</button>
                     </li>
                     <li class="mr-2">
-                        <button id="tab-empty" class="tab-button" onclick="openTab('empty')">Empty Tab</button>
+                        <button id="tab-gemini" class="tab-button" onclick="openTab('gemini')"><i class="fas fa-edit mr-1"></i>Gemini</button>
                     </li>
                     <li class="mr-2">
-                        <button id="tab-index" class="tab-button" onclick="openTab('index')">Index DB</button>
+                        <button id="tab-together" class="tab-button" onclick="openTab('together')"><i class="fas fa-exchange-alt mr-1"></i>Together</button>
                     </li>
                     <li class="mr-2">
-                        <button id="tab-gemini" class="tab-button" onclick="openTab('gemini')">Gemini DB</button>
+                        <button id="tab-pollinations" class="tab-button" onclick="openTab('pollinations')"><i class="fas fa-seedling mr-1"></i>Pollinations</button>
                     </li>
                     <li class="mr-2">
-                        <button id="tab-together" class="tab-button" onclick="openTab('together')">Together DB</button>
+                        <button id="tab-stability" class="tab-button" onclick="openTab('stability')"><i class="fas fa-cogs mr-1"></i>Stability</button>
                     </li>
                     <li class="mr-2">
-                        <button id="tab-pollinations" class="tab-button" onclick="openTab('pollinations')">Pollinations DB</button>
+                        <button id="tab-stable" class="tab-button" onclick="openTab('stable')"><i class="fas fa-tree mr-1"></i>Stable</button>
                     </li>
                     <li class="mr-2">
-                        <button id="tab-stability" class="tab-button" onclick="openTab('stability')">Stability DB</button>
+                        <button id="tab-wombo" class="tab-button active" onclick="openTab('wombo')"><i class="fas fa-paint-brush mr-1"></i>WOMBO</button>
                     </li>
                 </ul>
             </div>
-
-            <!-- Tab Content: WOMBO DB -->
-            <div id="wombo" class="tab-content active">
-                <div id="wombo-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-                    <!-- WOMBO DB items will be displayed here -->
-                </div>
-            </div>
-
             <!-- Tab Content: Stability DB -->
             <div id="stability" class="tab-content">
-                <div id="stability-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                <div id="stability-grid"
+                    class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                     <!-- Stability DB items will be displayed here -->
                 </div>
             </div>
-
             <!-- Tab Content: Index DB -->
             <div id="index" class="tab-content">
-                <div id="index-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                <div id="index-grid"
+                    class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                     <!-- Index DB items will be displayed here -->
                 </div>
             </div>
-
             <!-- Tab Content: Gemini DB -->
             <div id="gemini" class="tab-content">
-                <div id="gemini-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                <div id="gemini-grid"
+                    class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                     <!-- Gemini DB items will be displayed here -->
                 </div>
             </div>
-
             <!-- Tab Content: Empty Tab -->
             <div id="empty" class="tab-content">
                 <p>This is an empty tab.</p>
             </div>
-
             <!-- Tab Content: Together DB -->
             <div id="together" class="tab-content">
-                <div id="together-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                <div id="together-grid"
+                    class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                     <!-- Together DB items will be displayed here -->
                 </div>
             </div>
-
             <!-- Tab Content: Pollinations DB -->
             <div id="pollinations" class="tab-content">
-                <div id="pollinations-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                <div id="pollinations-grid"
+                    class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                     <!-- Pollinations DB items will be displayed here -->
+                </div>
+            </div>
+            <!-- Tab Content: Stable DB -->
+            <div id="stable" class="tab-content">
+                <div id="stable-grid"
+                    class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                    <!-- Stable DB items will be displayed here -->
+                </div>
+            </div>
+            <!-- Tab Content: WOMBO DB -->
+            <div id="wombo" class="tab-content active">
+                <div id="wombo-grid"
+                    class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                    <!-- WOMBO DB items will be displayed here -->
                 </div>
             </div>
         </div>
@@ -239,6 +256,10 @@
         const TOGETHER_OBJECT_STORE_NAME = 'image_history'; // togetherDB的对象仓库名
         const POLLINATIONS_DB_NAME = 'imageHistoryDB'; // 要读取的 IndexedDB 数据库名
         const POLLINATIONS_OBJECT_STORE_NAME = 'imageHistoryStore'; // pollinationsDB的对象仓库名
+        const STABLE_DB_NAME = 'SD2imageHistoryDB'; // 要读取的 IndexedDB 数据库名
+        const STABLE_OBJECT_STORE_NAME = 'imageHistoryStore'; // stableDB的对象仓库名
+
+        let stableDb; // 保存 stableDB 的实例
 
         // Tab management
         function openTab(tabId) {
@@ -255,9 +276,55 @@
                 displayTogetherHistory();
             } else if (tabId === 'pollinations') {
                 displayPollinationsHistory();
+            } else if (tabId === 'stable') {
+                displayStableHistory();
             } else if (tabId === 'stability') {
                 displayStabilityHistory();
             }
+        }
+
+        // 从 SDImageHistoryDB 中读取数据并显示
+        function displayStabilityHistory() {
+            getAllStabilityHistoryItems().then(items => {
+                const stabilityGrid = document.getElementById('stability-grid');
+                stabilityGrid.innerHTML = '';
+
+                items.forEach(item => {
+                    const historyItemDiv = document.createElement('div');
+                    historyItemDiv.classList.add('history-item');
+
+                    // Create download button
+                    const downloadButton = document.createElement('div');
+                    downloadButton.classList.add('overlay-button', 'download-button');
+                    downloadButton.innerHTML = '<i class="fas fa-download"></i>';
+                    downloadButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to historyItem
+                        downloadImage(item.imageBase64, item.params?.prompt ? item.params.prompt.substring(0, 30) : 'image');
+                    });
+
+                    // Create delete button
+                    const deleteButton = document.createElement('div');
+                    deleteButton.classList.add('overlay-button', 'delete-button');
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to historyItem
+                        deleteStabilityHistoryItem(item.id);
+                    });
+
+                    historyItemDiv.innerHTML = `
+                        <div class="image-container">
+                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" style="object-fit: contain;">
+                        </div>
+                        <div class="history-item-details">
+                            <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
+                        </div>
+                    `;
+
+                    historyItemDiv.appendChild(downloadButton);
+                    historyItemDiv.appendChild(deleteButton);
+                    stabilityGrid.appendChild(historyItemDiv);
+                });
+            });
         }
 
         // 初始化 imageGeneratorDB 数据库
@@ -739,7 +806,7 @@
                 await initializeWomboDB();
                 await initializeIndexDB();
                 await initializeGeminiDB();
-                openTab('wombo');
+                openTab('index');
                 displayWomboHistory();
                 displayIndexHistory();
                 displayGeminiHistory();
@@ -748,6 +815,8 @@
                 await initializePollinationsDB();
                 await initializeStabilityDB();
                 displayStabilityHistory();
+                await initializeStableDB();
+                displayStableHistory();
             } catch (error) {
                 console.error("Failed to initialize database:", error);
                 alert("Failed to initialize database. Check console for details.");
@@ -793,6 +862,29 @@
         }
 
         // 初始化 pollinationsDB 数据库
+        function initializeStableDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(STABLE_DB_NAME);
+
+                request.onerror = (event) => {
+                    console.error("STABLE DB open error:", event);
+                    reject(event);
+                };
+
+                request.onsuccess = (event) => {
+                    stableDb = event.target.result;
+                    console.log("STABLE DB opened successfully");
+                    resolve();
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    // No need to create object store here, it should already exist
+                };
+            });
+        }
+
+        // 初始化 pollinationsDB 数据库
         function initializePollinationsDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(POLLINATIONS_DB_NAME);
@@ -826,6 +918,50 @@
                         console.log("POLLINATIONS DB object store created");
                     }
                 };
+            });
+        }
+
+        // 从 stableDB 中读取数据并显示
+        function displayStableHistory() {
+            getAllStableHistoryItems().then(items => {
+                const stableGrid = document.getElementById('stable-grid');
+                stableGrid.innerHTML = '';
+
+                items.forEach(item => {
+                    const historyItemDiv = document.createElement('div');
+                    historyItemDiv.classList.add('history-item');
+
+                    // Create download button
+                    const downloadButton = document.createElement('div');
+                    downloadButton.classList.add('overlay-button', 'download-button');
+                    downloadButton.innerHTML = '<i class="fas fa-download"></i>';
+                    downloadButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        downloadImage(item.imageUrl, item.params?.prompt ? item.params.prompt.substring(0, 30) : 'image');
+                    });
+
+                    // Create delete button
+                    const deleteButton = document.createElement('div');
+                    deleteButton.classList.add('overlay-button', 'delete-button');
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        deleteStableHistoryItem(item.id);
+                    });
+
+                    historyItemDiv.innerHTML = `
+                        <div class="image-container">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" style="object-fit: contain;">
+                        </div>
+                        <div class="history-item-details">
+                            <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
+                        </div>
+                    `;
+
+                    historyItemDiv.appendChild(downloadButton);
+                    historyItemDiv.appendChild(deleteButton);
+                    stableGrid.appendChild(historyItemDiv);
+                });
             });
         }
 
@@ -874,6 +1010,40 @@
                     pollinationsGrid.appendChild(historyItemDiv);
                 });
             });
+        }
+
+        // 从 SDImageHistoryDB 中读取所有数据
+        function getAllStableHistoryItems() {
+            return new Promise((resolve, reject) => {
+                const transaction = stableDb.transaction([STABLE_OBJECT_STORE_NAME], 'readonly');
+                const objectStore = transaction.objectStore(STABLE_OBJECT_STORE_NAME);
+                const request = objectStore.getAll();
+
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error getting all STABLE history items:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        // 删除 Stable 历史记录项
+        function deleteStableHistoryItem(itemId) {
+            const transaction = stableDb.transaction([STABLE_OBJECT_STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(STABLE_OBJECT_STORE_NAME);
+            const request = objectStore.delete(itemId);
+
+            request.onsuccess = () => {
+                console.log(`Item ${itemId} deleted successfully.`);
+                displayStableHistory(); // Refresh the displayed history
+            };
+
+            request.onerror = (event) => {
+                console.error('Error deleting STABLE history item:', event);
+            };
         }
 
         // 从 SDImageHistoryDB 中读取数据并显示
