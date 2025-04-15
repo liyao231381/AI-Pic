@@ -900,6 +900,18 @@
             }
         });
 
+        //  handleImageReady 函数移到 handleFirstRequest 函数的外部
+        function handleImageReady(currentParams, imageBase64) {
+                    saveImageToDB({
+                        ...currentParams,
+                    }, imageBase64)
+                        .then(() => {
+                            displayHistory(); // 刷新历史记录
+                        })
+                        .catch(err => {
+                            console.error("保存图像到历史记录时出错:", err);
+                        });
+                }
         async function handleFirstRequest() {
             const promptValue = promptInput.value;
             // const aspectRatioValue = aspectRatioSelect.value;  // 删除这行
@@ -923,6 +935,14 @@
                 clearTimeout(timeoutId);
             }
 
+            // 缓存请求参数
+            const currentParams = {
+                prompt: promptValue,
+                style: styleValue,
+                aspect_ratio: 'old_vertical_ratio',
+                mediastore_uid: mediastoreUid,
+                weight: document.querySelector('input[name="weight"]:checked').value
+            };
 
             try {
                 let requestUrl = 'https://aipic.liyao.sbs/api/wombo'; // Default URL
@@ -974,7 +994,7 @@
 
                 console.log("任务 ID:", taskId);
                 polling = true; // 开始轮询
-                handleSecondRequest(); // 开始检查状态
+                handleSecondRequest(currentParams); // 开始检查状态
 
             } catch (error) {
                 console.error("启动图像生成时出错:", error);
@@ -983,7 +1003,7 @@
             }
         }
 
-        async function handleSecondRequest() {
+        async function handleSecondRequest(currentParams) {
             const authTokenValue = authTokenInput.value;
 
             if (!taskId) {
@@ -1031,26 +1051,11 @@
                         polling = false;
                         if (timeoutId) clearTimeout(timeoutId);
                         console.log("图像已完成。轮询已停止。");
-
                         // Convert image URL to Base64
                         imageToBase64(imageUrl)
                             .then(imageBase64 => {
-                                // --- Store to IndexDB after successful image generation ---
-                                const currentParams = {
-                                    prompt: promptInput.value,
-                                    style: styleInput.value,
-                                    aspect_ratio: 'old_vertical_ratio',
-                                    mediastore_uid: mediastoreUid,
-                                    weight: document.querySelector('input[name="weight"]:checked').value
-                                };
-
-                                saveImageToDB(currentParams,imageBase64)
-                                    .then(() => {
-                                        displayHistory(); // Refresh history
-                                    })
-                                    .catch(err => {
-                                        console.error("Error saving image to history:", err);
-                                    });
+                                // 调用存储函数
+                                handleImageReady(currentParams, imageBase64);
                             })
                             .catch(error => {
                                 console.error("Error converting image to base64:", error);
@@ -1089,7 +1094,7 @@
                          previewPlaceholder.style.display = 'flex';
                      }
                      // Continue polling
-                    timeoutId = setTimeout(() => handleSecondRequest(), 1500); // 每 1.5 秒轮询一次
+                    timeoutId = setTimeout(() => handleSecondRequest(currentParams), 1500); // 每 1.5 秒轮询一次
                 } else {
                      // Unknown state, stop polling to prevent infinite loops
                      polling = false;
