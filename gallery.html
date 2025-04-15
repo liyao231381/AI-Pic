@@ -891,7 +891,7 @@
                     downloadButton.classList.add('overlay-button', 'download-button');
                     downloadButton.innerHTML = '<i class="fas fa-download"></i>';
                     downloadButton.addEventListener('click', (event) => {
-                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        event.stopPropagation(); // Prevent click from bubbling to historyItem
                         downloadImage(item.imageBase64, item.params?.prompt ? item.params.prompt.substring(0, 30) : 'image');
                     });
 
@@ -900,13 +900,13 @@
                     deleteButton.classList.add('overlay-button', 'delete-button');
                     deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
                     deleteButton.addEventListener('click', (event) => {
-                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        event.stopPropagation(); // Prevent click from bubbling to historyItem
                         deleteStabilityHistoryItem(item.id);
                     });
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageBase64}" alt="${item.params?.prompt}">
+                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" style="object-fit: contain;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
