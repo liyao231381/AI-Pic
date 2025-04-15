@@ -157,6 +157,9 @@
                     <li class="mr-2">
                         <button id="tab-gemini" class="tab-button" onclick="openTab('gemini')">Gemini DB</button>
                     </li>
+                    <li class="mr-2">
+                        <button id="tab-together" class="tab-button" onclick="openTab('together')">Together DB</button>
+                    </li>
                 </ul>
             </div>
 
@@ -185,6 +188,13 @@
             <div id="empty" class="tab-content">
                 <p>This is an empty tab.</p>
             </div>
+
+            <!-- Tab Content: Together DB -->
+            <div id="together" class="tab-content">
+                <div id="together-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                    <!-- Together DB items will be displayed here -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -199,10 +209,13 @@
         let womboDb; // 保存 womboDreamHistoryDB 的实例
         let indexDb; // 保存 imageGeneratorDB 的实例
         let geminiDb; // 保存 geminiImageHistoryDB 的实例
+        let togetherDb; // 保存 togetherDB 的实例
         const INDEX_DB_NAME = 'imageGeneratorDB'; // 要读取的 IndexedDB 数据库名
         const INDEX_OBJECT_STORE_NAME = 'imageHistoryStore'; // indexDB的对象仓库名
         const GEMINI_DB_NAME = 'geminiImageHistoryDB'; // 要读取的 IndexedDB 数据库名
         const GEMINI_OBJECT_STORE_NAME = 'imageHistoryStore'; // geminiDB的对象仓库名
+        const TOGETHER_DB_NAME = 'image_generator_db'; // 要读取的 IndexedDB 数据库名
+        const TOGETHER_OBJECT_STORE_NAME = 'image_history'; // togetherDB的对象仓库名
 
         // Tab management
         function openTab(tabId) {
@@ -215,6 +228,9 @@
             document.getElementById(tabId).classList.add('active');
             document.getElementById(`tab-${tabId}`).classList.add('active');
 
+            if (tabId === 'together') {
+                displayTogetherHistory();
+            }
         }
 
         // 初始化 imageGeneratorDB 数据库
@@ -325,6 +341,84 @@
             });
         }
 
+        // 初始化 togetherDB 数据库
+        function initializeTogetherDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(TOGETHER_DB_NAME);
+
+                request.onerror = (event) => {
+                    console.error("TOGETHER DB open error:", event);
+                    reject(event);
+                };
+
+                request.onsuccess = (event) => {
+                    togetherDb = event.target.result;
+                    console.log("TOGETHER DB opened successfully");
+                    resolve();
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(TOGETHER_OBJECT_STORE_NAME)) {
+                        // 如果对象存储不存在，则创建它
+                        const objectStore = db.createObjectStore(TOGETHER_OBJECT_STORE_NAME, {
+                            keyPath: 'timestamp'
+                        });
+                        // 可以选择创建索引
+                        objectStore.createIndex('prompt', 'prompt', {
+                            unique: false
+                        });
+                        console.log("TOGETHER DB object store created");
+                    }
+                };
+            });
+        }
+
+        // 从 togetherDB 中读取数据并显示
+        function displayTogetherHistory() {
+            getAllTogetherHistoryItems().then(items => {
+                const togetherGrid = document.getElementById('together-grid');
+                togetherGrid.innerHTML = '';
+
+                items.forEach(item => {
+                    const historyItemDiv = document.createElement('div');
+                    historyItemDiv.classList.add('history-item');
+
+                    // Create download button
+                    const downloadButton = document.createElement('div');
+                    downloadButton.classList.add('overlay-button', 'download-button');
+                    downloadButton.innerHTML = '<i class="fas fa-download"></i>';
+                    downloadButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        downloadImage(item.imageUrl, item.prompt ? item.prompt.substring(0, 30) : 'image');
+                    });
+
+                    // Create delete button
+                    const deleteButton = document.createElement('div');
+                    deleteButton.classList.add('overlay-button', 'delete-button');
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        deleteTogetherHistoryItem(item.timestamp);
+                    });
+
+                    historyItemDiv.innerHTML = `
+                        <div class="image-container">
+                            <img src="${item.imageUrl}" alt="${item.prompt}">
+                        </div>
+                        <div class="history-item-details">
+                            <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.prompt || 'No Prompt'}</h3>
+                            <p class="text-xs text-gray-500">${new Date(item.timestamp).toLocaleString()}</p>
+                        </div>
+                    `;
+
+                    historyItemDiv.appendChild(downloadButton);
+                    historyItemDiv.appendChild(deleteButton);
+                    togetherGrid.appendChild(historyItemDiv);
+                });
+            });
+        }
+
         // 从 imageGeneratorDB 中读取数据并显示
         function displayIndexHistory() {
             getAllIndexHistoryItems().then(items => {
@@ -372,6 +466,24 @@
             });
         }
 
+        // 从 togetherDB 中读取所有数据
+        function getAllTogetherHistoryItems() {
+            return new Promise((resolve, reject) => {
+                const transaction = togetherDb.transaction([TOGETHER_OBJECT_STORE_NAME], 'readonly');
+                const objectStore = transaction.objectStore(TOGETHER_OBJECT_STORE_NAME);
+                const request = objectStore.getAll();
+
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error getting all TOGETHER history items:', event);
+                    reject(event);
+                };
+            });
+        }
+
         // 从 imageGeneratorDB 中读取所有数据
         function getAllIndexHistoryItems() {
             return new Promise((resolve, reject) => {
@@ -388,6 +500,22 @@
                     reject(event);
                 };
             });
+        }
+
+        // 删除 Together 历史记录项
+        function deleteTogetherHistoryItem(timestamp) {
+            const transaction = togetherDb.transaction([TOGETHER_OBJECT_STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(TOGETHER_OBJECT_STORE_NAME);
+            const request = objectStore.delete(timestamp);
+
+            request.onsuccess = () => {
+                console.log(`Item ${timestamp} deleted successfully.`);
+                displayTogetherHistory(); // Refresh the displayed history
+            };
+
+            request.onerror = (event) => {
+                console.error('Error deleting TOGETHER history item:', event);
+            };
         }
 
         // 删除 Index 历史记录项
@@ -588,6 +716,8 @@
                 displayWomboHistory();
                 displayIndexHistory();
                 displayGeminiHistory();
+                await initializeTogetherDB();
+                displayTogetherHistory();
             } catch (error) {
                 console.error("Failed to initialize database:", error);
                 alert("Failed to initialize database. Check console for details.");
