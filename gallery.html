@@ -296,14 +296,19 @@
             <button id="modal-close" class="absolute top-2 right-2 bg-gray-200 hover:bg-gray-300 rounded py-1 px-2"><i class="fas fa-times"></i></button>
             <img id="modal-image" src="" alt="放大图片" class="w-full h-auto">
         </div>
+        <div class="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-200 hover:bg-gray-300 rounded py-1 px-2 cursor-pointer" onclick="prevImage()"><i class="fas fa-chevron-left"></i></div>
+        <div class="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-200 hover:bg-gray-300 rounded py-1 px-2 cursor-pointer" onclick="nextImage()"><i class="fas fa-chevron-right"></i></div>
     </div>
 
     <script>
+        let images = [];
+        let currentImageIndex = 0;
+
         const DB_NAME = 'WBHistoryViewerDB';
         const DB_VERSION = 1;
         const OBJECT_STORE_NAME = 'importedHistory';
         const WOMBO_DB_NAME = 'womboDreamHistoryDB'; // 要读取的 IndexedDB 数据库名
-        const WOMBO_OBJECT_STORE_NAME = 'imageHistory'; // womboDB的对象仓库名
+        const WOMBO_OBJECT_STORE_NAME = 'imageHistory'; // womboDB 的对象仓库名
 
         let db;
         let womboDb; // 保存 womboDreamHistoryDB 的实例
@@ -1270,13 +1275,26 @@
 
         // Function to open the image modal
         function openImageModal(imageSrc) {
-            console.log("openImageModal called with imageSrc:", imageSrc);
             const modal = document.getElementById('image-modal');
             const modalImage = document.getElementById('modal-image');
+
+            // 构建图片数组
+            images = Array.from(document.querySelectorAll('.history-item img')).map(img => img.src);
+            currentImageIndex = images.indexOf(imageSrc);
 
             modalImage.src = imageSrc;
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+        }
+
+        function nextImage() {
+            currentImageIndex = (currentImageIndex + 1) % images.length;
+            document.getElementById('modal-image').src = images[currentImageIndex];
+        }
+
+        function prevImage() {
+            currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+            document.getElementById('modal-image').src = images[currentImageIndex];
         }
 
         // Function to close the image modal
@@ -1288,6 +1306,7 @@
 
         // Add event listener to close button
         document.getElementById('modal-close').addEventListener('click', closeImageModal);
+
         // Close modal when clicking outside the image
         document.getElementById('image-modal').addEventListener('click', function(event) {
             if (event.target.id === 'image-modal') {
@@ -1299,6 +1318,10 @@
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closeImageModal();
+            } else if (event.key === 'ArrowLeft') {
+                prevImage();
+            } else if (event.key === 'ArrowRight') {
+                nextImage();
             }
         });
     </script>
