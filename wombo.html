@@ -12,16 +12,57 @@
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh; /* 确保 body 至少占据整个视口 */
         }
-        
+
         .container-wrapper {
             display: flex;
-            height: 100vh;
+            min-height: 100vh; /* 确保 container-wrapper 占据整个视口高度 */
             padding: 1rem;
         }
-        
+
+        .panel.w-full.md\:w-80 {
+            overflow-y: auto; /* 允许左侧 panel 在内容超出时滚动 */
+        }
+
+        /* 宽屏样式 (min-width: 769px) */
+        @media screen and (min-width: 769px) {
+            body {
+                height: 100vh; /* 限制 body 高度为视口高度 */
+                overflow: hidden; /* 禁止 body 滚动 */
+            }
+
+            .container-wrapper {
+                height: calc(100vh - 2rem); /* 确保 container-wrapper 占据整个视口高度 */
+            }
+
+            .panel.w-full.md\:w-80 {
+                max-height: calc(100vh - 2rem); /* 限制左侧 panel 最大高度，允许内部滚动 */
+            }
+        }
+
+        /* 小屏幕样式 (max-width: 768px) */
+        @media screen and (max-width: 768px) {
+            .container-wrapper {
+                flex-direction: column;
+                min-height: auto; /* 允许 container-wrapper 高度自适应 */
+            }
+
+            .panel.w-full.md\:w-80 {
+                max-height: none; /* 移除左侧 panel 的最大高度限制 */
+            }
+
+            body {
+                overflow: auto; /* 允许 body 在小屏幕上滚动 */
+                height: auto; /* 允许 body 高度自适应 */
+            }
+
+            /* 确保所有 panel 在小屏幕上都允许滚动 */
+            .panel {
+                overflow: auto;
+            }
+        }
+
         .panel {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
@@ -31,7 +72,7 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
         }
-        
+
         .panel:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
@@ -226,17 +267,27 @@
     <div class="container-wrapper gap-4 flex-col overflow-auto md:flex-row">
         <!-- Left Panel - Parameters -->
         <div class="panel w-full md:w-80 p-4 flex flex-col">
-            <div class="flex items-center mb-2">
+            <div class="flex items-center justify-center mb-2">
                 <div class="bg-gradient-to-r from-purple-500 to-blue-500 w-10 h-10 rounded-lg flex items-center justify-center text-white mr-3">
                     <i class="fas fa-magic"></i>
                 </div>
+                <div class="flex-col">
                 <h1 class="text-xl font-bold text-gray-800">WOMBO Dream</h1>
+                    <div class="flex flex-row justify-center items-center">
+                        <a href="./wombohistory.html" target="_blank" class="text-xs text-blue-500">批量下载</a>
+                        <a href="./womboauth.html" target="_blank" class="text-xs text-blue-500 ml-4">授权令牌</a>
+                    </div>
+                </div>
             </div>
-            <div class="flex flex-row justify-center items-center mb-4">
-                <a href="./wombohistory.html" target="_blank" class="text-blue-500">批量下载</a>
-                <a href="./womboauth.html" target="_blank" class="text-blue-500 ml-4">授权令牌</a>
+
+            <!-- Image Reference Toggle Button -->
+            <div class="toggle-btn" id="toggle-image-ref">
+                <i class="fas fa-caret-right mr-2 text-gray-500"></i>
+                <span class="text-sm font-medium text-gray-700">图片参考</span>
             </div>
-            <div class="mb-2 relative">
+            
+            <!-- Image Reference Section (initially hidden) -->
+            <div class="image-ref-section overflow-y-auto" id="image-ref-section">
                 <label for="authorization-token" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                     <i class="fas fa-key mr-2 text-gray-500"></i> 授权令牌
                 </label>
@@ -249,45 +300,7 @@
                         <i class="fas fa-sync"></i>
                     </button>
                 </div>
-            </div>
-                   
-            <div>
-                
-                <div>
-                    <input type="hidden" id="aspect_ratio" value="old_vertical_ratio">
-                </div>
-
-                <div class="mb-2">
-                    <label for="style" class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-seedling mr-2 text-blue-500"></i>风格 ID</label>
-                    <input type="number" id="style"
-                        class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
-                        value="112"
-                        onkeydown="if (event.keyCode == 13) { handleFirstRequest(); return false; }">
-                        <div class="flex items-center justify-between">
-                        <div id="imagePreviewContainer" class="mt-1 h-48 rounded-lg overflow-hidden p-2">
-                            <img id="imagePreview" src="" alt="预览">
-                        </div>
-                        </div>
-                </div>
-
-                <div class="mb-2">
-                    <label for="prompt" class="block text-sm font-medium text-gray-700 mb-1">提示词</label>
-                    <input type="text" id="prompt"
-                        class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
-                        value="a woman in A-POSE, white background"
-                        onkeydown="if (event.keyCode == 13) { handleFirstRequest(); return false; }">
-                </div>
-            </div>
-            
-            <!-- Image Reference Toggle Button -->
-            <div class="toggle-btn" id="toggle-image-ref">
-                <i class="fas fa-caret-right mr-2 text-gray-500"></i>
-                <span class="text-sm font-medium text-gray-700">图片参考</span>
-            </div>
-            
-            <!-- Image Reference Section (initially hidden) -->
-            <div class="image-ref-section mb-2 overflow-y-auto" id="image-ref-section">
-                <div class="mb-2">
+                <div class="mt-2 mb-2">
                     <div class="file-upload">
                         <div class="file-upload-btn">
                             <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-1"></i>
@@ -307,7 +320,9 @@
 
                 <div class="mb-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">权重</label>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex items-center justify-between">
+                    <div class="flex items-center flex-wrap gap-2">
+
                         <div class="flex items-center">
                             <input type="radio" id="weight-low" name="weight" value="LOW" class="hidden radio-btn" checked>
                             <label for="weight-low" class="radio-label px-3 py-1 border rounded-lg cursor-pointer transition">低</label>
@@ -321,11 +336,54 @@
                             <label for="weight-high" class="radio-label px-3 py-1 border rounded-lg cursor-pointer transition">高</label>
                         </div>
                     </div>
+                        <button id="clear-button"
+                            class="py-2 px-3 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300 transition flex items-center justify-center">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>                    
+            </div>
+                   
+            <div>
+                
+                <div>
+                    <input type="hidden" id="aspect_ratio" value="old_vertical_ratio">
                 </div>
-                <button id="clear-button"
-                    class="w-full py-2 px-3 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300 transition flex items-center justify-center">
-                    <i class="fas fa-trash-alt mr-2"></i> 清除
-                </button>
+
+                <div class="mb-2">
+                    <label for="style" class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-seedling mr-2 text-blue-500"></i>风格 ID</label>
+                    <input type="number" id="style"
+                        class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none hidden"
+                        value="112"
+                        onkeydown="if (event.keyCode == 13) { handleFirstRequest(); return false; }">
+                        <div class="flex items-center justify-between">
+                        <div id="imagePreviewContainer" class="mt-1 h-48 rounded-lg overflow-hidden p-2">
+                            <img id="imagePreview" src="" alt="预览">
+                        </div>
+                        </div>
+                </div>
+
+                <div class="mb-2">
+                    <label for="prompt" class="block text-sm font-medium text-gray-700 mb-1">提示词</label>
+                    <textarea id="prompt"
+                        class="input-field w-full px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none"
+                        onkeydown="if (event.keyCode == 13) { handleFirstRequest(); event.preventDefault(); return false; }"
+                    >a woman in A-POSE, white background</textarea>
+                    <div class="flex space-x-2 mt-2">
+                        <button onclick="pasteText()"
+                            class="action-btn w-1/3 bg-blue-100 hover:bg-blue-500 text-blue-600 hover:text-white py-2 px-3 rounded-lg transition">
+                            <i class="fas fa-paste"></i><span class="hidden xl:inline ml-1cap">粘贴</span>
+                        </button>
+                        <button onclick="copyText()"
+                            class="action-btn w-1/3 bg-gray-200 hover:bg-gray-500 text-gray-700 hover:text-white py-2 px-3 rounded-lg transition">
+                            <i class="fas fa-copy"></i><span class="hidden xl:inline ml-1cap">复制</span>
+                        </button>
+                        <button onclick="clearAll()"
+                            class="action-btn w-1/3 bg-red-100 hover:bg-red-500 text-red-600 hover:text-white py-2 px-3 rounded-lg transition">
+                            <i class="fas fa-trash-alt"></i><span class="hidden xl:inline ml-1cap">清除</span>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <div>
@@ -351,7 +409,7 @@
             <img src="https://img.liyao.sbs/file/WB_style/1744611584599_150.png" alt="150" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
             <img src="https://img.liyao.sbs/file/WB_style/1744611978433_148.png" alt="148" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
             <img src="https://img.liyao.sbs/file/WB_style/1744611519710_147.png" alt="147" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
-                <img src="https://img.liyao.sbs/file/WB_style/1744611943165_146.png" alt="146" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
+            <img src="https://img.liyao.sbs/file/WB_style/1744611943165_146.png" alt="146" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
             <img src="https://img.liyao.sbs/file/WB_style/1744611614777_145.png" alt="145" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
             <img src="https://img.liyao.sbs/file/WB_style/1744611526021_144.png" alt="144" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
             <img src="https://img.liyao.sbs/file/WB_style/1744611613484_143.png" alt="143" class="w-full h-auto cursor-pointer border border-gray-200 rounded">
@@ -486,7 +544,7 @@
                     class="input-field flex-1 px-3 py-2 rounded-lg bg-white shadow-sm focus:outline-none text-sm">
                 <button id="download-button" 
                     class="download-btn py-2 px-4 rounded-lg text-white text-sm font-medium flex items-center">
-                    <i class="fas fa-download mr-2"></i> 下载
+                    <i class="fas fa-download"></i>
                 </button>
             </div>
         </div>
@@ -1345,6 +1403,77 @@
         }
 
         refreshTokenButton.addEventListener('click', refreshToken);
+
+                // Paste text
+                async function pasteText() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    document.getElementById('prompt').value = text;
+                    showNotification('已粘贴剪贴板内容');
+                } else {
+                    showNotification('剪贴板为空', true);
+                }
+            } catch (err) {
+                console.error('Failed to read clipboard:', err);
+                showNotification('无法访问剪贴板', true);
+            }
+        }
+
+        // Copy text
+        function copyText() {
+            const text = document.getElementById('prompt').value;
+            if (!text.trim()) {
+                showNotification('没有内容可复制', true);
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('已复制提示词');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showNotification('复制失败', true);
+            });
+        }
+
+        // Clear prompt input
+        function clearAll() {
+            document.getElementById('prompt').value = '';
+            showNotification('已清除提示词');
+        }
+
+        // Show Notification
+        function showNotification(message, isError = false) {
+            // 首先检查是否已经存在notification
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove(); // 如果存在，先移除
+            }
+
+            // 创建notification元素
+            const notification = document.createElement('div');
+            notification.className = `notification ${isError ? 'bg-red-500' : 'bg-green-500'} text-white py-2 px-4 rounded fixed top-1/2 right-1/2 transform -translate-y-1/2 translate-x-1/2 z-50 transition-opacity duration-300 opacity-0`;
+            notification.textContent = message;
+
+            // 将notification添加到body中
+            document.body.appendChild(notification);
+
+            // 触发notification出现
+            setTimeout(() => {
+                notification.classList.add('opacity-100');
+            }, 100);
+
+            // 设定延时后移除notification
+            setTimeout(() => {
+                notification.classList.remove('opacity-100');
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300); // 等待过渡完成后移除
+            }, 3000);
+        }
+
     </script>
 </body>
 </html>
