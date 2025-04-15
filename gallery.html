@@ -163,6 +163,9 @@
                     <li class="mr-2">
                         <button id="tab-pollinations" class="tab-button" onclick="openTab('pollinations')">Pollinations DB</button>
                     </li>
+                    <li class="mr-2">
+                        <button id="tab-stability" class="tab-button" onclick="openTab('stability')">Stability DB</button>
+                    </li>
                 </ul>
             </div>
 
@@ -170,6 +173,13 @@
             <div id="wombo" class="tab-content active">
                 <div id="wombo-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                     <!-- WOMBO DB items will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Tab Content: Stability DB -->
+            <div id="stability" class="tab-content">
+                <div id="stability-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                    <!-- Stability DB items will be displayed here -->
                 </div>
             </div>
 
@@ -245,6 +255,8 @@
                 displayTogetherHistory();
             } else if (tabId === 'pollinations') {
                 displayPollinationsHistory();
+            } else if (tabId === 'stability') {
+                displayStabilityHistory();
             }
         }
 
@@ -734,11 +746,51 @@
                 await initializeTogetherDB();
                 displayTogetherHistory();
                 await initializePollinationsDB();
+                await initializeStabilityDB();
+                displayStabilityHistory();
             } catch (error) {
                 console.error("Failed to initialize database:", error);
                 alert("Failed to initialize database. Check console for details.");
             }
         });
+
+        // 初始化 stabilityDB 数据库
+        function initializeStabilityDB() {
+            return new Promise((resolve, reject) => {
+                if (!('indexedDB' in window)) {
+                    console.error('This browser doesn\'t support IndexedDB');
+                    reject('IndexedDB not supported');
+                    alert("您的浏览器不支持 IndexDB，历史记录功能无法使用。");
+                    return;
+                }
+
+                const request = indexedDB.open('SDImageHistoryDB', 1);
+
+                request.onerror = (event) => {
+                    console.error("Database open error:", event);
+                    console.error("Error details:", event.target.error); // 详细错误信息
+                    reject(event);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    const objectStore = db.createObjectStore('history', {
+                        keyPath: 'id',
+                        autoIncrement: true
+                    });
+                    objectStore.createIndex('timestamp', 'timestamp', {
+                        unique: false
+                    });
+                    console.log("Database setup completed");
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log("Database opened successfully");
+                    resolve(db);
+                };
+            });
+        }
 
         // 初始化 pollinationsDB 数据库
         function initializePollinationsDB() {
@@ -822,6 +874,82 @@
                     pollinationsGrid.appendChild(historyItemDiv);
                 });
             });
+        }
+
+        // 从 SDImageHistoryDB 中读取数据并显示
+        function displayStabilityHistory() {
+            getAllStabilityHistoryItems().then(items => {
+                const stabilityGrid = document.getElementById('stability-grid');
+                stabilityGrid.innerHTML = '';
+
+                items.forEach(item => {
+                    const historyItemDiv = document.createElement('div');
+                    historyItemDiv.classList.add('history-item');
+
+                    // Create download button
+                    const downloadButton = document.createElement('div');
+                    downloadButton.classList.add('overlay-button', 'download-button');
+                    downloadButton.innerHTML = '<i class="fas fa-download"></i>';
+                    downloadButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        downloadImage(item.imageBase64, item.params?.prompt ? item.params.prompt.substring(0, 30) : 'image');
+                    });
+
+                    // Create delete button
+                    const deleteButton = document.createElement('div');
+                    deleteButton.classList.add('overlay-button', 'delete-button');
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        deleteStabilityHistoryItem(item.id);
+                    });
+
+                    historyItemDiv.innerHTML = `
+                        <div class="image-container">
+                            <img src="${item.imageBase64}" alt="${item.params?.prompt}">
+                        </div>
+                        <div class="history-item-details">
+                            <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
+                        </div>
+                    `;
+
+                    historyItemDiv.appendChild(downloadButton);
+                    historyItemDiv.appendChild(deleteButton);
+                    stabilityGrid.appendChild(historyItemDiv);
+                });
+            });
+        }
+
+        // 从 SDImageHistoryDB 中读取所有数据
+        function getAllStabilityHistoryItems() {
+            return new Promise((resolve, reject) => {
+                const request = db.transaction(['history'], 'readonly').objectStore('history').getAll();
+
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error getting all Stability history items:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        // 删除 Stability 历史记录项
+        function deleteStabilityHistoryItem(itemId) {
+            const transaction = db.transaction(['history'], 'readwrite');
+            const objectStore = transaction.objectStore('history');
+            const request = objectStore.delete(itemId);
+
+            request.onsuccess = () => {
+                console.log(`Item ${itemId} deleted successfully.`);
+                displayStabilityHistory(); // Refresh the displayed history
+            };
+
+            request.onerror = (event) => {
+                console.error('Error deleting Stability history item:', event);
+            };
         }
 
         // 从 pollinationsDB 中读取所有数据
