@@ -12,7 +12,7 @@
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             height: 100vh;
-            overflow: auto; /* 修改这里，允许垂直滚动 */
+            overflow: auto;
         }
 
         .container-wrapper {
@@ -47,8 +47,7 @@
         }
 
         .image-container {
-            /* 使用 padding-bottom 来维持宽高比 */
-            padding-bottom: 163.33%; /* (1568 / 960) * 100 */
+            padding-bottom: 163.33%;
             height: 0;
             position: relative;
             overflow: hidden;
@@ -81,6 +80,24 @@
             border-color: #667eea;
             background-color: rgba(102, 126, 234, 0.05);
         }
+
+        /* Tab styles */
+        .tab-button {
+            @apply py-2 px-4 rounded-t-lg text-sm font-medium transition;
+        }
+
+        .tab-button.active {
+            @apply bg-blue-500 text-white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 1rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 
@@ -89,7 +106,8 @@
         <div class="panel p-4 flex flex-col">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
-                    <div class="bg-gradient-to-r from-purple-500 to-blue-500 w-10 h-10 rounded-lg flex items-center justify-center text-white mr-3">
+                    <div
+                        class="bg-gradient-to-r from-purple-500 to-blue-500 w-10 h-10 rounded-lg flex items-center justify-center text-white mr-3">
                         <i class="fas fa-magic"></i>
                     </div>
                     <h1 class="text-xl font-bold text-gray-800">WOMBO Dream 历史记录查看器</h1>
@@ -100,258 +118,386 @@
                 </button>
             </div>
 
-            <div class="mb-4 drop-area" id="drop-area">
-                <i class="fas fa-cloud-upload-alt fa-3x text-gray-400 mb-2"></i>
-                <p class="text-sm text-gray-500">拖放JSON文件到这里或点击上传</p>
-                <input type="file" id="file-input" class="hidden" accept=".json">
+            <!-- Tabs -->
+            <div class="mb-4 border-b border-gray-200">
+                <ul class="flex flex-wrap -mb-px">
+                    <li class="mr-2">
+                        <button id="tab-imported" class="tab-button active" onclick="openTab('imported')">导入和查看</button>
+                    </li>
+                    <li class="mr-2">
+                        <button id="tab-wombo" class="tab-button" onclick="openTab('wombo')">WOMBO DB</button>
+                    </li>
+                </ul>
             </div>
 
-            <div id="history-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <!-- History items will be displayed here -->
+            <!-- Tab Content: Imported History -->
+            <div id="imported" class="tab-content active">
+                <div class="mb-4 drop-area" id="drop-area">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-gray-400 mb-2"></i>
+                    <p class="text-sm text-gray-500">拖放JSON文件到这里或点击上传</p>
+                    <input type="file" id="file-input" class="hidden" accept=".json">
+                </div>
+
+                <div id="history-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- History items will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Tab Content: WOMBO DB -->
+            <div id="wombo" class="tab-content">
+                <div id="wombo-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- WOMBO DB items will be displayed here -->
+                </div>
             </div>
         </div>
     </div>
+
     <script>
-        const DB_NAME = 'WBHistoryViewerDB';
-        const DB_VERSION = 1;
-        const OBJECT_STORE_NAME = 'importedHistory';
+const DB_NAME = 'WBHistoryViewerDB';
+const DB_VERSION = 1;
+const OBJECT_STORE_NAME = 'importedHistory';
+const WOMBO_DB_NAME = 'womboDreamHistoryDB'; // 要读取的 IndexedDB 数据库名
+const WOMBO_OBJECT_STORE_NAME = 'imageHistory'; // womboDB的对象仓库名
 
-        let db;
+let db;
+let womboDb; // 保存 womboDreamHistoryDB 的实例
 
-        function initializeDatabase() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
+// Tab management
+function openTab(tabId) {
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => content.classList.remove('active'));
 
-                request.onerror = (event) => {
-                    console.error("Database open error:", event);
-                    reject(event);
-                };
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => button.classList.remove('active'));
 
-                request.onsuccess = (event) => {
-                    db = event.target.result;
-                    console.log("Database opened successfully");
-                    resolve();
-                };
+    document.getElementById(tabId).classList.add('active');
+    document.getElementById(`tab-${tabId}`).classList.add('active');
 
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
-                        const objectStore = db.createObjectStore(OBJECT_STORE_NAME, {
-                            keyPath: 'id',
-                            autoIncrement: true
-                        });
-                        objectStore.createIndex('prompt', 'prompt', {
-                            unique: false
-                        });
-                        console.log("Object store created");
-                    }
-                };
-            });
-        }
+    if (tabId === 'wombo' && !womboDb) {
+        initializeWomboDB().then(() => {
+            displayWomboHistory();
+        });
+    }
+}
 
-        function importDataToDB(data) {
-            return new Promise((resolve, reject) => {
-                // 1. 创建一个事务，用于清空对象存储
-                const clearTransaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
-                const clearObjectStore = clearTransaction.objectStore(OBJECT_STORE_NAME);
-                const clearRequest = clearObjectStore.clear(); // `clear()` 方法用于清空对象存储
+function initializeDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-                clearRequest.onsuccess = () => {
-                    console.log('Existing data cleared from DB');
+        request.onerror = (event) => {
+            console.error("Database open error:", event);
+            reject(event);
+        };
 
-                    // 2. 在清空操作成功后，再导入新的数据
-                    const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
-                    const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            console.log("Database opened successfully");
+            resolve();
+        };
 
-                    data.forEach(item => {
-                        objectStore.add(item);
-                    });
-
-                    transaction.oncomplete = () => {
-                        console.log('Data imported to DB');
-                        resolve();
-                    };
-
-                    transaction.onerror = (event) => {
-                        console.error('Error importing data to DB:', event);
-                        reject(event);
-                    };
-                };
-
-                clearRequest.onerror = (event) => {
-                    console.error('Error clearing data from DB:', event);
-                    reject(event);
-                };
-            });
-        }
-
-        function displayHistory() {
-            getAllHistoryItems().then(items => {
-                const historyGrid = document.getElementById('history-grid');
-                historyGrid.innerHTML = ''; // Clear existing items
-
-                items.forEach(item => {
-                    const historyItemDiv = document.createElement('div');
-                    historyItemDiv.classList.add('history-item');
-                    historyItemDiv.innerHTML = `
-                        <div class="image-container">
-                            <img src="${item.image}" alt="${item.prompt}">
-                        </div>
-                        <div class="history-item-details">
-                            <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.prompt || 'No Prompt'}</h3>
-                            <p class="text-md font-semibold text-green-500">${item.style}</p>
-                        </div>
-                    `;
-                    historyGrid.appendChild(historyItemDiv);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
+                const objectStore = db.createObjectStore(OBJECT_STORE_NAME, {
+                    keyPath: 'id',
+                    autoIncrement: true
                 });
-            });
-        }
-
-        function getAllHistoryItems() {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
-                const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
-                const request = objectStore.getAll();
-
-                request.onsuccess = (event) => {
-                    resolve(event.target.result);
-                };
-
-                request.onerror = (event) => {
-                    console.error('Error getting all history items:', event);
-                    reject(event);
-                };
-            });
-        }
-
-        // Drag and drop functionality
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('file-input');
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false)
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault()
-            e.stopPropagation()
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false)
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false)
-        });
-
-        function highlight(e) {
-            dropArea.classList.add('bg-blue-50');
-        }
-
-        function unhighlight(e) {
-            dropArea.classList.remove('bg-blue-50');
-        }
-
-        dropArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            let dt = e.dataTransfer
-            let files = dt.files
-
-            handleFiles(files)
-        }
-
-        fileInput.addEventListener('change', () => {
-            handleFiles(fileInput.files);
-        });
-
-        dropArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        function handleFiles(files) {
-            const file = files[0];
-            if (file && file.type === 'application/json') {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        importDataToDB(data).then(() => {
-                            displayHistory();
-                            alert('历史记录已成功导入！');
-                        }).catch(err => {
-                            console.error('导入数据时出错:', err);
-                            alert('导入数据时出错，请检查控制台。');
-                        });
-                    } catch (error) {
-                        console.error('解析JSON时出错:', error);
-                        alert('解析JSON时出错，请确保文件是有效的JSON格式。');
-                    }
-                };
-                reader.readAsText(file);
-            } else {
-                alert('请选择有效的JSON文件。');
-            }
-        }
-
-        // Download all images
-        const downloadAllButton = document.getElementById('download-all-button');
-        downloadAllButton.addEventListener('click', async () => {
-            const items = await getAllHistoryItems();
-            if (items.length === 0) {
-                alert('没有图片可以下载！');
-                return;
-            }
-
-            // 使用循环来逐个下载图片，并添加延迟
-            for (const item of items) {
-                await downloadImageWithDelay(item.image, `${item.style}.png`, 500); // 延迟1秒
-            }
-            alert('所有图片已开始下载！');
-        });
-
-        function downloadImageWithDelay(imageUrl, filename, delay) {
-            return new Promise(resolve => {
-                downloadImage(imageUrl, filename);
-                setTimeout(resolve, delay); // 延迟 delay 毫秒后 resolve Promise
-            });
-        }
-
-        function downloadImage(imageUrl, filename) {
-            fetch(imageUrl, {
-                    method: 'GET',
-                    mode: 'cors', // 解决跨域问题
-                    headers: {
-                        'Access-Control-Allow-Origin': '*'
-                    }
-                })
-                .then(response => response.blob())
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                })
-                .catch(error => {
-                    console.error('下载图片时出错:', error);
-                    alert('下载图片时出错，请检查控制台。');
+                objectStore.createIndex('prompt', 'prompt', {
+                    unique: false
                 });
-        }
+                console.log("Object store created");
+            }
+        };
+    });
+}
 
-        window.addEventListener('load', async () => {
+// 初始化 womboDreamHistoryDB 数据库
+function initializeWomboDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(WOMBO_DB_NAME);
+
+        request.onerror = (event) => {
+            console.error("WOMBO DB open error:", event);
+            reject(event);
+        };
+
+        request.onsuccess = (event) => {
+            womboDb = event.target.result;
+            console.log("WOMBO DB opened successfully");
+            resolve();
+        };
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(WOMBO_OBJECT_STORE_NAME)) {
+                // 如果对象存储不存在，则创建它
+                const objectStore = db.createObjectStore(WOMBO_OBJECT_STORE_NAME, {
+                    keyPath: 'id',
+                    autoIncrement: true
+                });
+                // 可以选择创建索引
+                objectStore.createIndex('prompt', 'prompt', {
+                    unique: false
+                });
+                objectStore.createIndex('style', 'style', {
+                    unique: false
+                });
+                console.log("WOMBO DB object store created");
+            }
+            console.log("WOMBO DB upgrade needed");
+        };
+    });
+}
+
+function importDataToDB(data) {
+    return new Promise((resolve, reject) => {
+        const clearTransaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+        const clearObjectStore = clearTransaction.objectStore(OBJECT_STORE_NAME);
+        const clearRequest = clearObjectStore.clear();
+
+        clearRequest.onsuccess = () => {
+            console.log('Existing data cleared from DB');
+
+            const transaction = db.transaction([OBJECT_STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+
+            data.forEach(item => {
+                objectStore.add(item);
+            });
+
+            transaction.oncomplete = () => {
+                console.log('Data imported to DB');
+                resolve();
+            };
+
+            transaction.onerror = (event) => {
+                console.error('Error importing data to DB:', event);
+                reject(event);
+            };
+        };
+
+        clearRequest.onerror = (event) => {
+            console.error('Error clearing data from DB:', event);
+            reject(event);
+        };
+    });
+}
+
+function displayHistory() {
+    getAllHistoryItems().then(items => {
+        const historyGrid = document.getElementById('history-grid');
+        historyGrid.innerHTML = '';
+
+        items.forEach(item => {
+            const historyItemDiv = document.createElement('div');
+            historyItemDiv.classList.add('history-item');
+            historyItemDiv.innerHTML = `
+                <div class="image-container">
+                    <img src="${item.image}" alt="${item.prompt}">
+                </div>
+                <div class="history-item-details">
+                    <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.prompt || 'No Prompt'}</h3>
+                    <p class="text-md font-semibold text-green-500">${item.style}</p>
+                </div>
+            `;
+            historyGrid.appendChild(historyItemDiv);
+        });
+    });
+}
+
+function getAllHistoryItems() {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([OBJECT_STORE_NAME], 'readonly');
+        const objectStore = transaction.objectStore(OBJECT_STORE_NAME);
+        const request = objectStore.getAll();
+
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+
+        request.onerror = (event) => {
+            console.error('Error getting all history items:', event);
+            reject(event);
+        };
+    });
+}
+
+// 从 womboDreamHistoryDB 中读取数据并显示
+function displayWomboHistory() {
+    getAllWomboHistoryItems().then(items => {
+        const womboGrid = document.getElementById('wombo-grid');
+        womboGrid.innerHTML = '';
+
+        items.forEach(item => {
+            const historyItemDiv = document.createElement('div');
+            historyItemDiv.classList.add('history-item');
+            historyItemDiv.innerHTML = `
+                <div class="image-container">
+                    <img src="${item.image}" alt="${item.prompt}">
+                </div>
+                <div class="history-item-details">
+                    <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.prompt || 'No Prompt'}</h3>
+                    <p class="text-md font-semibold text-green-500">${item.style}</p>
+                </div>
+            `;
+            womboGrid.appendChild(historyItemDiv);
+        });
+    });
+}
+
+// 从 womboDreamHistoryDB 中读取所有数据
+function getAllWomboHistoryItems() {
+    return new Promise((resolve, reject) => {
+        const transaction = womboDb.transaction([WOMBO_OBJECT_STORE_NAME], 'readonly');
+        const objectStore = transaction.objectStore(WOMBO_OBJECT_STORE_NAME);
+        const request = objectStore.getAll();
+
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+
+        request.onerror = (event) => {
+            console.error('Error getting all WOMBO history items:', event);
+            reject(event);
+        };
+    });
+}
+
+// Drag and drop functionality
+const dropArea = document.getElementById('drop-area');
+const fileInput = document.getElementById('file-input');
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false)
+});
+
+function preventDefaults(e) {
+    e.preventDefault()
+    e.stopPropagation()
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, highlight, false)
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, unhighlight, false)
+});
+
+function highlight(e) {
+    dropArea.classList.add('bg-blue-50');
+}
+
+function unhighlight(e) {
+    dropArea.classList.remove('bg-blue-50');
+}
+
+dropArea.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+    let dt = e.dataTransfer
+    let files = dt.files
+
+    handleFiles(files)
+}
+
+fileInput.addEventListener('change', () => {
+    handleFiles(fileInput.files);
+});
+
+dropArea.addEventListener('click', () => {
+    fileInput.click();
+});
+
+function handleFiles(files) {
+    const file = files[0];
+    if (file && file.type === 'application/json') {
+        const reader = new FileReader();
+        reader.onload = function (e) {
             try {
-                await initializeDatabase();
-                displayHistory();
+                const data = JSON.parse(e.target.result);
+                importDataToDB(data).then(() => {
+                    displayHistory();
+                    alert('历史记录已成功导入！');
+                }).catch(err => {
+                    console.error('导入数据时出错:', err);
+                    alert('导入数据时出错，请检查控制台。');
+                });
             } catch (error) {
-                console.error("Failed to initialize database:", error);
-                alert("Failed to initialize database. Check console for details.");
+                console.error('解析JSON时出错:', error);
+                alert('解析JSON时出错，请确保文件是有效的JSON格式。');
             }
+        };
+        reader.readAsText(file);
+    } else {
+        alert('请选择有效的JSON文件。');
+    }
+}
+
+// Download all images
+const downloadAllButton = document.getElementById('download-all-button');
+downloadAllButton.addEventListener('click', async () => {
+    const items = await getAllHistoryItems();
+    if (items.length === 0) {
+        alert('没有图片可以下载！');
+        return;
+    }
+
+    // 使用循环来逐个下载图片，并添加延迟
+    for (const item of items) {
+        // 使用 prompt 的前30个字符作为文件名
+        const filename = (item.prompt ? item.prompt.substring(0, 30) : 'no_prompt') + '.png';
+        await downloadImageWithDelay(item.image, filename, 500); // 延迟0.5秒
+    }
+    alert('所有图片已开始下载！');
+});
+
+function downloadImageWithDelay(imageUrl, filename, delay) {
+    return new Promise(resolve => {
+        downloadImage(imageUrl, filename);
+        setTimeout(resolve, delay);
+    });
+}
+
+function downloadImage(imageUrl, filename) {
+    fetch(imageUrl, {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+            'Access-Control-Allow-Origin': '*'
+        }
+    })
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename; // 使用 prompt 生成的文件名
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            console.error('下载图片时出错:', error);
+            alert('下载图片时出错，请检查控制台。');
         });
+}
+
+window.addEventListener('load', async () => {
+    try {
+        await initializeDatabase(); // 初始化 WBHistoryViewerDB
+        await initializeWomboDB();   // 初始化 womboDreamHistoryDB
+        displayHistory(); // 显示从 JSON 导入的数据
+        if (womboDb) {
+            displayWomboHistory(); // 显示从 womboDreamHistoryDB 读取的数据
+        }
+    } catch (error) {
+        console.error("Failed to initialize database:", error);
+        alert("Failed to initialize database. Check console for details.");
+    }
+});
+
     </script>
 </body>
 
