@@ -151,6 +151,9 @@
                     <li class="mr-2">
                         <button id="tab-empty" class="tab-button" onclick="openTab('empty')">Empty Tab</button>
                     </li>
+                    <li class="mr-2">
+                        <button id="tab-index" class="tab-button" onclick="openTab('index')">Index DB</button>
+                    </li>
                 </ul>
             </div>
 
@@ -158,6 +161,13 @@
             <div id="wombo" class="tab-content active">
                 <div id="wombo-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                     <!-- WOMBO DB items will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Tab Content: Index DB -->
+            <div id="index" class="tab-content">
+                <div id="index-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                    <!-- Index DB items will be displayed here -->
                 </div>
             </div>
 
@@ -177,6 +187,9 @@
 
         let db;
         let womboDb; // 保存 womboDreamHistoryDB 的实例
+        let indexDb; // 保存 imageGeneratorDB 的实例
+        const INDEX_DB_NAME = 'imageGeneratorDB'; // 要读取的 IndexedDB 数据库名
+        const INDEX_OBJECT_STORE_NAME = 'imageHistoryStore'; // indexDB的对象仓库名
 
         // Tab management
         function openTab(tabId) {
@@ -189,6 +202,43 @@
             document.getElementById(tabId).classList.add('active');
             document.getElementById(`tab-${tabId}`).classList.add('active');
 
+        }
+
+        // 初始化 imageGeneratorDB 数据库
+        function initializeIndexDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(INDEX_DB_NAME);
+
+                request.onerror = (event) => {
+                    console.error("Index DB open error:", event);
+                    reject(event);
+                };
+
+                request.onsuccess = (event) => {
+                    indexDb = event.target.result;
+                    console.log("Index DB opened successfully");
+                    resolve();
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(INDEX_OBJECT_STORE_NAME)) {
+                        // 如果对象存储不存在，则创建它
+                        const objectStore = db.createObjectStore(INDEX_OBJECT_STORE_NAME, {
+                            keyPath: 'id',
+                            autoIncrement: true
+                        });
+                        // 可以选择创建索引
+                        objectStore.createIndex('prompt', 'prompt', {
+                            unique: false
+                        });
+                        objectStore.createIndex('model', 'model', {
+                            unique: false
+                        });
+                        console.log("Index DB object store created");
+                    }
+                };
+            });
         }
 
         // 初始化 womboDreamHistoryDB 数据库
@@ -224,9 +274,89 @@
                         });
                         console.log("WOMBO DB object store created");
                     }
-                    console.log("WOMBO DB upgrade needed");
                 };
             });
+        }
+
+        // 从 imageGeneratorDB 中读取数据并显示
+        function displayIndexHistory() {
+            getAllIndexHistoryItems().then(items => {
+                const indexGrid = document.getElementById('index-grid');
+                indexGrid.innerHTML = '';
+
+                items.forEach(item => {
+                    const historyItemDiv = document.createElement('div');
+                    historyItemDiv.classList.add('history-item');
+
+                    // Create download button
+                    const downloadButton = document.createElement('div');
+                    downloadButton.classList.add('overlay-button', 'download-button');
+                    downloadButton.innerHTML = '<i class="fas fa-download"></i>';
+                    downloadButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        downloadImage(item.imageData, item.prompt ? item.prompt.substring(0, 30) : 'image');
+                    });
+
+                    // Create delete button
+                    const deleteButton = document.createElement('div');
+                    deleteButton.classList.add('overlay-button', 'delete-button');
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        deleteIndexHistoryItem(item.id);
+                    });
+
+                    let modelInfo = item.model ? `<p class="text-xs text-gray-500">Model: ${item.model}</p>` : '';
+
+                    historyItemDiv.innerHTML = `
+                        <div class="image-container">
+                            <img src="${item.imageData}" alt="${item.prompt}">
+                        </div>
+                        <div class="history-item-details">
+                            <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.prompt || 'No Prompt'}</h3>
+                            ${modelInfo}
+                        </div>
+                    `;
+
+                    historyItemDiv.appendChild(downloadButton);
+                    historyItemDiv.appendChild(deleteButton);
+                    indexGrid.appendChild(historyItemDiv);
+                });
+            });
+        }
+
+        // 从 imageGeneratorDB 中读取所有数据
+        function getAllIndexHistoryItems() {
+            return new Promise((resolve, reject) => {
+                const transaction = indexDb.transaction([INDEX_OBJECT_STORE_NAME], 'readonly');
+                const objectStore = transaction.objectStore(INDEX_OBJECT_STORE_NAME);
+                const request = objectStore.getAll();
+
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error getting all Index history items:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        // 删除 Index 历史记录项
+        function deleteIndexHistoryItem(itemId) {
+            const transaction = indexDb.transaction([INDEX_OBJECT_STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(INDEX_OBJECT_STORE_NAME);
+            const request = objectStore.delete(itemId);
+
+            request.onsuccess = () => {
+                console.log(`Item ${itemId} deleted successfully.`);
+                displayIndexHistory(); // Refresh the displayed history
+            };
+
+            request.onerror = (event) => {
+                console.error('Error deleting Index history item:', event);
+            };
         }
 
         // 从 womboDreamHistoryDB 中读取数据并显示
@@ -327,8 +457,10 @@
         window.addEventListener('load', async () => {
             try {
                 await initializeWomboDB();
+                await initializeIndexDB();
                 openTab('wombo');
                 displayWomboHistory();
+                displayIndexHistory();
             } catch (error) {
                 console.error("Failed to initialize database:", error);
                 alert("Failed to initialize database. Check console for details.");
