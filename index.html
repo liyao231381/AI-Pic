@@ -403,9 +403,12 @@
 <!-- History Area -->
 <div class="history-area w-full md:w-1/4 p-4 bg-gray-50 md:border-l border-gray-200 overflow-y-auto max-h-[70vh] md:max-h-screen shadow-inner">
     <div id="history">
-      <h2 class="text-xl font-semibold mb-3 text-gray-800 flex items-center">
-        <i class="fas fa-history mr-2 text-blue-500"></i> 历史记录
-      </h2>
+      <div class=" flex flex-row justify-between items-center mb-3">
+        <h2 class="text-xl font-semibold mb-3 text-gray-800 flex items-center">
+          <i class="fas fa-history mr-2 text-blue-500"></i> 历史记录
+        </h2>
+        <i class="fas fa-table text-xl" onclick="window.location.href='./gallery.html'" title="所有记录"></i>
+      </div>
       <div class="flex space-x-2 mb-3">
         <button type="button" id="selectAllButton" onclick="toggleSelectAll()" class="bg-gray-200 text-gray-700 py-2 px-3 rounded-lg cursor-pointer text-sm font-bold transition duration-300 hover:bg-gray-300 flex items-center">
           <i class="fas fa-check-square"></i><span class="hidden xl:inline ml-2">全选</span>
