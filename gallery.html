@@ -154,6 +154,9 @@
                     <li class="mr-2">
                         <button id="tab-index" class="tab-button" onclick="openTab('index')">Index DB</button>
                     </li>
+                    <li class="mr-2">
+                        <button id="tab-gemini" class="tab-button" onclick="openTab('gemini')">Gemini DB</button>
+                    </li>
                 </ul>
             </div>
 
@@ -168,6 +171,13 @@
             <div id="index" class="tab-content">
                 <div id="index-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                     <!-- Index DB items will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Tab Content: Gemini DB -->
+            <div id="gemini" class="tab-content">
+                <div id="gemini-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                    <!-- Gemini DB items will be displayed here -->
                 </div>
             </div>
 
@@ -188,8 +198,11 @@
         let db;
         let womboDb; // 保存 womboDreamHistoryDB 的实例
         let indexDb; // 保存 imageGeneratorDB 的实例
+        let geminiDb; // 保存 geminiImageHistoryDB 的实例
         const INDEX_DB_NAME = 'imageGeneratorDB'; // 要读取的 IndexedDB 数据库名
         const INDEX_OBJECT_STORE_NAME = 'imageHistoryStore'; // indexDB的对象仓库名
+        const GEMINI_DB_NAME = 'geminiImageHistoryDB'; // 要读取的 IndexedDB 数据库名
+        const GEMINI_OBJECT_STORE_NAME = 'imageHistoryStore'; // geminiDB的对象仓库名
 
         // Tab management
         function openTab(tabId) {
@@ -278,6 +291,40 @@
             });
         }
 
+        // 初始化 geminiImageHistoryDB 数据库
+        function initializeGeminiDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(GEMINI_DB_NAME);
+
+                request.onerror = (event) => {
+                    console.error("GEMINI DB open error:", event);
+                    reject(event);
+                };
+
+                request.onsuccess = (event) => {
+                    geminiDb = event.target.result;
+                    console.log("GEMINI DB opened successfully");
+                    resolve();
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(GEMINI_OBJECT_STORE_NAME)) {
+                        // 如果对象存储不存在，则创建它
+                        const objectStore = db.createObjectStore(GEMINI_OBJECT_STORE_NAME, {
+                            keyPath: 'id',
+                            autoIncrement: true
+                        });
+                        // 可以选择创建索引
+                        objectStore.createIndex('promptText', 'promptText', {
+                            unique: false
+                        });
+                        console.log("GEMINI DB object store created");
+                    }
+                };
+            });
+        }
+
         // 从 imageGeneratorDB 中读取数据并显示
         function displayIndexHistory() {
             getAllIndexHistoryItems().then(items => {
@@ -359,9 +406,27 @@
             };
         }
 
+        // 从 womboDreamHistoryDB 中读取所有数据
+        function getAllWomboHistoryItems() {
+            return new Promise((resolve, reject) => {
+                const transaction = womboDb.transaction([WOMBO_OBJECT_STORE_NAME], 'readonly');
+                const objectStore = transaction.objectStore(WOMBO_OBJECT_STORE_NAME);
+                const request = objectStore.getAll();
+
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error getting all WOMBO history items:', event);
+                    reject(event);
+                };
+            });
+        }
+
         // 从 womboDreamHistoryDB 中读取数据并显示
         function displayWomboHistory() {
-            getAllWomboHistoryItems().then(items => {
+            return getAllWomboHistoryItems().then(items => {
                 const womboGrid = document.getElementById('wombo-grid');
                 womboGrid.innerHTML = '';
 
@@ -404,11 +469,55 @@
             });
         }
 
-        // 从 womboDreamHistoryDB 中读取所有数据
-        function getAllWomboHistoryItems() {
+        // 从 geminiImageHistoryDB 中读取数据并显示
+        function displayGeminiHistory() {
+            getAllGeminiHistoryItems().then(items => {
+                const geminiGrid = document.getElementById('gemini-grid');
+                geminiGrid.innerHTML = '';
+
+                items.forEach(item => {
+                    const historyItemDiv = document.createElement('div');
+                    historyItemDiv.classList.add('history-item');
+
+                    // Create download button
+                    const downloadButton = document.createElement('div');
+                    downloadButton.classList.add('overlay-button', 'download-button');
+                    downloadButton.innerHTML = '<i class="fas fa-download"></i>';
+                    downloadButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        downloadImage(item.imageUrl, item.promptText ? item.promptText.substring(0, 30) : 'image');
+                    });
+
+                    // Create delete button
+                    const deleteButton = document.createElement('div');
+                    deleteButton.classList.add('overlay-button', 'delete-button');
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteButton.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from bubbling to history item
+                        deleteGeminiHistoryItem(item.id);
+                    });
+
+                    historyItemDiv.innerHTML = `
+                        <div class="image-container">
+                            <img src="${item.imageUrl}" alt="${item.promptText}">
+                        </div>
+                        <div class="history-item-details">
+                            <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.promptText || 'No Prompt'}</h3>
+                        </div>
+                    `;
+
+                    historyItemDiv.appendChild(downloadButton);
+                    historyItemDiv.appendChild(deleteButton);
+                    geminiGrid.appendChild(historyItemDiv);
+                });
+            });
+        }
+
+        // 从 geminiImageHistoryDB 中读取所有数据
+        function getAllGeminiHistoryItems() {
             return new Promise((resolve, reject) => {
-                const transaction = womboDb.transaction([WOMBO_OBJECT_STORE_NAME], 'readonly');
-                const objectStore = transaction.objectStore(WOMBO_OBJECT_STORE_NAME);
+                const transaction = geminiDb.transaction([GEMINI_OBJECT_STORE_NAME], 'readonly');
+                const objectStore = transaction.objectStore(GEMINI_OBJECT_STORE_NAME);
                 const request = objectStore.getAll();
 
                 request.onsuccess = (event) => {
@@ -416,7 +525,7 @@
                 };
 
                 request.onerror = (event) => {
-                    console.error('Error getting all WOMBO history items:', event);
+                    console.error('Error getting all GEMINI history items:', event);
                     reject(event);
                 };
             });
@@ -454,13 +563,31 @@
             };
         }
 
+        // 删除 GEMINI 历史记录项
+        function deleteGeminiHistoryItem(itemId) {
+            const transaction = geminiDb.transaction([GEMINI_OBJECT_STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(GEMINI_OBJECT_STORE_NAME);
+            const request = objectStore.delete(itemId);
+
+            request.onsuccess = () => {
+                console.log(`Item ${itemId} deleted successfully.`);
+                displayGeminiHistory(); // Refresh the displayed history
+            };
+
+            request.onerror = (event) => {
+                console.error('Error deleting GEMINI history item:', event);
+            };
+        }
+
         window.addEventListener('load', async () => {
             try {
                 await initializeWomboDB();
                 await initializeIndexDB();
+                await initializeGeminiDB();
                 openTab('wombo');
                 displayWomboHistory();
                 displayIndexHistory();
+                displayGeminiHistory();
             } catch (error) {
                 console.error("Failed to initialize database:", error);
                 alert("Failed to initialize database. Check console for details.");
