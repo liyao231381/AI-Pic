@@ -313,7 +313,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" style="object-fit: contain;">
+                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" loading="lazy">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
@@ -498,7 +498,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.prompt}">
+                            <img src="${item.imageUrl}" alt="${item.prompt}" loading="lazy">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.prompt || 'No Prompt'}</h3>
@@ -545,7 +545,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageData}" alt="${item.prompt}">
+                            <img src="${item.imageData}" alt="${item.prompt}" loading="lazy">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.prompt || 'No Prompt'}</h3>
@@ -676,7 +676,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.image}" alt="${item.prompt}">
+                            <img src="${item.image}" alt="${item.prompt}" loading="lazy">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.prompt || 'No Prompt'}</h3>
@@ -721,7 +721,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.promptText}">
+                            <img src="${item.imageUrl}" alt="${item.promptText}" loading="lazy">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.promptText || 'No Prompt'}</h3>
@@ -951,7 +951,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" style="object-fit: contain;">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
@@ -997,7 +997,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.params?.prompt}">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
@@ -1076,7 +1076,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" style="object-fit: contain;">
+                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" loading="lazy" style="object-fit: contain;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
