@@ -179,6 +179,11 @@
             position: relative;
             /* 确保grid在tabs-container之下 */
         }
+        #image-modal .bg-white {
+            max-width: 90vw; /* 限制模态框的最大宽度为视窗宽度的 90% */
+            max-height: 90vh; /* 限制模态框的最大高度为视窗高度的 90% */
+            position: relative; /* 为内部绝对定位的关闭按钮提供定位上下文 */
+        }
     </style>
 </head>
 
@@ -285,6 +290,13 @@
             <span id="notification-message"></span>
         </div>
     </div>
+    <!-- Image Modal Overlay -->
+    <div id="image-modal" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white max-w-4xl max-h-screen overflow-auto relative">
+            <button id="modal-close" class="absolute top-2 right-2 bg-gray-200 hover:bg-gray-300 rounded py-1 px-2"><i class="fas fa-times"></i></button>
+            <img id="modal-image" src="" alt="放大图片" class="w-full h-auto">
+        </div>
+    </div>
 
     <script>
         const DB_NAME = 'WBHistoryViewerDB';
@@ -369,7 +381,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" loading="lazy">
+                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
@@ -554,7 +566,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.prompt}" loading="lazy">
+                            <img src="${item.imageUrl}" alt="${item.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.prompt}" onclick="copyToClipboard(this)">${item.prompt || 'No Prompt'}</h3>
@@ -601,7 +613,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageData}" alt="${item.prompt}" loading="lazy">
+                            <img src="${item.imageData}" alt="${item.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.prompt}" onclick="copyToClipboard(this)">${item.prompt || 'No Prompt'}</h3>
@@ -732,7 +744,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.image}" alt="${item.prompt}" loading="lazy">
+                            <img src="${item.image}" alt="${item.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.prompt}" onclick="copyToClipboard(this)">${item.prompt || 'No Prompt'}</h3>
@@ -777,7 +789,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.promptText}" loading="lazy">
+                            <img src="${item.imageUrl}" alt="${item.promptText}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.promptText}" onclick="copyToClipboard(this)">${item.promptText || 'No Prompt'}</h3>
@@ -985,7 +997,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
@@ -1033,7 +1045,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
@@ -1113,7 +1125,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" loading="lazy" style="object-fit: contain;">
+                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;" style="object-fit: contain;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
@@ -1255,6 +1267,33 @@
                 alert("Failed to initialize database. Check console for details.");
             }
         });
+
+        // Function to open the image modal
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('image-modal');
+            const modalImage = document.getElementById('modal-image');
+
+            modalImage.src = imageSrc;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+        }
+
+        // Function to close the image modal
+        function closeImageModal() {
+            const modal = document.getElementById('image-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+
+        // Add event listener to close button
+        document.getElementById('modal-close').addEventListener('click', closeImageModal);
+        // Close modal when clicking outside the image
+        document.getElementById('image-modal').addEventListener('click', function(event) {
+            if (event.target.id === 'image-modal') {
+                closeImageModal();
+            }
+        });
+
     </script>
 </body>
 
