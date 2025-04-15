@@ -660,30 +660,29 @@
                 </button>
             `;
             historyItemDiv.addEventListener('click', () => {
-                // Set Input field
-                promptInput.value = item.prompt;
-                styleInput.value = item.style;
-                aspectRatioSelect.value = item.aspect_ratio;
-                // Set Image field
-                finalImage.src = item.image;
-                finalImage.classList.remove('hidden');
-                previewPlaceholder.style.display = 'none';
-                finalImage.alt = "WOMBO Dream Image";
-                // Set Mediastore field
-                mediastoreUid = item.mediastore_uid;
-                mediastoreUidInput.value = item.mediastore_uid; // Set the input field
-                // Set radio field
-                if (item.weight) {
-                    const weightRadio = document.querySelector(`input[name="weight"][value="${item.weight}"]`);
-                    if (weightRadio) {
-                        weightRadio.checked = true;
-                        document.querySelector(`label[for="${weightRadio.id}"]`).classList.add('border-blue-500', 'bg-blue-50');
-                    }
-                }
-                // HightLight
-                document.querySelectorAll('.history-item').forEach(el => el.classList.remove('ring-2', 'ring-blue-500'));
-                historyItemDiv.classList.add('ring-2', 'ring-blue-500');
-            });
+        // Set Input field
+        promptInput.value = item.prompt;
+        styleInput.value = item.style;
+        // Set Image field
+        finalImage.src = item.image; // 设置图片源
+        finalImage.classList.remove('hidden'); // 移除 hidden 类，显示图片
+        previewPlaceholder.style.display = 'none'; // 隐藏占位符
+        finalImage.alt = "WOMBO Dream Image"; // 设置alt文本
+        // Set Mediastore field
+        mediastoreUid = item.mediastore_uid;
+        mediastoreUidInput.value = item.mediastore_uid; // Set the input field
+        // Set radio field
+        if (item.weight) {
+            const weightRadio = document.querySelector(`input[name="weight"][value="${item.weight}"]`);
+            if (weightRadio) {
+                weightRadio.checked = true;
+                document.querySelector(`label[for="${weightRadio.id}"]`).classList.add('border-blue-500', 'bg-blue-50');
+            }
+        }
+        // HightLight
+        document.querySelectorAll('.history-item').forEach(el => el.classList.remove('ring-2', 'ring-blue-500'));
+        historyItemDiv.classList.add('ring-2', 'ring-blue-500');
+    });
             // Add delete function
             const deleteButton = historyItemDiv.querySelector('.history-item-delete');
             deleteButton.addEventListener('click', (event) => {
