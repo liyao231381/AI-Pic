@@ -381,10 +381,10 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.imageUrl}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
-                            <h3 class="text-md font-semibold text-gray-800 line-clamp-1">${item.params?.prompt || 'No Prompt'}</h3>
+                            <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
                         </div>
                     `;
 
@@ -566,7 +566,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
+                            <img src="${item.imageUrl}" alt="${item.prompt}" loading="lazy" onclick="openImageModal('${item.imageUrl}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.prompt}" onclick="copyToClipboard(this)">${item.prompt || 'No Prompt'}</h3>
@@ -613,7 +613,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageData}" alt="${item.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
+                            <img src="${item.imageData}" alt="${item.prompt}" loading="lazy" onclick="openImageModal('${item.imageData}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.prompt}" onclick="copyToClipboard(this)">${item.prompt || 'No Prompt'}</h3>
@@ -789,7 +789,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.promptText}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
+                            <img src="${item.imageUrl}" alt="${item.promptText}" loading="lazy" onclick="openImageModal('${item.imageUrl}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.promptText}" onclick="copyToClipboard(this)">${item.promptText || 'No Prompt'}</h3>
@@ -997,7 +997,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.imageUrl}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
@@ -1045,7 +1045,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.imageUrl}')" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
@@ -1125,7 +1125,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;" style="object-fit: contain;">
+                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.imageBase64}')" style="cursor: pointer;" style="object-fit: contain;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
@@ -1270,6 +1270,7 @@
 
         // Function to open the image modal
         function openImageModal(imageSrc) {
+            console.log("openImageModal called with imageSrc:", imageSrc);
             const modal = document.getElementById('image-modal');
             const modalImage = document.getElementById('modal-image');
 
@@ -1294,6 +1295,12 @@
             }
         });
 
+        // Add event listener to close modal on ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImageModal();
+            }
+        });
     </script>
 </body>
 
