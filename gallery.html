@@ -7,6 +7,7 @@
     <title>WOMBO Dream 历史记录查看器</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -179,25 +180,8 @@
             position: relative;
             /* 确保grid在tabs-container之下 */
         }
-
-        #image-modal {
-            align-items: center;
-            justify-content: center;
-        }
-
-        #image-modal .bg-white {
-            max-width: 100vw;
-            max-height: 100vh;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #modal-image {
-            max-width: 100vw;
-            max-height: 100vh;
-            object-fit: contain;
+        .viewer-container {
+            background-color: rgba(0, 0, 0, 0.85); /* 更深的背景 */
         }
     </style>
 </head>
@@ -305,19 +289,9 @@
             <span id="notification-message"></span>
         </div>
     </div>
-    <!-- Image Modal Overlay -->
-    <div id="image-modal" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
-        <div class="bg-white max-w-4xl max-h-screen overflow-auto relative">
-            <button id="modal-close" class="absolute top-2 right-2 bg-gray-200 hover:bg-gray-300 rounded py-1 px-2"><i class="fas fa-times"></i></button>
-            <img id="modal-image" src="" alt="放大图片" class="w-full h-auto">
-        </div>
-        <div class="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-200 hover:bg-gray-300 rounded py-1 px-2 cursor-pointer" onclick="prevImage()"><i class="fas fa-chevron-left"></i></div>
-        <div class="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-200 hover:bg-gray-300 rounded py-1 px-2 cursor-pointer" onclick="nextImage()"><i class="fas fa-chevron-right"></i></div>
-    </div>
 
     <script>
-        let images = [];
-        let currentImageIndex = 0;
+        let viewerInstances = {}; // 用于存储每个网格的 Viewer.js 实例
 
         const DB_NAME = 'WBHistoryViewerDB';
         const DB_VERSION = 1;
@@ -401,7 +375,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.imageUrl}')" style="cursor: pointer;">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
@@ -586,7 +560,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.prompt}" loading="lazy" onclick="openImageModal('${item.imageUrl}')" style="cursor: pointer;">
+                            <img src="${item.imageUrl}" alt="${item.prompt || 'Generated Image'}" loading="lazy" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.prompt}" onclick="copyToClipboard(this)">${item.prompt || 'No Prompt'}</h3>
@@ -597,8 +571,23 @@
                     historyItemDiv.appendChild(downloadButton);
                     historyItemDiv.appendChild(deleteButton);
                     togetherGrid.appendChild(historyItemDiv);
-                });
-            });
+                }); // 结束 forEach
+
+                // --- 添加 Viewer.js 初始化/更新 ---
+                const gridId = 'together-grid'; // <--- Actual Grid ID
+                const gridElement = togetherGrid; // <--- Use existing variable
+
+                if (viewerInstances[gridId]) {
+                    try { viewerInstances[gridId].destroy(); } catch(e) { console.warn(`Error destroying viewer for ${gridId}:`, e); }
+                    delete viewerInstances[gridId];
+                }
+                if (gridElement && items.length > 0) {
+                viewerInstances[gridId] = new Viewer(gridElement, { /* ... Viewer options ... */ });
+                }
+                // --- 结束 Viewer.js 初始化/更新 ---
+
+            }); // 结束 then
+
         }
 
         // 从 imageGeneratorDB 中读取数据并显示
@@ -633,7 +622,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageData}" alt="${item.prompt}" loading="lazy" onclick="openImageModal('${item.imageData}')" style="cursor: pointer;">
+                            <img src="${item.imageData}" alt="${item.prompt} || 'Generated Image'" loading="lazy" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.prompt}" onclick="copyToClipboard(this)">${item.prompt || 'No Prompt'}</h3>
@@ -644,8 +633,22 @@
                     historyItemDiv.appendChild(downloadButton);
                     historyItemDiv.appendChild(deleteButton);
                     indexGrid.appendChild(historyItemDiv);
-                });
-            });
+                }); // 结束 forEach
+
+                // --- 添加 Viewer.js 初始化/更新 ---
+                const gridId = 'index-grid'; // <--- Actual Grid ID
+                const gridElement = indexGrid; // <--- Use existing variable
+
+                if (viewerInstances[gridId]) {
+                    try { viewerInstances[gridId].destroy(); } catch(e) { console.warn(`Error destroying viewer for ${gridId}:`, e); }
+                    delete viewerInstances[gridId];
+                }
+                if (gridElement && items.length > 0) {
+                viewerInstances[gridId] = new Viewer(gridElement, { /* ... Viewer options ... */ });
+                }
+                // --- 结束 Viewer.js 初始化/更新 ---
+
+            }); // 结束 then
         }
 
         // 从 togetherDB 中读取所有数据
@@ -764,7 +767,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.image}" alt="${item.prompt}" loading="lazy" onclick="openImageModal('${item.image}')" style="cursor: pointer;">
+                            <img src="${item.image}" alt="${item.prompt || 'Generated Image'}" loading="lazy" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.prompt}" onclick="copyToClipboard(this)">${item.prompt || 'No Prompt'}</h3>
@@ -775,8 +778,21 @@
                     historyItemDiv.appendChild(downloadButton);
                     historyItemDiv.appendChild(deleteButton);
                     womboGrid.appendChild(historyItemDiv);
-                });
-            });
+                }); // 结束 forEach
+
+                // --- 添加 Viewer.js 初始化/更新 ---
+                const gridId = 'wombo-grid'; // <--- Actual Grid ID
+                const gridElement = womboGrid; // <--- Use existing variable
+
+                if (viewerInstances[gridId]) {
+                    try { viewerInstances[gridId].destroy(); } catch(e) { console.warn(`Error destroying viewer for ${gridId}:`, e); }
+                    delete viewerInstances[gridId];
+                }
+                if (gridElement && items.length > 0) {
+                viewerInstances[gridId] = new Viewer(gridElement, { /* ... Viewer options ... */ });
+                }
+                // --- 结束 Viewer.js 初始化/更新 ---
+            }); // 结束 then
         }
 
         // 从 geminiImageHistoryDB 中读取数据并显示
@@ -809,7 +825,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.promptText}" loading="lazy" onclick="openImageModal('${item.imageUrl}')" style="cursor: pointer;">
+                            <img src="${item.imageUrl}" alt="${item.promptText || 'Generated Image'}" loading="lazy" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.promptText}" onclick="copyToClipboard(this)">${item.promptText || 'No Prompt'}</h3>
@@ -819,8 +835,22 @@
                     historyItemDiv.appendChild(downloadButton);
                     historyItemDiv.appendChild(deleteButton);
                     geminiGrid.appendChild(historyItemDiv);
-                });
-            });
+                }); // 结束 forEach
+
+                // --- 添加 Viewer.js 初始化/更新 ---
+                const gridId = 'gemini-grid'; // <--- Actual Grid ID
+                const gridElement = geminiGrid; // <--- Use existing variable
+
+                if (viewerInstances[gridId]) {
+                    try { viewerInstances[gridId].destroy(); } catch(e) { console.warn(`Error destroying viewer for ${gridId}:`, e); }
+                    delete viewerInstances[gridId];
+                }
+                if (gridElement && items.length > 0) {
+                viewerInstances[gridId] = new Viewer(gridElement, { /* ... Viewer options ... */ });
+                }
+                // --- 结束 Viewer.js 初始化/更新 ---
+
+            }); // 结束 then
         }
 
         // 从 geminiImageHistoryDB 中读取所有数据
@@ -1017,7 +1047,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.imageUrl}')" style="cursor: pointer;">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt || 'Generated Image'}" loading="lazy" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
@@ -1027,8 +1057,53 @@
                     historyItemDiv.appendChild(downloadButton);
                     historyItemDiv.appendChild(deleteButton);
                     stableGrid.appendChild(historyItemDiv);
+                }); // 结束 forEach
+
+                // --- 添加 Viewer.js 初始化/更新 ---
+                const gridId = 'stable-grid'; // <--- Actual Grid ID
+                const gridElement = stableGrid; // <--- Use existing variable (assuming it's named stableGrid)
+
+                // 先销毁旧实例（如果存在）
+                if (viewerInstances[gridId]) {
+                    try {
+                        viewerInstances[gridId].destroy();
+                    } catch (e) {
+                        console.warn(`Error destroying viewer for ${gridId}:`, e);
+                    }
+                    delete viewerInstances[gridId]; // 确保引用被移除
+                }
+
+                // 仅当网格元素存在且包含图片时才初始化
+                // items 是从 getAllStableHistoryItems() 获取的数组
+                if (gridElement && items.length > 0) {
+                viewerInstances[gridId] = new Viewer(gridElement, {
+                    inline: false, // 点击图片时弹出查看器
+                    toolbar: { // 自定义工具栏按钮
+                        zoomIn: 1,
+                        zoomOut: 1,
+                        oneToOne: 1,
+                        reset: 1,
+                        prev: 1,
+                        play: { show: 1, size: 'large' }, // 显示播放按钮
+                        next: 1,
+                        rotateLeft: 1,
+                        rotateRight: 1,
+                        flipHorizontal: 1,
+                        flipVertical: 1,
+                    },
+                    title: [1, (image, imageData) => `${image.alt || 'Image'} (${imageData.naturalWidth} x ${imageData.naturalHeight})`], // 显示 alt 内容和尺寸
+                    url: 'src', // 图片 URL 从 img 标签的 src 属性获取
+                    zIndex: 10000, // 确保在其他元素之上
+                    transition: true, // 使用过渡效果
+                    movable: true, // 可拖动
+                    zoomable: true, // 可缩放
+                    rotatable: true, // 可旋转
+                    scalable: true, // 可翻转
                 });
-            });
+                }
+                // --- 结束 Viewer.js 初始化/更新 ---
+
+            }); // 结束 then
         }
 
         // 从 pollinationsDB 中读取数据并显示
@@ -1065,7 +1140,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageUrl}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.imageUrl}')" style="cursor: pointer;">
+                            <img src="${item.imageUrl}" alt="${item.params?.prompt || 'Generated Image'}" loading="lazy" style="cursor: pointer;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
@@ -1076,8 +1151,22 @@
                     historyItemDiv.appendChild(downloadButton);
                     historyItemDiv.appendChild(deleteButton);
                     pollinationsGrid.appendChild(historyItemDiv);
-                });
-            });
+                }); // 结束 forEach
+
+                // --- 添加 Viewer.js 初始化/更新 ---
+                const gridId = 'pollinations-grid'; // <--- Actual Grid ID
+                const gridElement = pollinationsGrid; // <--- Use existing variable
+
+                if (viewerInstances[gridId]) {
+                    try { viewerInstances[gridId].destroy(); } catch(e) { console.warn(`Error destroying viewer for ${gridId}:`, e); }
+                    delete viewerInstances[gridId];
+                }
+                if (gridElement && items.length > 0) {
+                viewerInstances[gridId] = new Viewer(gridElement, { /* ... Viewer options ... */ });
+                }
+                // --- 结束 Viewer.js 初始化/更新 ---
+
+            }); // 结束 then
         }
 
         // 从 SDImageHistoryDB 中读取所有数据
@@ -1145,7 +1234,7 @@
 
                     historyItemDiv.innerHTML = `
                         <div class="image-container">
-                            <img src="${item.imageBase64}" alt="${item.params?.prompt}" loading="lazy" onclick="openImageModal('${item.imageBase64}')" style="cursor: pointer;" style="object-fit: contain;">
+                            <img src="${item.imageBase64}" alt="${item.params?.prompt || 'Generated Image'}" loading="lazy" style="cursor: pointer;" style="object-fit: contain;">
                         </div>
                         <div class="history-item-details">
                             <h3 class="text-md font-semibold text-gray-800 line-clamp-1 copy-prompt" data-prompt="${item.params?.prompt}" onclick="copyToClipboard(this)">${item.params?.prompt || 'No Prompt'}</h3>
@@ -1155,8 +1244,23 @@
                     historyItemDiv.appendChild(downloadButton);
                     historyItemDiv.appendChild(deleteButton);
                     stabilityGrid.appendChild(historyItemDiv);
-                });
-            });
+                }); // 结束 forEach
+
+                // --- 添加 Viewer.js 初始化/更新 ---
+                const gridId = 'stability-grid'; // <--- Actual Grid ID
+                const gridElement = stabilityGrid; // <--- Use existing variable
+
+                if (viewerInstances[gridId]) {
+                    try { viewerInstances[gridId].destroy(); } catch(e) { console.warn(`Error destroying viewer for ${gridId}:`, e); }
+                    delete viewerInstances[gridId];
+                }
+                if (gridElement && items.length > 0) {
+                viewerInstances[gridId] = new Viewer(gridElement, { /* ... Viewer options ... */ });
+                }
+                // --- 结束 Viewer.js 初始化/更新 ---
+
+            }); // 结束 then
+
         }
 
         // 从 SDImageHistoryDB 中读取所有数据
@@ -1288,58 +1392,8 @@
             }
         });
 
-        // Function to open the image modal
-        function openImageModal(imageSrc) {
-            const modal = document.getElementById('image-modal');
-            const modalImage = document.getElementById('modal-image');
-
-            // 构建图片数组
-            images = Array.from(document.querySelectorAll('.history-item img')).map(img => img.src);
-            currentImageIndex = images.indexOf(imageSrc);
-
-            modalImage.src = imageSrc;
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-        }
-
-        function nextImage() {
-            currentImageIndex = (currentImageIndex + 1) % images.length;
-            document.getElementById('modal-image').src = images[currentImageIndex];
-        }
-
-        function prevImage() {
-            currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
-            document.getElementById('modal-image').src = images[currentImageIndex];
-        }
-
-        // Function to close the image modal
-        function closeImageModal() {
-            const modal = document.getElementById('image-modal');
-            modal.classList.add('hidden');
-            document.body.style.overflow = 'auto'; // Restore scrolling
-        }
-
-        // Add event listener to close button
-        document.getElementById('modal-close').addEventListener('click', closeImageModal);
-
-        // Close modal when clicking outside the image
-        document.getElementById('image-modal').addEventListener('click', function(event) {
-            if (event.target.id === 'image-modal') {
-                closeImageModal();
-            }
-        });
-
-        // Add event listener to close modal on ESC key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeImageModal();
-            } else if (event.key === 'ArrowLeft') {
-                prevImage();
-            } else if (event.key === 'ArrowRight') {
-                nextImage();
-            }
-        });
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 
 </html>
