@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 图像生成器 | SiliconFlow</title>
     <!-- Include Tailwind CSS via CDN -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,line-clamp"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -950,7 +950,7 @@
 
         const result = await response.json();
 
-        if (result.images && result.images.length > 0 && result.images[0].url) {
+        if (Array.isArray(result.images) && result.images.length > 0 && result.images[0].url) {
           const imageUrl = result.images[0].url;
           // Display image immediately from URL for faster feedback
           // generatedImageElement.src = imageUrl;
@@ -978,13 +978,13 @@
             console.error("API response missing image URL:", result);
             generatedImageElement.src = 'https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe'; // Error image
             downloadButton.disabled = true;
-            showNotification("图像生成失败：API 未返回有效图像。", true);
+            showNotification(`图像生成失败：API 未返回有效图像。 详细信息: ${JSON.stringify(result)}`, true);
         }
       } catch (error) {
         console.error('生成图像时出错:', error);
         generatedImageElement.src = 'https://api.yujn.cn/api/gzl_ACG.php?type=image&form=pe'; // Error image
         downloadButton.disabled = true;
-        showNotification(`图像生成失败: ${error.message}`, true);
+        showNotification(`图像生成失败: ${error.message}. 请检查API密钥和网络连接。`, true);
       } finally {
         loadingIndicatorElement.classList.add('hidden'); // Use classList
         // Re-enable button after countdown
@@ -1391,6 +1391,10 @@
         const guidanceScaleInput = document.getElementById('guidanceScale');
         const selectedModel = modelSelect.value;
 
+        if (!aiImageUploadContainer || !aiImageUploadContainerLabel) {
+            return;
+        }
+
         // Set default guidance scale based on model
         let defaultScale = 2.5; // Default for Kolors and Schnell
         if (selectedModel === "stabilityai/stable-diffusion-xl-base-1.0") {
@@ -1441,12 +1445,14 @@
 
        // Initial setup on load
         document.addEventListener('DOMContentLoaded', () => {
-            setModelGuidanceScale(); // Set initial guidance scale and visibility
-             // Ensure translate area is hidden initially if toggle button exists
-             if (toggleTranslateAreaButton && translateArea) {
-                 translateArea.classList.add('hidden');
-                 toggleTranslateAreaButton.textContent = '———显示 翻译&识别区———';
-             }
+            if (aiImageUploadContainer && aiImageUploadContainerLabel) {
+                setModelGuidanceScale(); // Set initial guidance scale and visibility
+            }
+            // Ensure translate area is hidden initially if toggle button exists
+            if (toggleTranslateAreaButton && translateArea) {
+                translateArea.classList.add('hidden');
+                toggleTranslateAreaButton.textContent = '———显示 翻译&识别区———';
+            }
         });
 
   </script>
